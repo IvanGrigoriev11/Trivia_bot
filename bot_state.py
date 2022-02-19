@@ -43,3 +43,4 @@ class GameState(BotState):
     def process(self, update: Update) -> 'BotState':
         chat_id = update.message.chat.id
         self._client.send_text(chat_id, f'GameState.process()')
+        return self
