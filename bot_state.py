@@ -86,15 +86,15 @@ class GameState(BotState):
     def __init__(self, client: TelegramClient, questions: List[Question]):
         self._client = client
         self._questions = questions
-        self.number = 0
-        self.right_answer = 0
+        self.cur_question = 0
+        self.score = 0
 
     def on_enter(self, chat_id: int) -> None:
         """
         """
 
         # TODO: send the first question to the chat
-        self._client.send_text(chat_id, f'{self._questions[0].text}' + '\n' + f'{self._questions[0].answers}')
+        self._send_question(chat_id, self._questions[0])
 
     def process(self, update: Update) -> 'BotState':
         """
@@ -105,21 +105,25 @@ class GameState(BotState):
             A variable used to receive last updates, especially client's chat ID
         """
 
-
         chat_id = update.message.chat.id
-        if int(update.message.text) == self._questions[self.number].correct_answer:    
+
+        # use try/except to handle int conversion error
+        if int(update.message.text) == self._questions[self.cur_question].correct_answer:    
             self._client.send_text(chat_id, f'You are right')
-            self.right_answer = self.right_answer + 1 
+            self.score += 1 
         else:
             self._client.send_text(chat_id, f'You are wrong')
-        self.number += 1 
         
-        if self.number != len(self._questions):
-            self._client.send_text(chat_id, f'{self._questions[self.number].text}' + '\n' + f'{self._questions[self.number].answers}')
+        self.cur_question += 1 
+        
+        if self.cur_question != len(self._questions):
+            self._send_question(chat_id, self._questions[self.cur_question])
         else:    
-            self._client.send_text(chat_id, f'You got {self.right_answer} points out of {self.number}.' + '\n' +
+            self._client.send_text(chat_id, f'You got {self.score} points out of {self.cur_question}.' + '\n' +
             'If you want to try again, type /startGame to start a new game.')
-            self.number = 0
-            self.right_answer = 0
-            return IdleState(self._client)    
+            return IdleState(self._client)
+        
         return self
+
+    def _send_question(self, chat_id: int, question: Question):
+        self._client.send_text(chat_id, f'{question.text}' + '\n' + f'{question.answers}')
