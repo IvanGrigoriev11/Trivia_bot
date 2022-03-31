@@ -112,7 +112,7 @@ class GameState(BotState):
             self.right_answer = self.right_answer + 1 
         else:
             self._client.send_text(chat_id, f'You are wrong')
-        self.number = self.number + 1  
+        self.number += 1 
         
         if self.number != len(self._questions):
             self._client.send_text(chat_id, f'{self._questions[self.number].text}' + '\n' + f'{self._questions[self.number].answers}')
