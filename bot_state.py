@@ -5,36 +5,22 @@ from typing import List
 
 
 class BotState(ABC):
-    """A class used to as State interface"""
+    """A class responsible for handling a single chat operation."""
 
     @abstractclassmethod
-    def on_enter(self, chat_id: int) -> None: pass
+    def on_enter(self, chat_id: int) -> None:
+        """A callback when this bot state becomes active. Can be used to
+        e.g. proactively send a message to the chat."""
+        pass
 
     @abstractclassmethod
-    def process(self, update: Update) -> 'BotState': pass
-
+    def process(self, update: Update) -> 'BotState':
+        """A callback for handling an update."""
+        pass
 
 
 class IdleState(BotState):
-    """A child class used to represent TelegramBot's state in idle time
-    
-    Attributes
-    ----------
-    client : TelegramClient
-        Used to determine which client is chatting with bot
-    text : str 
-        A formatted string used to receive the text from Client 
-    chat_id : int 
-        A variable used to receive Client's Telegram chat ID 
-
-    Methods
-    -------
-    on_enter(chat_id: int)
-        The method does nothing
-
-    process (update: Update)
-        The method receives last updates from Client and run the game    
-    """
+    """A state when there is no active game in place."""
 
     def __init__(self, client: TelegramClient):
         self._client = client
@@ -43,16 +29,6 @@ class IdleState(BotState):
         pass
 
     def process(self, update: Update) -> 'BotState':
-        """The method receives last updates from Client and run the game
-
-        Parameteres
-        -----------
-        text : str 
-            A formatted string used to receive the text from Client 
-        chat_id : int 
-            A variable used to receive Client's Telegram chat ID 
-        """
-
         text = update.message.text.lower()
         chat_id = update.message.chat.id
 
@@ -65,49 +41,25 @@ class IdleState(BotState):
 
 
 class GameState(BotState):
-    """A child class used to represent TelegramBot state in game time
-
-    Attributes
-    ----------
-    client : TelegramClient
-        Used to determine which client is chatting with bot
-    questions: List 
-        A list with a question
-
-    Methods
-    -------
-    on_enter(chat_id: int)
-        The method toggles bot states
-
-    process (update: Update)
-        The method receives last updates from Client
-    """
+    """A state responsible for handling the game itself. Assumes the game has already started."""
 
     def __init__(self, client: TelegramClient, questions: List[Question]):
+        """
+        questions -- questions for this particular game.
+        """
         self._client = client
         self._questions = questions
         self.cur_question = 0
         self.score = 0
 
     def on_enter(self, chat_id: int) -> None:
-        """
-        """
-
         # TODO: send the first question to the chat
         self._send_question(chat_id, self._questions[0])
 
     def process(self, update: Update) -> 'BotState':
-        """
-
-        Parameters
-        ----------
-        update: Update
-            A variable used to receive last updates, especially client's chat ID
-        """
-
         chat_id = update.message.chat.id
 
-        # use try/except to handle int conversion error
+        # TODO: use try/except to handle int conversion error
         if int(update.message.text) == self._questions[self.cur_question].correct_answer:    
             self._client.send_text(chat_id, f'You are right')
             self.score += 1 
@@ -118,12 +70,12 @@ class GameState(BotState):
         
         if self.cur_question != len(self._questions):
             self._send_question(chat_id, self._questions[self.cur_question])
-        else:    
-            self._client.send_text(chat_id, f'You got {self.score} points out of {self.cur_question}.' + '\n' +
-            'If you want to try again, type /startGame to start a new game.')
-            return IdleState(self._client)
-        
-        return self
+            return self
+
+        self._client.send_text(chat_id, f'You got {self.score} points out of {self.cur_question}.' + '\n' +
+        'If you want to try again, type /startGame to start a new game.')
+        return IdleState(self._client)
+
 
     def _send_question(self, chat_id: int, question: Question):
         self._client.send_text(chat_id, f'{question.text}' + '\n' + f'{question.answers}')

@@ -11,7 +11,7 @@ import marshmallow
 
 @dataclass
 class Chat:
-    """A class used to represent Chat ID
+    """A class used to represent a Telegram Chat.
     
     Attribute
     ---------
@@ -24,14 +24,14 @@ class Chat:
 
 @dataclass
 class Message:
-    """A class used to show message
+    """A class used to represent a Telegram Message.
 
     Attributes
     ----------
     chat : Chat 
-        A variable used to represent Chat ID
+        chat the message came from
     text : str
-        A formatted string which contains a text message
+        text of the message
     """
 
     chat: Chat
@@ -40,14 +40,12 @@ class Message:
 
 @dataclass
 class Update:
-    """A class used to represent lasd updates from the Chat between Bot and Client
+    """A class used to represent Telegram updates that a bot can receive.
 
     Attributes
     ----------
     update_id : int
-        A variable shown the number of message from the chat 
-    message : Message
-        A variable contains text of the message and which clients sent it
+        An increasing update identifier. Each subsequent updates will have larger update_id.
     """
 
     update_id: int
@@ -56,29 +54,13 @@ class Update:
 
 @dataclass
 class GetUpdatesResponse:
-    """A class gets updates from Bot
-
-    Attribute
-    ---------
-    result : List 
-        List of updates
-    """
-
+    """Http response from Telegram for recieving updates."""
     result: List[Update]
 
 
 @dataclass
 class SendMessagePayload:
-    """A class used to send message to client
-
-    Attribute
-    ---------
-    chat_id : int
-        the number of client's ID
-    text : str 
-        the text of message is sent to client 
-    """
-
+    """Bot request to send a message to a chat."""
     chat_id: int
     text: str
 
@@ -93,65 +75,39 @@ SendMessagePayloadSchema = mdc.class_schema(SendMessagePayload)()
 
 
 class TelegramClient(ABC):
-    """An interface for receiving and sending messages
-    
-    Methods
-    ------
-    get_updates(offset)
-        The interface used to get list of updates from the chat between Client and Bot
-    send_message(payload)
-        The interface used to send messages to Client from Bot  
-    send_text(chat_id, text)
-        The interface used to form text for message    
-    """
+    """An interface for communicating with Telegram backend."""
 
     @abstractclassmethod
-    def get_updates(self, offset: int = 0) -> List[Update]: pass
+    def get_updates(self, offset: int = 0) -> List[Update]:
+        """Gets updates from the telegram with `update_id` bigger than `offset`."""
+        pass
 
     @abstractclassmethod
-    def send_message(self, payload: SendMessagePayload) -> None: pass
+    def send_message(self, payload: SendMessagePayload) -> None:
+        """Sends message with a given `payload` to Telegram."""
+        pass
 
     def send_text(self, chat_id: int, text: str) -> None:
         self.send_message(SendMessagePayload(chat_id, text))
 
 
 class LiveTelegramClient(TelegramClient):
-    """A class for receiving and sending messages
-
-    Attribute
-    ---------
-    token : str
-        a variable to get access to Telegram Bot  
-
-    Methods
-    ------
-    get_updates(offset)
-        The interface used to get list of updates from the chat between Client and Bot
-    send_message(payload)
-        The interface used to send messages to Client from Bot  
-    send_text(chat_id, text)
-        The interface used to form text for message 
-    """
+    """An implementation of the `TelegramClient` for communicating with an actual backend."""
 
     def __init__(self, token: str) -> None:
+        """
+        token -- Telegram bot token.
+        """
         self._token = token
 
     def get_updates(self, offset: int = 0) -> List[Update]:
-
-
         data = requests.get(f'https://api.telegram.org/bot{self._token}/getUpdates?offset={offset}').text
         response: GetUpdatesResponse = GetUpdatesResponseSchema.loads(data)
         print(response.result)
         return response.result
 
     def send_message(self, payload: SendMessagePayload) -> None:
-        """A method used to form and send message to the client
-
-        Assert
-        ------
-        If API response is incorrect, to write the current status of the programme 
-        """
-
+        # TODO: handle Telegram errors.
         data = SendMessagePayloadSchema.dump(payload)
         print(data)
         r = requests.post(f'https://api.telegram.org/bot{self._token}/sendMessage', data=data)

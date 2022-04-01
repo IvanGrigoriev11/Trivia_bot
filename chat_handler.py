@@ -3,27 +3,19 @@ from telegram_client import Update
 
 
 class ChatHandler:
-    """A method used to handle chatting with multiple clients
-
-    Attributes
-    ----------
-    initial_state : BotState
-        Initial bot state 
-    chat_id : int
-        A variable shown client's ID 
-
-    Method
-    ------
-    process(update: Update)
-        A method toggles between previous and future states    
-    """
+    """A top-level handler responsible for driving communications within a single chat.
+    It works by implementing a state machine over `BotState`s."""
 
     def __init__(self, initial_state: BotState, chat_id: int) -> None:
+        """
+        initial_state -- initial state responsible for handling chat updates.
+        chat_id -- id of the chat this handler is responsible for.
+        """
         self._state = initial_state
         self._chat_id = chat_id
 
     def process(self, update: Update) -> None:
-        """The method toggles bot states"""
+        """Processes a given `update`."""
 
         new_state = self._state.process(update)
         if new_state != self._state:
