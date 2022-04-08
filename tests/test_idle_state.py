@@ -18,6 +18,7 @@ def check(user_message: str, expected_bot_message: str):
     client = FakeTelegramClient()
     state = IdleState(client)
     chat_id = 111
+    state.on_enter(chat_id)
     state.process(Update(123, Message(Chat(chat_id), user_message)))
     
     assert client.sent_messages == [

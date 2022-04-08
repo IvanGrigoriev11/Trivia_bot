@@ -16,23 +16,26 @@ class FakeTelegramClient(TelegramClient):
         self.sent_messages.append(payload)
 
 
-def check(user_message, expected_bot_message):
+def check(user_message: str, expected_messages: List[str]):
     client = FakeTelegramClient()
-    questions = List[Question]
+    questions = [
+        Question("question 1", ["a", "b", "c"], 0),
+        Question("question 2", ["a", "b", "c"], 1)
+    ]
     state = GameState(client, questions)
     chat_id = 111
-    cur_question = 1
-    questions[cur_question].correct_answer = 1
+    state.on_enter(chat_id)
     state.process(Update(123, Message(Chat(chat_id), user_message)))
-    
 
-    assert client.sent_messages == [
-        SendMessagePayload(chat_id, expected_bot_message)
-    ]
+    expected_payloads = [SendMessagePayload(chat_id, text) for text in expected_messages]
+
+    assert client.sent_messages == expected_payloads
+
 
 def test_test():
-    check(1, 'You are right')
-
-
-
+    check("0", [
+        "question 1\n['a', 'b', 'c']",
+        "You are right",
+        "question 2\n['a', 'b', 'c']"
+    ])
 

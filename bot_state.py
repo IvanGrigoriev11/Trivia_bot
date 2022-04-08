@@ -7,14 +7,27 @@ from typing import List
 class BotState(ABC):
     """A class responsible for handling a single chat operation."""
 
-    @abstractclassmethod
+    def __init__(self):
+        self._on_enter_called = False
+
     def on_enter(self, chat_id: int) -> None:
+        assert not self._on_enter_called
+        self._on_enter_called = True
+        self._do_on_enter(chat_id)
+
+    def process(self, update: Update) -> 'BotState':
+        assert self._on_enter_called
+        return self._do_process(update)
+
+
+    @abstractclassmethod
+    def _do_on_enter(self, chat_id: int) -> None:
         """A callback when this bot state becomes active. Can be used to
         e.g. proactively send a message to the chat."""
         pass
 
     @abstractclassmethod
-    def process(self, update: Update) -> 'BotState':
+    def _do_process(self, update: Update) -> 'BotState':
         """A callback for handling an update."""
         pass
 
@@ -23,12 +36,13 @@ class IdleState(BotState):
     """A state when there is no active game in place."""
 
     def __init__(self, client: TelegramClient):
+        super().__init__()
         self._client = client
 
-    def on_enter(self, chat_id: int) -> None:
+    def _do_on_enter(self, chat_id: int) -> None:
         pass
 
-    def process(self, update: Update) -> 'BotState':
+    def _do_process(self, update: Update) -> 'BotState':
         text = update.message.text.lower()
         chat_id = update.message.chat.id
 
@@ -47,16 +61,17 @@ class GameState(BotState):
         """
         questions -- questions for this particular game.
         """
+        super().__init__()
         self._client = client
         self._questions = questions
         self.cur_question = 0
         self.score = 0
 
-    def on_enter(self, chat_id: int) -> None:
+    def _do_on_enter(self, chat_id: int) -> None:
         # TODO: send the first question to the chat
         self._send_question(chat_id, self._questions[0])
 
-    def process(self, update: Update) -> 'BotState':
+    def _do_process(self, update: Update) -> 'BotState':
         chat_id = update.message.chat.id
 
         # TODO: use try/except to handle int conversion error
