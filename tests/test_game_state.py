@@ -1,6 +1,8 @@
-from bot_state import IdleState
+from keyword import kwlist
+from bot_state import GameState
 from telegram_client import TelegramClient, Update, SendMessagePayload, Message, Chat
 from typing import List
+from models import Question
 
 
 class FakeTelegramClient(TelegramClient):
@@ -14,21 +16,23 @@ class FakeTelegramClient(TelegramClient):
         self.sent_messages.append(payload)
 
 
-def check(user_message: str, expected_bot_message: str):
+def check(user_message, expected_bot_message):
     client = FakeTelegramClient()
-    state = IdleState(client)
+    questions = List[Question]
+    state = GameState(client, questions)
     chat_id = 111
+    cur_question = 1
+    questions[cur_question].correct_answer = 1
     state.process(Update(123, Message(Chat(chat_id), user_message)))
     
+
     assert client.sent_messages == [
         SendMessagePayload(chat_id, expected_bot_message)
     ]
 
+def test_test():
+    check(1, 'You are right')
 
-def test_process_starting_game():
-    check('/startGame', 'Starting game!')
 
 
-def test_process_other_message():
-    check('other message', 'Type /startGame to start a new game.')
-    
+

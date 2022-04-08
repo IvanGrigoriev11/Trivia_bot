@@ -60,14 +60,17 @@ class GameState(BotState):
         chat_id = update.message.chat.id
 
         # TODO: use try/except to handle int conversion error
-        if int(update.message.text) == self._questions[self.cur_question].correct_answer:    
-            self._client.send_text(chat_id, f'You are right')
-            self.score += 1 
-        else:
-            self._client.send_text(chat_id, f'You are wrong')
-        
-        self.cur_question += 1 
-        
+        try:
+            if int(update.message.text) == self._questions[self.cur_question].correct_answer:    
+                self._client.send_text(chat_id, f'You are right')
+                self.score += 1 
+            else:
+                self._client.send_text(chat_id, f'You are wrong')
+            
+            self.cur_question += 1 
+        except ValueError: 
+            self._client.send_text(chat_id, f'please, type the number of your supposed answer')
+
         if self.cur_question != len(self._questions):
             self._send_question(chat_id, self._questions[self.cur_question])
             return self
