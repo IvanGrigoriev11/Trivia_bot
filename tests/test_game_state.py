@@ -32,10 +32,17 @@ def check(user_message: str, expected_messages: List[str]):
     assert client.sent_messages == expected_payloads
 
 
-def test_test():
+def right_asnwer():
     check("0", [
         "question 1\n['a', 'b', 'c']",
         "You are right",
         "question 2\n['a', 'b', 'c']"
     ])
 
+
+def wrong_answer():
+    check("1", [
+        "question 1\n['a', 'b', 'c']",
+        "You are wrong",
+        "question 2\n['a', 'b', 'c']"
+    ])
