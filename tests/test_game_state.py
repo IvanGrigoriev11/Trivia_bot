@@ -1,4 +1,3 @@
-from keyword import kwlist
 from bot_state import GameState
 from telegram_client import TelegramClient, Update, SendMessagePayload, Message, Chat
 from typing import List
@@ -32,7 +31,7 @@ def check(user_message: str, expected_messages: List[str]):
     assert client.sent_messages == expected_payloads
 
 
-def right_asnwer():
+def test_right_asnwer():
     check("0", [
         "question 1\n['a', 'b', 'c']",
         "You are right",
@@ -40,9 +39,17 @@ def right_asnwer():
     ])
 
 
-def wrong_answer():
+def test_wrong_answer():
     check("1", [
         "question 1\n['a', 'b', 'c']",
         "You are wrong",
         "question 2\n['a', 'b', 'c']"
+    ])
+
+
+def test_others_from_client():
+    check("others", [
+        "question 1\n['a', 'b', 'c']",
+        "please, type the number of your supposed answer",
+        "question 1\n['a', 'b', 'c']"
     ])
