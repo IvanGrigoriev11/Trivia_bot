@@ -3,7 +3,7 @@ from chat_handler import ChatHandler
 from telegram_client import TelegramClient, Update, SendMessagePayload, Message, Chat
 from test_game_state import FakeTelegramClient
 from models import Question
-from typing import List
+from typing import List, Tuple
 
 
 def communication_process(bot_state: BotState, bot: bool, bot_message: str, user_message: str):
@@ -36,6 +36,7 @@ def test_for_idle_state():
         "Starting game!", 
         ], "/startGame")
 
+
 def test_for_game_state():
     communication_process(GameState, False, [
         "question 3\n['a', 'b', 'c']",
@@ -44,3 +45,24 @@ def test_for_game_state():
         ], "2")
 
 
+def _test_chat(dialogue: List[Tuple[bool, str]]):
+    client = FakeTelegramClient()
+    chat_id = 123
+    chat_handler = ChatHandler.default_for_chat(client, chat_id)
+    last_bot_msg_checked = 0
+    for is_bot, message in dialogue:
+        if is_bot:
+            assert client.sent_messages[last_bot_msg_checked] == SendMessagePayload(chat_id, message)
+            last_bot_msg_checked += 1
+        else:
+            chat_handler.process(Update(1, Message(Chat(chat_id), message)))
+
+
+def test_chat_handler():
+    _test_chat([
+        (False, "/startgame"),
+        (True, "Starting game!"),
+        (True, "1.What is the color of sky?\n['orange', 'blue', 'green']"),
+        (False, "1"),
+        (True, "You are right")
+    ])
