@@ -15,7 +15,7 @@ class FakeTelegramClient(TelegramClient):
         self.sent_messages.append(payload)
 
 
-def check(last_question: bool, user_message: str, expected_messages: List[str]):
+def check_game_state(last_question: bool, user_message: str, expected_messages: List[str]):
     client = FakeTelegramClient()
     if last_question != True:
         questions = [
@@ -24,7 +24,7 @@ def check(last_question: bool, user_message: str, expected_messages: List[str]):
         ]
     else: 
         questions = [
-        Question("question 3", ["a", "b", "c"], 2)
+            Question("question 3", ["a", "b", "c"], 2)
     ]
     state = GameState(client, questions)
     chat_id = 111
@@ -37,7 +37,7 @@ def check(last_question: bool, user_message: str, expected_messages: List[str]):
 
 
 def test_end_game_score_1_of_1():
-    check(True, "2", [
+    check_game_state(True, "2", [
         "question 3\n['a', 'b', 'c']",
         "You are right",
         "You got 1 points out of 1.\nIf you want to try again, type /startGame to start a new game."
@@ -45,7 +45,7 @@ def test_end_game_score_1_of_1():
 
 
 def test_end_game_score_0_of_1():
-    check(True, "1", [
+    check_game_state(True, "1", [
         "question 3\n['a', 'b', 'c']",
         "You are wrong",
         "You got 0 points out of 1.\nIf you want to try again, type /startGame to start a new game."
@@ -53,7 +53,7 @@ def test_end_game_score_0_of_1():
 
 
 def test_right_asnwer():
-    check(False, "0", [
+    check_game_state(False, "0", [
         "question 1\n['a', 'b', 'c']",
         "You are right",
         "question 2\n['a', 'b', 'c']"
@@ -61,7 +61,7 @@ def test_right_asnwer():
 
 
 def test_wrong_answer():
-    check(False, "1", [
+    check_game_state(False, "1", [
         "question 1\n['a', 'b', 'c']",
         "You are wrong",
         "question 2\n['a', 'b', 'c']"
@@ -69,7 +69,7 @@ def test_wrong_answer():
 
 
 def test_others_from_client():
-    check(False, "others", [
+    check_game_state(False, "others", [
         "question 1\n['a', 'b', 'c']",
         "please, type the number of your supposed answer",
         "question 1\n['a', 'b', 'c']"

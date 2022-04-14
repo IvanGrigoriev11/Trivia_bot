@@ -14,7 +14,7 @@ class FakeTelegramClient(TelegramClient):
         self.sent_messages.append(payload)
 
 
-def check(user_message: str, expected_bot_message: str):
+def check_idle_state(user_message: str, expected_bot_message: str):
     client = FakeTelegramClient()
     state = IdleState(client)
     chat_id = 111
@@ -27,9 +27,9 @@ def check(user_message: str, expected_bot_message: str):
 
 
 def test_process_starting_game():
-    check('/startGame', 'Starting game!')
+    check_idle_state('/startGame', 'Starting game!')
 
 
 def test_process_other_message():
-    check('other message', 'Type /startGame to start a new game.')
+    check_idle_state('other message', 'Type /startGame to start a new game.')
     
