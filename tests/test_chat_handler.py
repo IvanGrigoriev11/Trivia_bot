@@ -3,44 +3,63 @@ from chat_handler import ChatHandler
 from telegram_client import TelegramClient, Update, SendMessagePayload, Message, Chat
 from test_game_state import FakeTelegramClient
 from models import Question
-from typing import List
+from typing import List, Tuple
 
 
-def communication_process(bot_state: BotState, bot: bool, bot_message: str, user_message: str):
-    #client = FakeTelegramClient()
-    if bot == True:
-        check(bot_state, bot_message, user_message)
-    else:
-        check(bot_state, user_message, bot_message) 
-
-
-def check(bot_state: BotState, text: str, expected_reply: str):
+def check_chat(conversation: List[Tuple[bool, str]]):
     client = FakeTelegramClient()
-    if bot_state == IdleState:
-        state = bot_state(client)
-    else:
-        questions = [
-            Question("question 3", ["a", "b", "c"], 2)
-        ]
-        state = bot_state(client, questions)
     chat_id = 111
-    state.on_enter(chat_id)
-    #state.process(SendMessagePayload(chat_id, text))
-    state.process(Update(123, Message(Chat(chat_id), text)))
-    
-    assert client.sent_messages == [SendMessagePayload(chat_id, text) for text in expected_reply]
+    chat_handler = ChatHandler.chat_handler(client, chat_id)
+    last_message_from_bot = 0
+    update_id = 111
+    for bot, message in conversation:
+        if bot:
+            assert client.sent_messages[last_message_from_bot] == SendMessagePayload(chat_id, message)
+            last_message_from_bot += 1
+        else:
+            chat_handler.process(Update(update_id, Message(Chat(chat_id), message)))
 
 
-def test_for_idle_state():
-    communication_process(IdleState, False, [
-        "Starting game!", 
-        ], "/startGame")
+def test_entire_game():
+    check_chat([
+        (False, '/startGame'),
+        (True, 'Starting game!'),
+        (True, "1.What is the color of sky?\n['orange', 'blue', 'green']"),
+        (False, '1'),
+        (True, 'You are right'),
+        (True, "2.How much is 2 + 5?\n['4', '10', '7', '8']"),
+        (False, '2'),
+        (True, 'You are right'),
+        (True, "3.What date is Christmas?\n['Dec 24', 'Apr 15', 'Jan 1', 'Dec 25']"),
+        (False, '3'),
+        (True, 'You are right'),
+        (True, 'You got 3 points out of 3.\nIf you want to try again, type /startGame to start a new game.')
+    ])
 
-def test_for_game_state():
-    communication_process(GameState, False, [
-        "question 3\n['a', 'b', 'c']",
-        "You are right",
-        "You got 1 points out of 1.\nIf you want to try again, type /startGame to start a new game."
-        ], "2")
+
+def test_for_zero_points():
+    check_chat([
+        (False, '/startGame'),
+        (True, 'Starting game!'),
+        (True, "1.What is the color of sky?\n['orange', 'blue', 'green']"),
+        (False, '2'),
+        (True, 'You are wrong'),
+        (True, "2.How much is 2 + 5?\n['4', '10', '7', '8']"),
+        (False, '3'),
+        (True, 'You are wrong'),
+        (True, "3.What date is Christmas?\n['Dec 24', 'Apr 15', 'Jan 1', 'Dec 25']"),
+        (False, '1'),
+        (True, 'You are wrong'),
+        (True, 'You got 0 points out of 3.\nIf you want to try again, type /startGame to start a new game.')
+    ])
 
 
+def test_other_reply_from_user():
+    check_chat([
+        (False, 'Whatever'),
+        (True, 'Type /startGame to start a new game.'),
+        (False, 'Whatever'),
+        (True, 'Type /startGame to start a new game.'),
+        (False, '/startGame'),
+        (True, 'Starting game!')
+    ])

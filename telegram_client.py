@@ -1,8 +1,6 @@
 import requests
 from typing import List
 from abc import abstractclassmethod, ABC
-
-
 from dataclasses import dataclass
 import marshmallow_dataclass as mdc
 from typing import List

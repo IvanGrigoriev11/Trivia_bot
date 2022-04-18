@@ -1,5 +1,5 @@
-from bot_state import BotState
-from telegram_client import Update
+from bot_state import BotState, IdleState
+from telegram_client import Update, TelegramClient
 
 
 class ChatHandler:
@@ -22,3 +22,9 @@ class ChatHandler:
             new_state.on_enter(self._chat_id)
 
         self._state = new_state
+
+    @staticmethod
+    def chat_handler(client: TelegramClient, chat_id: int):
+        state = IdleState(client)
+        state.on_enter(chat_id)
+        return ChatHandler(state, chat_id)
