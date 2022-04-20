@@ -1,0 +1,7 @@
+requests==2.26.0
+marshmallow==3.14.0
+marshmallow-dataclass==8.5.3
+black==21.9b0
+pylint==2.13.7
+pyright==1.1.239
+isort==5.10.1
