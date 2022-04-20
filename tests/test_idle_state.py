@@ -1,6 +1,7 @@
-from bot_state import IdleState
-from telegram_client import TelegramClient, Update, SendMessagePayload, Message, Chat
 from typing import List
+
+from bot_state import IdleState
+from telegram_client import Chat, Message, SendMessagePayload, TelegramClient, Update
 
 
 class FakeTelegramClient(TelegramClient):

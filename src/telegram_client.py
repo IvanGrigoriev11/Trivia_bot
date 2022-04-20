@@ -1,12 +1,10 @@
-import requests
-from typing import List
-from abc import abstractmethod, ABC
-
-
+from abc import ABC, abstractmethod
 from dataclasses import dataclass
-import marshmallow_dataclass as mdc
 from typing import List
+
 import marshmallow
+import marshmallow_dataclass as mdc
+import requests
 
 
 @dataclass

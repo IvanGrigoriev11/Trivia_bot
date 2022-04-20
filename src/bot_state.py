@@ -1,7 +1,8 @@
 from abc import ABC, abstractmethod
+from typing import List
+
 from models import Question
 from telegram_client import TelegramClient, Update
-from typing import List
 
 
 class BotState(ABC):
@@ -77,15 +78,15 @@ class GameState(BotState):
                 int(update.message.text)
                 == self._questions[self.cur_question].correct_answer
             ):
-                self._client.send_text(chat_id, f"You are right")
+                self._client.send_text(chat_id, "You are right")
                 self.score += 1
             else:
-                self._client.send_text(chat_id, f"You are wrong")
+                self._client.send_text(chat_id, "You are wrong")
 
             self.cur_question += 1
         except ValueError:
             self._client.send_text(
-                chat_id, f"please, type the number of your supposed answer"
+                chat_id, "please, type the number of your supposed answer"
             )
 
         if self.cur_question != len(self._questions):

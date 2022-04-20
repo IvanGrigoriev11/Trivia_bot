@@ -1,7 +1,8 @@
-from typing import Dict
 import os
-from telegram_client import LiveTelegramClient
+from typing import Dict
+
 from chat_handler import ChatHandler
+from telegram_client import LiveTelegramClient
 
 
 def main():

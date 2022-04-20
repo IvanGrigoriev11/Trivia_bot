@@ -1,9 +1,11 @@
+from typing import List, Tuple
+
+from test_game_state import FakeTelegramClient
+
 from bot_state import BotState, GameState, IdleState
 from chat_handler import ChatHandler
-from telegram_client import TelegramClient, Update, SendMessagePayload, Message, Chat
-from test_game_state import FakeTelegramClient
 from models import Question
-from typing import List, Tuple
+from telegram_client import Chat, Message, SendMessagePayload, TelegramClient, Update
 
 
 def communication_process(
@@ -51,7 +53,8 @@ def test_for_game_state():
         [
             "question 3\n['a', 'b', 'c']",
             "You are right",
-            "You got 1 points out of 1.\nIf you want to try again, type /startGame to start a new game.",
+            "You got 1 points out of 1.\nIf you want to try again, type"
+            + " /startGame to start a new game.",
         ],
         "2",
     )
