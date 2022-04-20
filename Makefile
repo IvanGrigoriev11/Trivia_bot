@@ -8,7 +8,7 @@ format:
 	black -t py39 .
 
 pylint: format-check
-	pylint
+	pylint src/* tests/*
 
 pyright: pylint
 	pyright
