@@ -2,10 +2,10 @@
 .PHONY: format-check format pylint pyright test
 
 format-check:
-	(isort -rc --trailing-comma --use-parentheses --line-width=88 --check-only .) && (black -t py39 --check .)
+	(isort --trailing-comma --use-parentheses --line-width=88 --check-only .) && (black -t py39 --check .)
 
 format:
-	isort -rc --trailing-comma --use-parentheses --line-width=88 .
+	isort --trailing-comma --use-parentheses --line-width=88 .
 	black -t py39 .
 
 pylint: format-check
