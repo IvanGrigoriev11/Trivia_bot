@@ -1,4 +1,4 @@
-from abc import ABC, abstractclassmethod
+from abc import ABC, abstractmethod
 from models import Question
 from telegram_client import TelegramClient, Update
 from typing import List
@@ -19,13 +19,13 @@ class BotState(ABC):
         assert self._on_enter_called
         return self._do_process(update)
 
-    @abstractclassmethod
+    @abstractmethod
     def _do_on_enter(self, chat_id: int) -> None:
         """A callback when this bot state becomes active. Can be used to
         e.g. proactively send a message to the chat."""
         pass
 
-    @abstractclassmethod
+    @abstractmethod
     def _do_process(self, update: Update) -> "BotState":
         """A callback for handling an update."""
         pass
