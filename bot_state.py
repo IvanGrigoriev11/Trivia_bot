@@ -15,10 +15,9 @@ class BotState(ABC):
         self._on_enter_called = True
         self._do_on_enter(chat_id)
 
-    def process(self, update: Update) -> 'BotState':
+    def process(self, update: Update) -> "BotState":
         assert self._on_enter_called
         return self._do_process(update)
-
 
     @abstractclassmethod
     def _do_on_enter(self, chat_id: int) -> None:
@@ -27,7 +26,7 @@ class BotState(ABC):
         pass
 
     @abstractclassmethod
-    def _do_process(self, update: Update) -> 'BotState':
+    def _do_process(self, update: Update) -> "BotState":
         """A callback for handling an update."""
         pass
 
@@ -42,15 +41,15 @@ class IdleState(BotState):
     def _do_on_enter(self, chat_id: int) -> None:
         pass
 
-    def _do_process(self, update: Update) -> 'BotState':
+    def _do_process(self, update: Update) -> "BotState":
         text = update.message.text.lower()
         chat_id = update.message.chat.id
 
-        if text == '/startgame':
-            self._client.send_text(chat_id, 'Starting game!')
+        if text == "/startgame":
+            self._client.send_text(chat_id, "Starting game!")
             return GameState(self._client, Question.make_some())
-        
-        self._client.send_text(chat_id, 'Type /startGame to start a new game.')
+
+        self._client.send_text(chat_id, "Type /startGame to start a new game.")
         return self
 
 
@@ -71,29 +70,39 @@ class GameState(BotState):
         # TODO: send the first question to the chat
         self._send_question(chat_id, self._questions[0])
 
-    def _do_process(self, update: Update) -> 'BotState':
+    def _do_process(self, update: Update) -> "BotState":
         chat_id = update.message.chat.id
 
         # TODO: use try/except to handle int conversion error
         try:
-            if int(update.message.text) == self._questions[self.cur_question].correct_answer:    
-                self._client.send_text(chat_id, f'You are right')
-                self.score += 1 
+            if (
+                int(update.message.text)
+                == self._questions[self.cur_question].correct_answer
+            ):
+                self._client.send_text(chat_id, f"You are right")
+                self.score += 1
             else:
-                self._client.send_text(chat_id, f'You are wrong')
-            
-            self.cur_question += 1 
-        except ValueError: 
-            self._client.send_text(chat_id, f'please, type the number of your supposed answer')
+                self._client.send_text(chat_id, f"You are wrong")
+
+            self.cur_question += 1
+        except ValueError:
+            self._client.send_text(
+                chat_id, f"please, type the number of your supposed answer"
+            )
 
         if self.cur_question != len(self._questions):
             self._send_question(chat_id, self._questions[self.cur_question])
             return self
 
-        self._client.send_text(chat_id, f'You got {self.score} points out of {self.cur_question}.' + '\n' +
-        'If you want to try again, type /startGame to start a new game.')
+        self._client.send_text(
+            chat_id,
+            f"You got {self.score} points out of {self.cur_question}."
+            + "\n"
+            + "If you want to try again, type /startGame to start a new game.",
+        )
         return IdleState(self._client)
 
-
     def _send_question(self, chat_id: int, question: Question):
-        self._client.send_text(chat_id, f'{question.text}' + '\n' + f'{question.answers}')
+        self._client.send_text(
+            chat_id, f"{question.text}" + "\n" + f"{question.answers}"
+        )

@@ -12,7 +12,7 @@ import marshmallow
 @dataclass
 class Chat:
     """A class used to represent a Telegram Chat.
-    
+
     Attribute
     ---------
     id : int
@@ -28,7 +28,7 @@ class Message:
 
     Attributes
     ----------
-    chat : Chat 
+    chat : Chat
         chat the message came from
     text : str
         text of the message
@@ -55,12 +55,14 @@ class Update:
 @dataclass
 class GetUpdatesResponse:
     """Http response from Telegram for recieving updates."""
+
     result: List[Update]
 
 
 @dataclass
 class SendMessagePayload:
     """Bot request to send a message to a chat."""
+
     chat_id: int
     text: str
 
@@ -70,7 +72,9 @@ class BaseSchema(marshmallow.Schema):
         unknown = marshmallow.EXCLUDE
 
 
-GetUpdatesResponseSchema = mdc.class_schema(GetUpdatesResponse, base_schema=BaseSchema)()
+GetUpdatesResponseSchema = mdc.class_schema(
+    GetUpdatesResponse, base_schema=BaseSchema
+)()
 SendMessagePayloadSchema = mdc.class_schema(SendMessagePayload)()
 
 
@@ -101,7 +105,9 @@ class LiveTelegramClient(TelegramClient):
         self._token = token
 
     def get_updates(self, offset: int = 0) -> List[Update]:
-        data = requests.get(f'https://api.telegram.org/bot{self._token}/getUpdates?offset={offset}').text
+        data = requests.get(
+            f"https://api.telegram.org/bot{self._token}/getUpdates?offset={offset}"
+        ).text
         response: GetUpdatesResponse = GetUpdatesResponseSchema.loads(data)
         print(response.result)
         return response.result
@@ -110,5 +116,7 @@ class LiveTelegramClient(TelegramClient):
         # TODO: handle Telegram errors.
         data = SendMessagePayloadSchema.dump(payload)
         print(data)
-        r = requests.post(f'https://api.telegram.org/bot{self._token}/sendMessage', data=data)
-        assert r.status_code == 200, f'Expected status code 200 but got {r.status_code}'
+        r = requests.post(
+            f"https://api.telegram.org/bot{self._token}/sendMessage", data=data
+        )
+        assert r.status_code == 200, f"Expected status code 200 but got {r.status_code}"

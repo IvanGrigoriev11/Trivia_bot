@@ -24,7 +24,7 @@ class ChatHandler:
         self._state = new_state
 
     @staticmethod
-    def default_for_chat(client: TelegramClient, chat_id: int) -> 'ChatHandler':
+    def default_for_chat(client: TelegramClient, chat_id: int) -> "ChatHandler":
         state = IdleState(client)
         state.on_enter(chat_id)
         return ChatHandler(state, chat_id)
