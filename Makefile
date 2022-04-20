@@ -1,12 +1,15 @@
 
+ISORT_PARAMS = --trailing-comma --use-parentheses --line-width=88
+BLACK_PARAMS = -t py39
+
 .PHONY: format-check format pylint pyright test
 
 format-check:
-	(isort --trailing-comma --use-parentheses --line-width=88 --check-only .) && (black -t py39 --check .)
+	(isort $(ISORT_PARAMS) --check-only .) && (black $(BLACK_PARAMS) --check .)
 
 format:
-	isort --trailing-comma --use-parentheses --line-width=88 .
-	black -t py39 .
+	isort $(ISORT_PARAMS) .
+	black $(BLACK_PARAMS) .
 
 pylint: format-check
 	pylint src/* tests/*
