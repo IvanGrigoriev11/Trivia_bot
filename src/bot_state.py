@@ -23,12 +23,10 @@ class BotState(ABC):
     def _do_on_enter(self, chat_id: int) -> None:
         """A callback when this bot state becomes active. Can be used to
         e.g. proactively send a message to the chat."""
-        pass
 
     @abstractmethod
     def _do_process(self, update: Update) -> "BotState":
         """A callback for handling an update."""
-        pass
 
 
 class IdleState(BotState):
