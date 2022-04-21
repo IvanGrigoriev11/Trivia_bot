@@ -1,6 +1,6 @@
-from typing import Callable, List, Tuple
 
 from telegram_client import Chat, Message, SendMessagePayload, TelegramClient, Update
+from typing import Callable, List, Tuple
 
 
 class FakeTelegramClient(TelegramClient):
