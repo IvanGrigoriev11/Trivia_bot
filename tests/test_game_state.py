@@ -1,76 +1,76 @@
+from utils import FakeTelegramClient
 from bot_state import GameState
-from telegram_client import TelegramClient, Update, SendMessagePayload, Message, Chat
-from typing import List
+from telegram_client import Update, SendMessagePayload, Message, Chat
 from models import Question
+from typing import List, Tuple
 
 
-class FakeTelegramClient(TelegramClient):
-    def __init__(self):
-        self.sent_messages: List[SendMessagePayload] = []
-
-    def get_updates(self, offset: int = 0) -> List[Update]:
-        raise NotImplementedError()
-
-    def send_message(self, payload: SendMessagePayload) -> None:
-        self.sent_messages.append(payload)
-
-
-def check_game_state(last_question: bool, user_message: str, expected_messages: List[str]):
+def check_game_state(conversation: List[Tuple[bool, str]]):
     client = FakeTelegramClient()
-    if last_question != True:
-        questions = [
-            Question("question 1", ["a", "b", "c"], 0),
-            Question("question 2", ["a", "b", "c"], 1)
-        ]
-    else: 
-        questions = [
-            Question("question 3", ["a", "b", "c"], 2)
-    ]
-    state = GameState(client, questions)
     chat_id = 111
+    state = GameState(client, Question.make_some())
     state.on_enter(chat_id)
-    state.process(Update(123, Message(Chat(chat_id), user_message)))
+    last_message_from_bot = 0
+    update_id = 111
+    for bot, message in conversation:
+        if bot:
+            assert client.sent_messages[last_message_from_bot] == SendMessagePayload(chat_id, message)
+            last_message_from_bot += 1
+        else:
+            state.process(Update(update_id, Message(Chat(chat_id), message)))
 
-    expected_payloads = [SendMessagePayload(chat_id, text) for text in expected_messages]
 
-    assert client.sent_messages == expected_payloads
-
-
-def test_end_game_score_1_of_1():
-    check_game_state(True, "2", [
-        "question 3\n['a', 'b', 'c']",
-        "You are right",
-        "You got 1 points out of 1.\nIf you want to try again, type /startGame to start a new game."
+def test_game_state():
+    check_game_state([
+        (True, "1.What is the color of sky?\n['orange', 'blue', 'green']"),
+        (False, '1'),
+        (True, 'You are right'),
+        (True, "2.How much is 2 + 5?\n['4', '10', '7', '8']"),
+        (False, '1'),
+        (True, 'You are wrong'),
+        (True, "3.What date is Christmas?\n['Dec 24', 'Apr 15', 'Jan 1', 'Dec 25']"),
+        (False, '1'),
+        (True, 'You are wrong'),
+        (True, 'You got 1 points out of 3.\nIf you want to try again, type /startGame to start a new game.')
     ])
 
 
-def test_end_game_score_0_of_1():
-    check_game_state(True, "1", [
-        "question 3\n['a', 'b', 'c']",
-        "You are wrong",
-        "You got 0 points out of 1.\nIf you want to try again, type /startGame to start a new game."
-    ])
-
-
-def test_right_asnwer():
-    check_game_state(False, "0", [
-        "question 1\n['a', 'b', 'c']",
-        "You are right",
-        "question 2\n['a', 'b', 'c']"
+def test_right_answer():
+    check_game_state([
+        (True, "1.What is the color of sky?\n['orange', 'blue', 'green']"),
+        (False, '1'),
+        (True, 'You are right')
     ])
 
 
 def test_wrong_answer():
-    check_game_state(False, "1", [
-        "question 1\n['a', 'b', 'c']",
-        "You are wrong",
-        "question 2\n['a', 'b', 'c']"
+    check_game_state([
+        (True, "1.What is the color of sky?\n['orange', 'blue', 'green']"),
+        (False, '2'),
+        (True, 'You are wrong')
     ])
 
 
-def test_others_from_client():
-    check_game_state(False, "others", [
-        "question 1\n['a', 'b', 'c']",
-        "please, type the number of your supposed answer",
-        "question 1\n['a', 'b', 'c']"
+def test_gibberish_reply():
+    check_game_state([
+        (True, "1.What is the color of sky?\n['orange', 'blue', 'green']"),
+        (False, 'first'),
+        (True, "please, type the number of your supposed answer"),
+        (False, 'second'),
+        (True, "please, type the number of your supposed answer"),
+        (False, '1'),
+        (True, "You are right")
+    ])
+
+
+def test_enter_inappropriate_number():
+    check_game_state([
+        (True, "1.What is the color of sky?\n['orange', 'blue', 'green']"),
+        (False, '-1'),
+        (True, "Type the number from 0 to 2"),
+        (False, '3'),
+        (True, "Type the number from 0 to 2"),
+        (False, '2'),
+        (True, 'You are wrong'),
+        (True, "2.How much is 2 + 5?\n['4', '10', '7', '8']"),
     ])

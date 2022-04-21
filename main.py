@@ -17,7 +17,7 @@ def main():
             offset = update.update_id + 1
             chat_id = update.message.chat.id
             if chat_id not in chat_handlers:
-                chat_handlers[chat_id] = ChatHandler.chat_handler(client, chat_id)
+                chat_handlers[chat_id] = ChatHandler.make_default(client, chat_id)
             
             chat_handler = chat_handlers[chat_id]
             chat_handler.process(update)

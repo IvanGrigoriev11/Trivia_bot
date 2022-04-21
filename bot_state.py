@@ -73,18 +73,19 @@ class GameState(BotState):
 
     def _do_process(self, update: Update) -> 'BotState':
         chat_id = update.message.chat.id
-
         # TODO: use try/except to handle int conversion error
-        try:
-            if int(update.message.text) == self._questions[self.cur_question].correct_answer:    
+        user_answer = self._handling_errors_in_user_answers(update)
+        if type(user_answer) == int:
+            if user_answer == self._questions[self.cur_question].correct_answer:
                 self._client.send_text(chat_id, f'You are right')
-                self.score += 1 
+                self.score += 1
             else:
                 self._client.send_text(chat_id, f'You are wrong')
-            
-            self.cur_question += 1 
-        except ValueError: 
-            self._client.send_text(chat_id, f'please, type the number of your supposed answer')
+
+            self.cur_question += 1
+        else:
+            self._client.send_text(chat_id, user_answer)
+            return self
 
         if self.cur_question != len(self._questions):
             self._send_question(chat_id, self._questions[self.cur_question])
@@ -94,6 +95,18 @@ class GameState(BotState):
         'If you want to try again, type /startGame to start a new game.')
         return IdleState(self._client)
 
-
     def _send_question(self, chat_id: int, question: Question):
         self._client.send_text(chat_id, f'{question.text}' + '\n' + f'{question.answers}')
+
+    def _handling_errors_in_user_answers(self, update: Update):
+        try:
+            int_msg = int(update.message.text)
+            if (0 <= int_msg) and (int_msg <= 2):
+                return int_msg
+            else:
+                int_msg = 'Type the number from 0 to 2'
+                return int_msg
+        except ValueError:
+            int_msg = 'please, type the number of your supposed answer'
+            return int_msg
+

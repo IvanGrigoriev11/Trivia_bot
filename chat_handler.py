@@ -24,7 +24,10 @@ class ChatHandler:
         self._state = new_state
 
     @staticmethod
-    def chat_handler(client: TelegramClient, chat_id: int):
+    def make_default(client: TelegramClient, chat_id: int):
+        """Method initialize default state for chat handler
+        at the very beginning of the game"""
+
         state = IdleState(client)
         state.on_enter(chat_id)
         return ChatHandler(state, chat_id)
