@@ -1,10 +1,9 @@
 from typing import List, Tuple
 
-from tutils import FakeTelegramClient
+from tutils import FakeTelegramClient, check_conversation
 
 from bot_state import GameState
 from models import Question
-from telegram_client import Chat, Message, SendMessagePayload, Update
 
 
 def check_game_state(conversation: List[Tuple[bool, str]]):
@@ -12,16 +11,7 @@ def check_game_state(conversation: List[Tuple[bool, str]]):
     chat_id = 111
     state = GameState(client, Question.make_some())
     state.on_enter(chat_id)
-    last_message_from_bot = 0
-    update_id = 111
-    for bot, message in conversation:
-        if bot:
-            assert client.sent_messages[last_message_from_bot] == SendMessagePayload(
-                chat_id, message
-            )
-            last_message_from_bot += 1
-        else:
-            state.process(Update(update_id, Message(Chat(chat_id), message)))
+    check_conversation(chat_id, conversation, client, state.process)
 
 
 def test_game_state():
@@ -41,7 +31,8 @@ def test_game_state():
             (True, "You are wrong"),
             (
                 True,
-                "You got 1 points out of 3.\nIf you want to try again, type /startGame to start a new game.",
+                "You got 1 points out of 3.\nIf you want to try again, type"
+                + " /startGame to start a new game.",
             ),
         ]
     )

@@ -1,4 +1,4 @@
-from abc import ABC, abstractclassmethod
+from abc import ABC, abstractmethod
 from typing import List
 
 from models import Question
@@ -21,16 +21,14 @@ class BotState(ABC):
         assert self._on_enter_called
         return self._do_process(update)
 
-    @abstractclassmethod
+    @abstractmethod
     def _do_on_enter(self, chat_id: int) -> None:
         """A callback when this bot state becomes active. Can be used to
         e.g. proactively send a message to the chat."""
-        pass
 
-    @abstractclassmethod
+    @abstractmethod
     def _do_process(self, update: Update) -> "BotState":
         """A callback for handling an update."""
-        pass
 
 
 class IdleState(BotState):
@@ -90,10 +88,10 @@ class GameState(BotState):
             return self
 
         if answer == self._questions[self._cur_question].correct_answer:
-            self._client.send_text(chat_id, f"You are right")
+            self._client.send_text(chat_id, "You are right")
             self._score += 1
         else:
-            self._client.send_text(chat_id, f"You are wrong")
+            self._client.send_text(chat_id, "You are wrong")
 
         self._cur_question += 1
 

@@ -1,4 +1,4 @@
-from abc import ABC, abstractclassmethod
+from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from typing import List
 
@@ -79,15 +79,13 @@ SendMessagePayloadSchema = mdc.class_schema(SendMessagePayload)()
 class TelegramClient(ABC):
     """An interface for communicating with Telegram backend."""
 
-    @abstractclassmethod
+    @abstractmethod
     def get_updates(self, offset: int = 0) -> List[Update]:
         """Gets updates from the telegram with `update_id` bigger than `offset`."""
-        pass
 
-    @abstractclassmethod
+    @abstractmethod
     def send_message(self, payload: SendMessagePayload) -> None:
         """Sends message with a given `payload` to Telegram."""
-        pass
 
     def send_text(self, chat_id: int, text: str) -> None:
         self.send_message(SendMessagePayload(chat_id, text))
