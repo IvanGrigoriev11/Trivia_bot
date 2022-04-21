@@ -1,5 +1,5 @@
 from bot_state import BotState, IdleState
-from telegram_client import Update, TelegramClient
+from telegram_client import TelegramClient, Update
 
 
 class ChatHandler:

@@ -1,5 +1,6 @@
-from telegram_client import TelegramClient, Update, SendMessagePayload
 from typing import List
+
+from telegram_client import SendMessagePayload, TelegramClient, Update
 
 
 class FakeTelegramClient(TelegramClient):

@@ -1,11 +1,12 @@
-from typing import Dict
 import os
-from telegram_client import LiveTelegramClient
+from typing import Dict
+
 from chat_handler import ChatHandler
+from telegram_client import LiveTelegramClient
 
 
 def main():
-    token = os.environ['TELEGRAM_BOT_TOKEN']
+    token = os.environ["TELEGRAM_BOT_TOKEN"]
     client = LiveTelegramClient(token)
 
     # chat_id -> handler
@@ -18,10 +19,10 @@ def main():
             chat_id = update.message.chat.id
             if chat_id not in chat_handlers:
                 chat_handlers[chat_id] = ChatHandler.make_default(client, chat_id)
-            
+
             chat_handler = chat_handlers[chat_id]
             chat_handler.process(update)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
