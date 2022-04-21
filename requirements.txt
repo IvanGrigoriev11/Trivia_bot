@@ -1,4 +1,5 @@
 requests==2.26.0
+typer==0.4.0
 marshmallow==3.14.0
 marshmallow-dataclass==8.5.3
 black==21.9b0
