@@ -32,6 +32,11 @@ jobs:
 
       - name: Install packages
         run: |
+          echo 'PWD'
+          pwd
+          echo 'DONE. LS'
+          ls
+          echo 'DONE LS'
           pip install -r $requirements.txt
 
       - name: Run code quality check
