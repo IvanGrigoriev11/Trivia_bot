@@ -32,14 +32,12 @@ jobs:
 
       - name: Install packages
         run: |
-          pip install -r $GITHUB_WORKSPACE/Trivia_bot/requirements.txt
+          pip install -r $requirements.txt
 
       - name: Run code quality check
         run: |
-          cd $GITHUB_WORKSPACE/Trivia_bot
           make pyright
 
       - name: Run tests
         run: |
-          $GITHUB_WORKSPACE/Trivia_bot
           make test
