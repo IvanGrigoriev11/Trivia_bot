@@ -4,6 +4,7 @@ from tutils import FakeTelegramClient, check_conversation
 
 from bot_state import GameState
 from models import Question
+from telegram_client import Update
 
 
 def check_game_state(conversation: List[Tuple[bool, str]]):
@@ -11,7 +12,11 @@ def check_game_state(conversation: List[Tuple[bool, str]]):
     chat_id = 111
     state = GameState(client, Question.make_some())
     state.on_enter(chat_id)
-    check_conversation(chat_id, conversation, client, state.process)
+
+    def process(u: Update):
+        state.process(u)
+
+    check_conversation(chat_id, conversation, client, process)
 
 
 def test_game_state():
