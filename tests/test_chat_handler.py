@@ -6,10 +6,10 @@ from typing import List, Tuple
 
 def check_chat(conversation: List[Tuple[bool, str]]):
     client = FakeTelegramClient()
-    chat_id = 111
+    chat_id = 123
     chat_handler = ChatHandler.make_default(client, chat_id)
     last_message_from_bot = 0
-    update_id = 111
+    update_id = 345
     for bot, message in conversation:
         if bot:
             assert client.sent_messages[last_message_from_bot] == SendMessagePayload(chat_id, message)

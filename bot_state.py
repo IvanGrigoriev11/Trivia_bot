@@ -3,6 +3,8 @@ from models import Question
 from telegram_client import TelegramClient, Update
 from typing import List
 
+from utils import parse_int
+
 
 class BotState(ABC):
     """A class responsible for handling a single chat operation."""
@@ -64,8 +66,8 @@ class GameState(BotState):
         super().__init__()
         self._client = client
         self._questions = questions
-        self.cur_question = 0
-        self.score = 0
+        self._cur_question = 0
+        self._score = 0
 
     def _do_on_enter(self, chat_id: int) -> None:
         # TODO: send the first question to the chat
@@ -73,40 +75,32 @@ class GameState(BotState):
 
     def _do_process(self, update: Update) -> 'BotState':
         chat_id = update.message.chat.id
-        # TODO: use try/except to handle int conversion error
-        user_answer = self._handling_errors_in_user_answers(update)
-        if type(user_answer) == int:
-            if user_answer == self._questions[self.cur_question].correct_answer:
-                self._client.send_text(chat_id, f'You are right')
-                self.score += 1
-            else:
-                self._client.send_text(chat_id, f'You are wrong')
+        answer = parse_int(update.message.text)
 
-            self.cur_question += 1
+        if answer is None:
+            self._client.send_text(chat_id, 'please, type the number of your supposed answer')
+            return self
+
+        cur_question = self._questions[self._cur_question]
+        if answer < 0 or answer >= len(cur_question.answers):
+            self._client.send_text(chat_id, f'Type the number from 0 to {len(cur_question.answers)}')
+            return self
+
+        if answer == self._questions[self._cur_question].correct_answer:
+            self._client.send_text(chat_id, f'You are right')
+            self._score += 1
         else:
-            self._client.send_text(chat_id, user_answer)
+            self._client.send_text(chat_id, f'You are wrong')
+
+        self._cur_question += 1
+
+        if self._cur_question != len(self._questions):
+            self._send_question(chat_id, self._questions[self._cur_question])
             return self
 
-        if self.cur_question != len(self._questions):
-            self._send_question(chat_id, self._questions[self.cur_question])
-            return self
-
-        self._client.send_text(chat_id, f'You got {self.score} points out of {self.cur_question}.' + '\n' +
+        self._client.send_text(chat_id, f'You got {self._score} points out of {self._cur_question}.' + '\n' +
         'If you want to try again, type /startGame to start a new game.')
         return IdleState(self._client)
 
     def _send_question(self, chat_id: int, question: Question):
         self._client.send_text(chat_id, f'{question.text}' + '\n' + f'{question.answers}')
-
-    def _handling_errors_in_user_answers(self, update: Update):
-        try:
-            int_msg = int(update.message.text)
-            if (0 <= int_msg) and (int_msg <= 2):
-                return int_msg
-            else:
-                int_msg = 'Type the number from 0 to 2'
-                return int_msg
-        except ValueError:
-            int_msg = 'please, type the number of your supposed answer'
-            return int_msg
-

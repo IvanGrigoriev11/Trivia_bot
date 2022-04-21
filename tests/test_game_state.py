@@ -35,22 +35,6 @@ def test_game_state():
     ])
 
 
-def test_right_answer():
-    check_game_state([
-        (True, "1.What is the color of sky?\n['orange', 'blue', 'green']"),
-        (False, '1'),
-        (True, 'You are right')
-    ])
-
-
-def test_wrong_answer():
-    check_game_state([
-        (True, "1.What is the color of sky?\n['orange', 'blue', 'green']"),
-        (False, '2'),
-        (True, 'You are wrong')
-    ])
-
-
 def test_gibberish_reply():
     check_game_state([
         (True, "1.What is the color of sky?\n['orange', 'blue', 'green']"),
