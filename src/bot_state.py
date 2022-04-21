@@ -83,7 +83,7 @@ class GameState(BotState):
 
         cur_question = self._questions[self._cur_question]
         if answer < 0 or answer >= len(cur_question.answers):
-            self._client.send_text(chat_id, f'Type the number from 0 to {len(cur_question.answers)}')
+            self._client.send_text(chat_id, f'Type the number from 0 to {len(cur_question.answers) - 1}')
             return self
 
         if answer == self._questions[self._cur_question].correct_answer:

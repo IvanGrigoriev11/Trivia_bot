@@ -1,4 +1,4 @@
-from utils import FakeTelegramClient
+from tutils import FakeTelegramClient
 from bot_state import IdleState
 from telegram_client import Update, SendMessagePayload, Message, Chat
 

@@ -1,4 +1,4 @@
-from utils import FakeTelegramClient
+from tutils import FakeTelegramClient
 from chat_handler import ChatHandler
 from telegram_client import Update, SendMessagePayload, Message, Chat
 from typing import List, Tuple
