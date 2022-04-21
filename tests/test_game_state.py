@@ -48,9 +48,9 @@ def test_gibberish_reply():
         [
             (True, "1.What is the color of sky?\n['orange', 'blue', 'green']"),
             (False, "first"),
-            (True, "please, type the number of your supposed answer"),
+            (True, "Please, type the number of your supposed answer"),
             (False, "second"),
-            (True, "please, type the number of your supposed answer"),
+            (True, "Please, type the number of your supposed answer"),
             (False, "1"),
             (True, "You are right"),
         ]

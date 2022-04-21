@@ -76,7 +76,7 @@ class GameState(BotState):
 
         if answer is None:
             self._client.send_text(
-                chat_id, "please, type the number of your supposed answer"
+                chat_id, "Please, type the number of your supposed answer"
             )
             return self
 
