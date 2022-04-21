@@ -1,18 +1,7 @@
-from typing import List
+from utils import FakeTelegramClient
 
 from bot_state import IdleState
-from telegram_client import Chat, Message, SendMessagePayload, TelegramClient, Update
-
-
-class FakeTelegramClient(TelegramClient):
-    def __init__(self):
-        self.sent_messages: List[SendMessagePayload] = []
-
-    def get_updates(self, offset: int = 0) -> List[Update]:
-        raise NotImplementedError()
-
-    def send_message(self, payload: SendMessagePayload) -> None:
-        self.sent_messages.append(payload)
+from telegram_client import Chat, Message, SendMessagePayload, Update
 
 
 def check_idle_state(user_message: str, expected_bot_message: str):

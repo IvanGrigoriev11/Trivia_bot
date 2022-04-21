@@ -5,14 +5,14 @@ from test_game_state import FakeTelegramClient
 from bot_state import BotState, GameState, IdleState
 from chat_handler import ChatHandler
 from models import Question
-from telegram_client import Chat, Message, SendMessagePayload, TelegramClient, Update
+from telegram_client import Chat, Message, SendMessagePayload, Update
 
 
 def communication_process(
     bot_state: BotState, bot: bool, bot_message: str, user_message: str
 ):
     # client = FakeTelegramClient()
-    if bot == True:
+    if bot:
         check(bot_state, bot_message, user_message)
     else:
         check(bot_state, user_message, bot_message)

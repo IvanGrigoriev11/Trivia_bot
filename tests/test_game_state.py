@@ -1,26 +1,17 @@
 from typing import List
 
+from utils import FakeTelegramClient
+
 from bot_state import GameState
 from models import Question
 from telegram_client import Chat, Message, SendMessagePayload, TelegramClient, Update
-
-
-class FakeTelegramClient(TelegramClient):
-    def __init__(self):
-        self.sent_messages: List[SendMessagePayload] = []
-
-    def get_updates(self, offset: int = 0) -> List[Update]:
-        raise NotImplementedError()
-
-    def send_message(self, payload: SendMessagePayload) -> None:
-        self.sent_messages.append(payload)
 
 
 def check_game_state(
     last_question: bool, user_message: str, expected_messages: List[str]
 ):
     client = FakeTelegramClient()
-    if last_question != True:
+    if not last_question:
         questions = [
             Question("question 1", ["a", "b", "c"], 0),
             Question("question 2", ["a", "b", "c"], 1),
@@ -46,7 +37,8 @@ def test_end_game_score_1_of_1():
         [
             "question 3\n['a', 'b', 'c']",
             "You are right",
-            "You got 1 points out of 1.\nIf you want to try again, type /startGame to start a new game.",
+            "You got 1 points out of 1.\nIf you want to try again,"
+            + " type /startGame to start a new game.",
         ],
     )
 
@@ -58,7 +50,8 @@ def test_end_game_score_0_of_1():
         [
             "question 3\n['a', 'b', 'c']",
             "You are wrong",
-            "You got 0 points out of 1.\nIf you want to try again, type /startGame to start a new game.",
+            "You got 0 points out of 1.\nIf you want to try again,"
+            + " type /startGame to start a new game.",
         ],
     )
 
