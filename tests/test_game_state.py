@@ -4,7 +4,7 @@ from utils import FakeTelegramClient
 
 from bot_state import GameState
 from models import Question
-from telegram_client import Chat, Message, SendMessagePayload, TelegramClient, Update
+from telegram_client import Chat, Message, SendMessagePayload, Update
 
 
 def check_game_state(
