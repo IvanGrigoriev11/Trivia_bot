@@ -6,7 +6,7 @@ name: CI
 # events but only for the master branch
 on:
   push:
-    branches: [ main, u/avorob/ci ]
+    branches: [ main, u/avorob/ci-2 ]
   pull_request:
     branches: [ main ]
 
@@ -22,11 +22,11 @@ jobs:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - uses: actions/checkout@v2
 
-      - name: Set up Python 3.9
+      - name: Set up Python 3.10
         uses: actions/setup-python@v2
         with:
           # Semantic version range syntax or exact version of a Python version
-          python-version: '3.9' 
+          python-version: '3.10'
           # Optional - x64 or x86 architecture, defaults to x64
           architecture: 'x64' 
 
