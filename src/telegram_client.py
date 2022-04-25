@@ -104,6 +104,7 @@ class LiveTelegramClient(TelegramClient):
         data = requests.get(
             f"https://api.telegram.org/bot{self._token}/getUpdates?offset={offset}"
         ).text
+        print(data)
         response: GetUpdatesResponse = GetUpdatesResponseSchema.loads(data)  # type: ignore
         print(response.result)
         return response.result
