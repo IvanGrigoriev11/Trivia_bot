@@ -42,14 +42,15 @@ class IdleState(BotState):
         pass
 
     def _do_process(self, update: Update) -> "BotState":
-        text = update.message.text.lower()
-        chat_id = update.message.chat.id
+        if update.message is not None:
+            text = update.message.text.lower()
+            chat_id = update.message.chat.id
 
-        if text == "/startgame":
-            self._client.send_text(chat_id, "Starting game!")
-            return GameState(self._client, Question.make_some())
+            if text == "/startgame":
+                self._client.send_text(chat_id, "Starting game!")
+                return GameState(self._client, Question.make_some())
 
-        self._client.send_text(chat_id, "Type /startGame to start a new game.")
+            self._client.send_text(chat_id, "Type /startGame to start a new game.")
         return self
 
 
@@ -71,41 +72,43 @@ class GameState(BotState):
         self._send_question(chat_id, self._questions[0])
 
     def _do_process(self, update: Update) -> "BotState":
-        chat_id = update.message.chat.id
-        answer = parse_int(update.message.text)
+        if update.message is not None:
+            chat_id = update.message.chat.id
+            answer = parse_int(update.message.text)
 
-        if answer is None:
+            if answer is None:
+                self._client.send_text(
+                    chat_id, "Please, type the number of your supposed answer"
+                )
+                return self
+
+            cur_question = self._questions[self._cur_question]
+            if answer < 0 or answer >= len(cur_question.answers):
+                self._client.send_text(
+                    chat_id, f"Type the number from 0 to {len(cur_question.answers) - 1}"
+                )
+                return self
+
+            if answer == self._questions[self._cur_question].correct_answer:
+                self._client.send_text(chat_id, "You are right")
+                self._score += 1
+            else:
+                self._client.send_text(chat_id, "You are wrong")
+
+            self._cur_question += 1
+
+            if self._cur_question != len(self._questions):
+                self._send_question(chat_id, self._questions[self._cur_question])
+                return self
+
             self._client.send_text(
-                chat_id, "Please, type the number of your supposed answer"
+                chat_id,
+                f"You got {self._score} points out of {self._cur_question}."
+                + "\n"
+                + "If you want to try again, type /startGame to start a new game.",
             )
-            return self
-
-        cur_question = self._questions[self._cur_question]
-        if answer < 0 or answer >= len(cur_question.answers):
-            self._client.send_text(
-                chat_id, f"Type the number from 0 to {len(cur_question.answers) - 1}"
-            )
-            return self
-
-        if answer == self._questions[self._cur_question].correct_answer:
-            self._client.send_text(chat_id, "You are right")
-            self._score += 1
-        else:
-            self._client.send_text(chat_id, "You are wrong")
-
-        self._cur_question += 1
-
-        if self._cur_question != len(self._questions):
-            self._send_question(chat_id, self._questions[self._cur_question])
-            return self
-
-        self._client.send_text(
-            chat_id,
-            f"You got {self._score} points out of {self._cur_question}."
-            + "\n"
-            + "If you want to try again, type /startGame to start a new game.",
-        )
-        return IdleState(self._client)
+            return IdleState(self._client)
+        return self
 
     def _send_question(self, chat_id: int, question: Question):
         self._client.send_text(

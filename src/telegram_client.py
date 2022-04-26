@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from typing import List
+from typing import List, Optional
 
 import marshmallow
 import marshmallow_dataclass as mdc
@@ -18,6 +18,17 @@ class Chat:
     """
 
     id: int
+
+
+@dataclass
+class User:
+    id: int
+
+
+@dataclass
+class CallbackQuery:
+    user: User
+    data: str
 
 
 @dataclass
@@ -47,7 +58,8 @@ class Update:
     """
 
     update_id: int
-    message: Message
+    message: Optional[Message]
+    callback_query: Optional[CallbackQuery]
 
 
 @dataclass
@@ -104,7 +116,6 @@ class LiveTelegramClient(TelegramClient):
         data = requests.get(
             f"https://api.telegram.org/bot{self._token}/getUpdates?offset={offset}"
         ).text
-        print(data)
         response: GetUpdatesResponse = GetUpdatesResponseSchema.loads(data)  # type: ignore
         print(response.result)
         return response.result
