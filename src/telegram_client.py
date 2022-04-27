@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from typing import List, Optional
+from typing import List, Optional, Dict
 
 import marshmallow
 import marshmallow_dataclass as mdc
@@ -70,11 +70,23 @@ class GetUpdatesResponse:
 
 
 @dataclass
+class InlineKeyboardButton:
+    text: str
+    callback_data: str
+
+
+@dataclass
+class InlineKeyboardMarkup:
+    inline_keyboard: List[InlineKeyboardButton]
+
+
+@dataclass
 class SendMessagePayload:
     """Bot request to send a message to a chat."""
 
     chat_id: int
     text: str
+    reply_markup: Optional[InlineKeyboardMarkup]
 
 
 class BaseSchema(marshmallow.Schema):
@@ -99,8 +111,8 @@ class TelegramClient(ABC):
     def send_message(self, payload: SendMessagePayload) -> None:
         """Sends message with a given `payload` to Telegram."""
 
-    def send_text(self, chat_id: int, text: str) -> None:
-        self.send_message(SendMessagePayload(chat_id, text))
+    def send_text(self, chat_id: int, text: str, reply_markup: Optional[InlineKeyboardMarkup]) -> None:
+        self.send_message(SendMessagePayload(chat_id, text, reply_markup))
 
 
 class LiveTelegramClient(TelegramClient):
