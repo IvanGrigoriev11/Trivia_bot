@@ -2,9 +2,7 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from typing import List, Optional, Dict
 
-import json
-import marshmallow
-import marshmallow_dataclass as mdc
+import jsons
 import requests
 
 
@@ -90,17 +88,6 @@ class SendMessagePayload:
     reply_markup: Optional[InlineKeyboardMarkup]
 
 
-class BaseSchema(marshmallow.Schema):
-    class Meta:
-        unknown = marshmallow.EXCLUDE
-
-
-GetUpdatesResponseSchema = mdc.class_schema(
-    GetUpdatesResponse, base_schema=BaseSchema
-)()
-SendMessagePayloadSchema = mdc.class_schema(SendMessagePayload)()
-
-
 class TelegramClient(ABC):
     """An interface for communicating with Telegram backend."""
 
@@ -129,14 +116,14 @@ class LiveTelegramClient(TelegramClient):
         data = requests.get(
             f"https://api.telegram.org/bot{self._token}/getUpdates?offset={offset}"
         ).text
-        response: GetUpdatesResponse = GetUpdatesResponseSchema.loads(data)  # type: ignore
+        response = jsons.loads(data, cls=GetUpdatesResponse)  # type: ignore
         print(response.result)
         return response.result
 
     def send_message(self, payload: SendMessagePayload) -> None:
         # TODO: handle Telegram errors.
-        data = SendMessagePayloadSchema.dump(payload)
-        print(json.dumps(data))
+        data = jsons.dump(payload, strip_nulls=True)
+        print(data)
         r = requests.post(
             f"https://api.telegram.org/bot{self._token}/sendMessage", data=data
         )
