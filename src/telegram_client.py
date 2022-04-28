@@ -2,6 +2,7 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from typing import List, Optional, Dict
 
+import json
 import marshmallow
 import marshmallow_dataclass as mdc
 import requests
@@ -77,7 +78,7 @@ class InlineKeyboardButton:
 
 @dataclass
 class InlineKeyboardMarkup:
-    inline_keyboard: List[InlineKeyboardButton]
+    inline_keyboard: List[List[InlineKeyboardButton]]
 
 
 @dataclass
@@ -135,7 +136,7 @@ class LiveTelegramClient(TelegramClient):
     def send_message(self, payload: SendMessagePayload) -> None:
         # TODO: handle Telegram errors.
         data = SendMessagePayloadSchema.dump(payload)
-        print(data)
+        print(json.dumps(data))
         r = requests.post(
             f"https://api.telegram.org/bot{self._token}/sendMessage", data=data
         )
