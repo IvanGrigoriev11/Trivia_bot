@@ -70,7 +70,7 @@ class GameState(BotState):
 
     def _do_on_enter(self, chat_id: int) -> None:
         # TODO: send the first question to the chat
-        reply_markup = form_buttons()
+        reply_markup = form_buttons(self._questions[0])
         self._send_question(chat_id, self._questions[0], reply_markup)
 
     def _do_process(self, update: Update) -> "BotState":
@@ -100,7 +100,8 @@ class GameState(BotState):
             self._cur_question += 1
 
             if self._cur_question != len(self._questions):
-                self._send_question(chat_id, self._questions[self._cur_question], form_buttons())
+                self._send_question(chat_id, self._questions[self._cur_question],
+                                    form_buttons(self._questions[self._cur_question]))
                 return self
 
             self._client.send_text(

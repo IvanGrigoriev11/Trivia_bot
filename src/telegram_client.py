@@ -125,6 +125,6 @@ class LiveTelegramClient(TelegramClient):
         data = jsons.dump(payload, strip_nulls=True)
         print(data)
         r = requests.post(
-            f"https://api.telegram.org/bot{self._token}/sendMessage", data=data
+            f"https://api.telegram.org/bot{self._token}/sendMessage", json=data
         )
         assert r.status_code == 200, f"Expected status code 200 but got {r.status_code}"

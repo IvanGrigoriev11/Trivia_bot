@@ -1,13 +1,14 @@
-from telegram_client import SendMessagePayload
 from models import Question
 from telegram_client import InlineKeyboardButton, InlineKeyboardMarkup
-from typing import List, Dict
 
 
-def form_buttons() -> InlineKeyboardMarkup:
-    button1 = InlineKeyboardButton('orange', '0')
-    button2 = InlineKeyboardButton('blue', '1')
-    button3 = InlineKeyboardButton('green', '2')
-    inline_keyboard = InlineKeyboardMarkup([[button1, button2, button3]])
+def form_buttons(questions: Question) -> InlineKeyboardMarkup:
+    text_of_button = questions.answers
+    default_list = []
+    for i in range(len(questions.answers)):
+        button = InlineKeyboardButton(f'{text_of_button[i]}', 'None')
+        default_list.append(button)
+
+    inline_keyboard = InlineKeyboardMarkup([default_list])
     return inline_keyboard
 
