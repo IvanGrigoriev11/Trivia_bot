@@ -4,6 +4,16 @@ from tutils import FakeTelegramClient, check_conversation
 from form_buttons import form_buttons
 from telegram_client import InlineKeyboardMarkup
 from chat_handler import ChatHandler
+from models import Question
+
+
+QUESTIONS = [
+        Question("1.What is the color of sky?", ["orange", "blue", "green"], 1),
+        Question("2.How much is 2 + 5?", ["4", "10", "7", "8"], 2),
+        Question(
+            "3.What date is Christmas?", ["Dec 24", "Apr 15", "Jan 1", "Dec 25"], 3
+        ),
+]
 
 
 def check_chat(conversation: List[Tuple[bool, str, Optional[InlineKeyboardMarkup]]]):
@@ -18,15 +28,15 @@ def test_entire_game():
      [
          (False, "/startGame", None),
          (True, "Starting game!", None),
-         (True, "1.What is the color of sky?\n['orange', 'blue', 'green']", None),
+         (True, "1.What is the color of sky?\n['orange', 'blue', 'green']", form_buttons(QUESTIONS[0])),
          (False, "2", None),
          (True, "You are wrong", None),
-         (True, "2.How much is 2 + 5?\n['4', '10', '7', '8']", None),
+         (True, "2.How much is 2 + 5?\n['4', '10', '7', '8']", form_buttons(QUESTIONS[1])),
          (False, "2", None),
          (True, "You are right", None),
          (
              True,
-             "3.What date is Christmas?\n['Dec 24', 'Apr 15', 'Jan 1', 'Dec 25']", None
+             "3.What date is Christmas?\n['Dec 24', 'Apr 15', 'Jan 1', 'Dec 25']", form_buttons(QUESTIONS[2])
          ),
          (False, "3", None),
          (True, "You are right", None),
