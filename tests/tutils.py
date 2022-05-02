@@ -1,10 +1,7 @@
 from typing import Callable, List, Tuple, Optional
 
-from form_buttons import form_buttons
-from telegram_client import Chat, Message, SendMessagePayload, TelegramClient, Update, InlineKeyboardMarkup,\
-    InlineKeyboardButton
-
-from models import Question
+from telegram_client import Chat, Message, SendMessagePayload, TelegramClient, Update,\
+    InlineKeyboardMarkup
 
 
 class FakeTelegramClient(TelegramClient):
@@ -34,25 +31,3 @@ def check_conversation(
             last_message_from_bot += 1
         else:
             handle(Update(update_id, Message(Chat(chat_id), message), callback_query=None))
-
-
-def check_keyboard(expected_keyboard: InlineKeyboardMarkup):
-    questions = [
-        Question("1.What is the color of sky?", ["orange", "blue", "green"], 1),
-    ]
-    formed_keyboard = form_buttons(questions[0])
-
-    assert expected_keyboard == formed_keyboard
-
-
-def test_keyboard():
-    check_keyboard(
-        InlineKeyboardMarkup(inline_keyboard=[
-                [
-                    InlineKeyboardButton(text='orange', callback_data='None'),
-                    InlineKeyboardButton(text='blue', callback_data='None'),
-                    InlineKeyboardButton(text='yellow', callback_data='None')
-                ]
-            ]
-        )
-    )

@@ -2,7 +2,7 @@ from typing import List, Tuple, Optional
 
 from tutils import FakeTelegramClient, check_conversation
 from form_buttons import form_buttons
-from telegram_client import InlineKeyboardMarkup
+from telegram_client import InlineKeyboardMarkup, InlineKeyboardButton
 from chat_handler import ChatHandler
 from models import Question
 
@@ -28,15 +28,22 @@ def test_entire_game():
      [
          (False, "/startGame", None),
          (True, "Starting game!", None),
-         (True, "1.What is the color of sky?\n['orange', 'blue', 'green']", form_buttons(QUESTIONS[0])),
+         (
+             True, "1.What is the color of sky?\n['orange', 'blue', 'green']",
+             form_buttons(QUESTIONS[0])
+         ),
          (False, "2", None),
          (True, "You are wrong", None),
-         (True, "2.How much is 2 + 5?\n['4', '10', '7', '8']", form_buttons(QUESTIONS[1])),
+         (
+             True, "2.How much is 2 + 5?\n['4', '10', '7', '8']",
+             form_buttons(QUESTIONS[1])
+         ),
          (False, "2", None),
          (True, "You are right", None),
          (
              True,
-             "3.What date is Christmas?\n['Dec 24', 'Apr 15', 'Jan 1', 'Dec 25']", form_buttons(QUESTIONS[2])
+             "3.What date is Christmas?\n['Dec 24', 'Apr 15', 'Jan 1', 'Dec 25']",
+             form_buttons(QUESTIONS[2])
          ),
          (False, "3", None),
          (True, "You are right", None),
@@ -50,3 +57,24 @@ def test_entire_game():
      ]
     )
 
+
+def check_keyboard(expected_keyboard: InlineKeyboardMarkup):
+    questions = [
+        Question("1.What is the color of sky?", ["orange", "blue", "green"], 1),
+    ]
+    formed_keyboard = form_buttons(questions[0])
+
+    assert expected_keyboard == formed_keyboard
+
+
+def unit_test_keyboard():
+    check_keyboard(
+        InlineKeyboardMarkup(inline_keyboard=[
+                [
+                    InlineKeyboardButton(text='orange', callback_data='None'),
+                    InlineKeyboardButton(text='blue', callback_data='None'),
+                    InlineKeyboardButton(text='green', callback_data='None')
+                ]
+            ]
+        )
+    )

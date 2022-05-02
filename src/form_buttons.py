@@ -11,4 +11,3 @@ def form_buttons(questions: Question) -> InlineKeyboardMarkup:
 
     inline_keyboard = InlineKeyboardMarkup([default_list])
     return inline_keyboard
-
