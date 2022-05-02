@@ -67,7 +67,7 @@ def check_keyboard(expected_keyboard: InlineKeyboardMarkup):
     assert expected_keyboard == formed_keyboard
 
 
-def unit_test_keyboard():
+def test_keyboard():
     check_keyboard(
         InlineKeyboardMarkup(inline_keyboard=[
                 [
