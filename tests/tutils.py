@@ -21,6 +21,18 @@ class FakeTelegramClient(TelegramClient):
         self.sent_messages.append(payload)
 
 
+def bot(
+    text_message: str, reply_markup: Optional[InlineKeyboardMarkup] = None
+) -> Tuple[bool, str, Optional[InlineKeyboardMarkup]]:
+    return True, text_message, reply_markup
+
+
+def user(
+    text_message: str, reply_markup: Optional[InlineKeyboardMarkup] = None
+) -> Tuple[bool, str, Optional[InlineKeyboardMarkup]]:
+    return False, text_message, reply_markup
+
+
 def check_conversation(
     chat_id: int,
     conversation: List[Tuple[bool, str, Optional[InlineKeyboardMarkup]]],
@@ -29,8 +41,8 @@ def check_conversation(
 ):
     last_message_from_bot = 0
     update_id = 111
-    for bot, message, reply_markup in conversation:
-        if bot:
+    for telegram_bot, message, reply_markup in conversation:
+        if telegram_bot:
             assert client.sent_messages[last_message_from_bot] == SendMessagePayload(
                 chat_id, message, reply_markup
             )

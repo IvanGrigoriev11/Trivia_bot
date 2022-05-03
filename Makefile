@@ -1,5 +1,5 @@
 
-ISORT_PARAMS = --trailing-comma --use-parentheses --line-width=88
+ISORT_PARAMS = --trailing-comma --use-parentheses --line-width=88 --profile black
 BLACK_PARAMS = -t py39
 
 .PHONY: format-check format pylint pyright test

@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from typing import List
 
-from form_buttons import form_buttons
+from format import make_keyboard
 from models import Question
 from telegram_client import InlineKeyboardMarkup, TelegramClient, Update
 from utils import parse_int
@@ -48,12 +48,10 @@ class IdleState(BotState):
             chat_id = update.message.chat.id
 
             if text == "/startgame":
-                self._client.send_text(chat_id, "Starting game!", None)
+                self._client.send_text(chat_id, "Starting game!")
                 return GameState(self._client, Question.make_some())
 
-            self._client.send_text(
-                chat_id, "Type /startGame to start a new game.", None
-            )
+            self._client.send_text(chat_id, "Type /startGame to start a new game.")
         return self
 
 
@@ -72,54 +70,53 @@ class GameState(BotState):
 
     def _do_on_enter(self, chat_id: int) -> None:
         # TODO: send the first question to the chat
-        reply_markup = form_buttons(self._questions[0])
-        self._send_question(chat_id, self._questions[0], reply_markup)
+        self._send_question(
+            chat_id, self._questions[0], make_keyboard(self._questions[0])
+        )
 
     def _do_process(self, update: Update) -> "BotState":
-        if update.message is not None:
-            chat_id = update.message.chat.id
-            answer = parse_int(update.message.text)
+        if update.message is None:
+            return self
 
-            if answer is None:
-                self._client.send_text(
-                    chat_id, "Please, type the number of your supposed answer", None
-                )
-                return self
+        chat_id = update.message.chat.id
+        answer = parse_int(update.message.text)
 
-            cur_question = self._questions[self._cur_question]
-            if answer < 0 or answer >= len(cur_question.answers):
-                self._client.send_text(
-                    chat_id,
-                    f"Type the number from 0 to {len(cur_question.answers) - 1}",
-                    None,
-                )
-                return self
-
-            if answer == self._questions[self._cur_question].correct_answer:
-                self._client.send_text(chat_id, "You are right", None)
-                self._score += 1
-            else:
-                self._client.send_text(chat_id, "You are wrong", None)
-
-            self._cur_question += 1
-
-            if self._cur_question != len(self._questions):
-                self._send_question(
-                    chat_id,
-                    self._questions[self._cur_question],
-                    form_buttons(self._questions[self._cur_question]),
-                )
-                return self
-
+        if answer is None:
             self._client.send_text(
-                chat_id,
-                f"You got {self._score} points out of {self._cur_question}."
-                + "\n"
-                + "If you want to try again, type /startGame to start a new game.",
-                None,
+                chat_id, "Please, type the number of your supposed answer"
             )
-            return IdleState(self._client)
-        return self
+            return self
+
+        cur_question = self._questions[self._cur_question]
+        if answer < 0 or answer >= len(cur_question.answers):
+            self._client.send_text(
+                chat_id, f"Type the number from 0 to {len(cur_question.answers) - 1}"
+            )
+            return self
+
+        if answer == self._questions[self._cur_question].correct_answer:
+            self._client.send_text(chat_id, "You are right")
+            self._score += 1
+        else:
+            self._client.send_text(chat_id, "You are wrong")
+
+        self._cur_question += 1
+
+        if self._cur_question != len(self._questions):
+            self._send_question(
+                chat_id,
+                self._questions[self._cur_question],
+                make_keyboard(self._questions[self._cur_question]),
+            )
+            return self
+
+        self._client.send_text(
+            chat_id,
+            f"You got {self._score} points out of {self._cur_question}."
+            + "\n"
+            + "If you want to try again, type /startGame to start a new game.",
+        )
+        return IdleState(self._client)
 
     def _send_question(
         self, chat_id: int, question: Question, reply_markup: InlineKeyboardMarkup

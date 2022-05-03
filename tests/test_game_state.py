@@ -1,10 +1,10 @@
 from typing import List, Optional, Tuple
 
 from test_chat_handler import QUESTIONS
-from tutils import FakeTelegramClient, check_conversation
+from tutils import FakeTelegramClient, bot, check_conversation, user
 
 from bot_state import GameState
-from form_buttons import form_buttons
+from format import make_keyboard
 from models import Question
 from telegram_client import InlineKeyboardMarkup, Update
 
@@ -26,32 +26,27 @@ def check_game_state(
 def test_game_state():
     check_game_state(
         [
-            (
-                True,
+            bot(
                 "1.What is the color of sky?\n['orange', 'blue', 'green']",
-                form_buttons(QUESTIONS[0]),
+                make_keyboard(QUESTIONS[0]),
             ),
-            (False, "1", None),
-            (True, "You are right", None),
-            (
-                True,
+            user("1"),
+            bot("You are right"),
+            bot(
                 "2.How much is 2 + 5?\n['4', '10', '7', '8']",
-                form_buttons(QUESTIONS[1]),
+                make_keyboard(QUESTIONS[1]),
             ),
-            (False, "1", None),
-            (True, "You are wrong", None),
-            (
-                True,
+            user("1"),
+            bot("You are wrong"),
+            bot(
                 "3.What date is Christmas?\n['Dec 24', 'Apr 15', 'Jan 1', 'Dec 25']",
-                form_buttons(QUESTIONS[2]),
+                make_keyboard(QUESTIONS[2]),
             ),
-            (False, "1", None),
-            (True, "You are wrong", None),
-            (
-                True,
+            user("1"),
+            bot("You are wrong"),
+            bot(
                 "You got 1 points out of 3.\nIf you want to try again, type"
-                + " /startGame to start a new game.",
-                None,
+                + " /startGame to start a new game."
             ),
         ]
     )
@@ -60,17 +55,16 @@ def test_game_state():
 def test_gibberish_reply():
     check_game_state(
         [
-            (
-                True,
+            bot(
                 "1.What is the color of sky?\n['orange', 'blue', 'green']",
-                form_buttons(QUESTIONS[0]),
+                make_keyboard(QUESTIONS[0]),
             ),
-            (False, "first", None),
-            (True, "Please, type the number of your supposed answer", None),
-            (False, "second", None),
-            (True, "Please, type the number of your supposed answer", None),
-            (False, "1", None),
-            (True, "You are right", None),
+            user("first"),
+            bot("Please, type the number of your supposed answer"),
+            user("second"),
+            bot("Please, type the number of your supposed answer"),
+            user("1"),
+            bot("You are right"),
         ]
     )
 
@@ -78,21 +72,19 @@ def test_gibberish_reply():
 def test_enter_inappropriate_number():
     check_game_state(
         [
-            (
-                True,
+            bot(
                 "1.What is the color of sky?\n['orange', 'blue', 'green']",
-                form_buttons(QUESTIONS[0]),
+                make_keyboard(QUESTIONS[0]),
             ),
-            (False, "-1", None),
-            (True, "Type the number from 0 to 2", None),
-            (False, "3", None),
-            (True, "Type the number from 0 to 2", None),
-            (False, "2", None),
-            (True, "You are wrong", None),
-            (
-                True,
+            user("-1"),
+            bot("Type the number from 0 to 2"),
+            user("3"),
+            bot("Type the number from 0 to 2"),
+            user("2"),
+            bot("You are wrong"),
+            bot(
                 "2.How much is 2 + 5?\n['4', '10', '7', '8']",
-                form_buttons(QUESTIONS[1]),
+                make_keyboard(QUESTIONS[1]),
             ),
         ]
     )

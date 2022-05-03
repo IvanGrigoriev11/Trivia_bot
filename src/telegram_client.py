@@ -57,8 +57,8 @@ class Update:
     """
 
     update_id: int
-    message: Optional[Message]
-    callback_query: Optional[CallbackQuery]
+    message: Optional[Message] = None
+    callback_query: Optional[CallbackQuery] = None
 
 
 @dataclass
@@ -85,7 +85,7 @@ class SendMessagePayload:
 
     chat_id: int
     text: str
-    reply_markup: Optional[InlineKeyboardMarkup]
+    reply_markup: Optional[InlineKeyboardMarkup] = None
 
 
 class TelegramClient(ABC):
@@ -100,7 +100,10 @@ class TelegramClient(ABC):
         """Sends message with a given `payload` to Telegram."""
 
     def send_text(
-        self, chat_id: int, text: str, reply_markup: Optional[InlineKeyboardMarkup]
+        self,
+        chat_id: int,
+        text: str,
+        reply_markup: Optional[InlineKeyboardMarkup] = None,
     ) -> None:
         self.send_message(SendMessagePayload(chat_id, text, reply_markup))
 
@@ -118,7 +121,7 @@ class LiveTelegramClient(TelegramClient):
         data = requests.get(
             f"https://api.telegram.org/bot{self._token}/getUpdates?offset={offset}"
         ).text
-        response = jsons.loads(data, cls=GetUpdatesResponse)  # type: ignore
+        response = jsons.loads(data, cls=GetUpdatesResponse)
         print(response.result)
         return response.result
 

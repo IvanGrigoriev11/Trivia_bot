@@ -1,11 +1,15 @@
+from typing import Optional
+
 from tutils import FakeTelegramClient
 
 from bot_state import IdleState
-from telegram_client import Chat, Message, SendMessagePayload, Update
+from telegram_client import CallbackQuery, Chat, Message, SendMessagePayload, Update
 
 
 def check_idle_state(
-    user_message: str, expected_bot_message: str, callback_query: None
+    user_message: str,
+    expected_bot_message: str,
+    callback_query: Optional[CallbackQuery] = None,
 ):
     client = FakeTelegramClient()
     state = IdleState(client)
@@ -18,8 +22,8 @@ def check_idle_state(
 
 
 def test_process_starting_game():
-    check_idle_state("/startGame", "Starting game!", None)
+    check_idle_state("/startGame", "Starting game!")
 
 
 def test_process_other_message():
-    check_idle_state("other message", "Type /startGame to start a new game.", None)
+    check_idle_state("other message", "Type /startGame to start a new game.")
