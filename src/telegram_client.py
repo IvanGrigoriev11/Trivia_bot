@@ -99,8 +99,9 @@ class TelegramClient(ABC):
     def send_message(self, payload: SendMessagePayload) -> None:
         """Sends message with a given `payload` to Telegram."""
 
-    def send_text(self, chat_id: int, text: str,
-                  reply_markup: Optional[InlineKeyboardMarkup]) -> None:
+    def send_text(
+        self, chat_id: int, text: str, reply_markup: Optional[InlineKeyboardMarkup]
+    ) -> None:
         self.send_message(SendMessagePayload(chat_id, text, reply_markup))
 
 

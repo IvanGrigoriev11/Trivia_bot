@@ -51,7 +51,9 @@ class IdleState(BotState):
                 self._client.send_text(chat_id, "Starting game!", None)
                 return GameState(self._client, Question.make_some())
 
-            self._client.send_text(chat_id, "Type /startGame to start a new game.", None)
+            self._client.send_text(
+                chat_id, "Type /startGame to start a new game.", None
+            )
         return self
 
 
@@ -87,7 +89,9 @@ class GameState(BotState):
             cur_question = self._questions[self._cur_question]
             if answer < 0 or answer >= len(cur_question.answers):
                 self._client.send_text(
-                    chat_id, f"Type the number from 0 to {len(cur_question.answers) - 1}", None
+                    chat_id,
+                    f"Type the number from 0 to {len(cur_question.answers) - 1}",
+                    None,
                 )
                 return self
 
@@ -100,20 +104,26 @@ class GameState(BotState):
             self._cur_question += 1
 
             if self._cur_question != len(self._questions):
-                self._send_question(chat_id, self._questions[self._cur_question],
-                                    form_buttons(self._questions[self._cur_question]))
+                self._send_question(
+                    chat_id,
+                    self._questions[self._cur_question],
+                    form_buttons(self._questions[self._cur_question]),
+                )
                 return self
 
             self._client.send_text(
                 chat_id,
                 f"You got {self._score} points out of {self._cur_question}."
                 + "\n"
-                + "If you want to try again, type /startGame to start a new game.", None
+                + "If you want to try again, type /startGame to start a new game.",
+                None,
             )
             return IdleState(self._client)
         return self
 
-    def _send_question(self, chat_id: int, question: Question, reply_markup: InlineKeyboardMarkup):
+    def _send_question(
+        self, chat_id: int, question: Question, reply_markup: InlineKeyboardMarkup
+    ):
         self._client.send_text(
             chat_id, f"{question.text}" + "\n" + f"{question.answers}", reply_markup
         )

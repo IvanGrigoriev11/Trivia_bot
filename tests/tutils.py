@@ -1,7 +1,13 @@
 from typing import Callable, List, Optional, Tuple
 
-from telegram_client import Chat, InlineKeyboardMarkup, Message, SendMessagePayload, \
-    TelegramClient, Update
+from telegram_client import (
+    Chat,
+    InlineKeyboardMarkup,
+    Message,
+    SendMessagePayload,
+    TelegramClient,
+    Update,
+)
 
 
 class FakeTelegramClient(TelegramClient):
@@ -30,4 +36,6 @@ def check_conversation(
             )
             last_message_from_bot += 1
         else:
-            handle(Update(update_id, Message(Chat(chat_id), message), callback_query=None))
+            handle(
+                Update(update_id, Message(Chat(chat_id), message), callback_query=None)
+            )
