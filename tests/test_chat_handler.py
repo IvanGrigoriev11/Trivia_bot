@@ -30,7 +30,7 @@ def test_entire_game():
                 "1.What is the color of sky?\n['orange', 'blue', 'green']",
                 make_keyboard(QUESTIONS[0]),
             ),
-            user("2"),
+            user("0"),
             bot("You are wrong"),
             bot(
                 "2.How much is 2 + 5?\n['4', '10', '7', '8']",
