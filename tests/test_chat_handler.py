@@ -1,11 +1,10 @@
-from typing import List, Tuple, Optional
+from typing import List, Optional, Tuple
 
 from tutils import check_conversation, FakeTelegramClient
 from form_buttons import form_buttons
+from models import Question
 from telegram_client import InlineKeyboardButton, InlineKeyboardMarkup
 from chat_handler import ChatHandler
-from models import Question
-
 
 QUESTIONS = [
         Question("1.What is the color of sky?", ["orange", "blue", "green"], 1),
