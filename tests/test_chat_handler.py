@@ -1,8 +1,8 @@
 from typing import List, Tuple, Optional
 
-from tutils import FakeTelegramClient, check_conversation
+from tutils import check_conversation, FakeTelegramClient
 from form_buttons import form_buttons
-from telegram_client import InlineKeyboardMarkup, InlineKeyboardButton
+from telegram_client import InlineKeyboardButton, InlineKeyboardMarkup
 from chat_handler import ChatHandler
 from models import Question
 

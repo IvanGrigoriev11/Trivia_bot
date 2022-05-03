@@ -3,7 +3,7 @@ from typing import List
 
 from form_buttons import form_buttons
 from models import Question
-from telegram_client import TelegramClient, Update, InlineKeyboardMarkup
+from telegram_client import InlineKeyboardMarkup, TelegramClient, Update
 from utils import parse_int
 
 

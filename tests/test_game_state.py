@@ -1,12 +1,12 @@
 from typing import List, Tuple, Optional
 
 from test_chat_handler import QUESTIONS
-from tutils import FakeTelegramClient, check_conversation
+from tutils import check_conversation, FakeTelegramClient
 from form_buttons import form_buttons
 
 from bot_state import GameState
 from models import Question
-from telegram_client import Update, InlineKeyboardMarkup
+from telegram_client import InlineKeyboardMarkup, Update
 
 
 def check_game_state(conversation: List[Tuple[bool, str, Optional[InlineKeyboardMarkup]]]):

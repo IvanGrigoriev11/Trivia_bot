@@ -1,7 +1,7 @@
-from typing import Callable, List, Tuple, Optional
+from typing import Callable, List, Optional, Tuple
 
-from telegram_client import Chat, Message, SendMessagePayload, TelegramClient, Update,\
-    InlineKeyboardMarkup
+from telegram_client import Chat, InlineKeyboardMarkup, Message, SendMessagePayload, \
+    TelegramClient, Update
 
 
 class FakeTelegramClient(TelegramClient):
