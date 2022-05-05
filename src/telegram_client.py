@@ -5,6 +5,8 @@ from typing import List, Optional
 import jsons
 import requests
 
+from utils import transform_keywords
+
 
 @dataclass
 class Chat:
@@ -26,7 +28,7 @@ class User:
 
 @dataclass
 class CallbackQuery:
-    user: User
+    from_: User
     data: str
 
 
@@ -121,7 +123,9 @@ class LiveTelegramClient(TelegramClient):
         data = requests.get(
             f"https://api.telegram.org/bot{self._token}/getUpdates?offset={offset}"
         ).text
-        response = jsons.loads(data, cls=GetUpdatesResponse)
+        response = jsons.loads(
+            data, cls=GetUpdatesResponse, key_transformer=transform_keywords
+        )
         print(response.result)
         return response.result
 

@@ -6,3 +6,7 @@ def parse_int(s: str) -> Optional[int]:
         return int(s)
     except ValueError:
         return None
+
+
+def transform_keywords(key: str) -> str:
+    return key if key != "from" else "from_"
