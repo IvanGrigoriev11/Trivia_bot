@@ -3,7 +3,7 @@ from typing import List
 
 from format import make_keyboard
 from models import Question
-from telegram_client import InlineKeyboardMarkup, TelegramClient, Update
+from telegram_client import TelegramClient, Update
 from utils import parse_int
 
 
