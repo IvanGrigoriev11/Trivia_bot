@@ -16,9 +16,7 @@ def check_idle_state(
     chat_id = 111
     state.on_enter(chat_id)
     state.process(Update(123, Message(Chat(chat_id), user_message), callback_query))
-    assert client.sent_messages == [
-        SendMessagePayload(chat_id, expected_bot_message, reply_markup=None)
-    ]
+    assert client.sent_messages == [SendMessagePayload(chat_id, expected_bot_message)]
 
 
 def test_process_starting_game():

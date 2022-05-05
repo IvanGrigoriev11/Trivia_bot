@@ -70,9 +70,7 @@ class GameState(BotState):
 
     def _do_on_enter(self, chat_id: int) -> None:
         # TODO: send the first question to the chat
-        self._send_question(
-            chat_id, self._questions[0], make_keyboard(self._questions[0])
-        )
+        self._send_question(chat_id, self._questions[0])
 
     def _do_process(self, update: Update) -> "BotState":
         if update.message is None:
@@ -106,7 +104,6 @@ class GameState(BotState):
             self._send_question(
                 chat_id,
                 self._questions[self._cur_question],
-                make_keyboard(self._questions[self._cur_question]),
             )
             return self
 
@@ -118,9 +115,9 @@ class GameState(BotState):
         )
         return IdleState(self._client)
 
-    def _send_question(
-        self, chat_id: int, question: Question, reply_markup: InlineKeyboardMarkup
-    ):
+    def _send_question(self, chat_id: int, question: Question):
         self._client.send_text(
-            chat_id, f"{question.text}" + "\n" + f"{question.answers}", reply_markup
+            chat_id,
+            f"{question.text}" + "\n" + f"{question.answers}",
+            make_keyboard(question),
         )

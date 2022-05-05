@@ -13,9 +13,9 @@ def test_keyboard():
             ]
         ]
     )
-    question = [
+
+    formed_keyboard = make_keyboard(
         Question("1.What is the color of sky?", ["orange", "blue", "green"], 1),
-    ]
-    formed_keyboard = make_keyboard(question[0])
+    )
 
     assert expected_keyboard == formed_keyboard
