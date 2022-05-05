@@ -1,7 +1,5 @@
 from typing import Optional
 
-from telegram_client import Update
-
 
 def parse_int(s: str) -> Optional[int]:
     try:
