@@ -15,18 +15,19 @@ def main():
 
     while True:
         for update in client.get_updates(offset):
-            if update.message is not None or update.callback_query is not None:
-                offset = update.update_id + 1
-                if update.message:
-                    chat_id = update.message.chat.id
-                else:
-                    chat_id = update.callback_query.from_.id
+            offset = update.update_id + 1
+            if update.message and update.callback_query is None:
+                chat_id = update.message.chat.id
+            elif update.message is None and update.callback_query:
+                chat_id = update.callback_query.from_.id
+            else:
+                pass
 
-                if chat_id not in chat_handlers:
-                    chat_handlers[chat_id] = ChatHandler.make_default(client, chat_id)
+            if chat_id not in chat_handlers:
+                chat_handlers[chat_id] = ChatHandler.make_default(client, chat_id)
 
-                chat_handler = chat_handlers[chat_id]
-                chat_handler.process(update)
+            chat_handler = chat_handlers[chat_id]
+            chat_handler.process(update)
 
 
 if __name__ == "__main__":
