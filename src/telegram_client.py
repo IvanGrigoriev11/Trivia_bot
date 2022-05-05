@@ -128,7 +128,6 @@ class LiveTelegramClient(TelegramClient):
     def send_message(self, payload: SendMessagePayload) -> None:
         # TODO: handle Telegram errors.
         data = jsons.dump(payload, strip_nulls=True)
-        print(data)
         r = requests.post(
             f"https://api.telegram.org/bot{self._token}/sendMessage", json=data
         )
