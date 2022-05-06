@@ -27,19 +27,19 @@ def test_game_state():
     check_game_state(
         [
             bot(
-                "1.What is the color of sky?\n['orange', 'blue', 'green']",
+                "1.What is the color of sky?",
                 make_keyboard(QUESTIONS[0]),
             ),
             user("1"),
             bot("You are right"),
             bot(
-                "2.How much is 2 + 5?\n['4', '10', '7', '8']",
+                "2.How much is 2 + 5?",
                 make_keyboard(QUESTIONS[1]),
             ),
             user("1"),
             bot("You are wrong"),
             bot(
-                "3.What date is Christmas?\n['Dec 24', 'Apr 15', 'Jan 1', 'Dec 25']",
+                "3.What date is Christmas?",
                 make_keyboard(QUESTIONS[2]),
             ),
             user("1"),
@@ -56,7 +56,7 @@ def test_gibberish_reply():
     check_game_state(
         [
             bot(
-                "1.What is the color of sky?\n['orange', 'blue', 'green']",
+                "1.What is the color of sky?",
                 make_keyboard(QUESTIONS[0]),
             ),
             user("first"),
@@ -73,7 +73,7 @@ def test_enter_inappropriate_number():
     check_game_state(
         [
             bot(
-                "1.What is the color of sky?\n['orange', 'blue', 'green']",
+                "1.What is the color of sky?",
                 make_keyboard(QUESTIONS[0]),
             ),
             user("-1"),
@@ -83,7 +83,7 @@ def test_enter_inappropriate_number():
             user("2"),
             bot("You are wrong"),
             bot(
-                "2.How much is 2 + 5?\n['4', '10', '7', '8']",
+                "2.How much is 2 + 5?",
                 make_keyboard(QUESTIONS[1]),
             ),
         ]
