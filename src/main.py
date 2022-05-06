@@ -15,12 +15,10 @@ def main():
 
     while True:
         for update in client.get_updates(offset):
-            chat_id = 0
             offset = update.update_id + 1
             if update.message is not None:
                 chat_id = update.message.chat.id
-
-            if update.callback_query is not None:
+            else:
                 chat_id = update.callback_query.from_.id
 
             if chat_id not in chat_handlers:

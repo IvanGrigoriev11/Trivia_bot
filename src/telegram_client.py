@@ -62,6 +62,19 @@ class Update:
     message: Optional[Message] = None
     callback_query: Optional[CallbackQuery] = None
 
+    @property
+    def chat_id(self) -> int:
+        assert (
+            len([x for x in (self.message, self.callback_query) if x is not None]) == 1
+        )
+
+        if self.message is not None:
+            return self.message.chat.id
+        if self.callback_query is not None:
+            return self.callback_query.from_.id
+
+        assert False, "Unreachable"
+
 
 @dataclass
 class GetUpdatesResponse:
