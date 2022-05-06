@@ -1,6 +1,6 @@
 from typing import List, Optional, Tuple
 
-from tutils import FakeTelegramClient, bot, check_conversation, user
+from tutils import FakeTelegramClient, bot, check_conversation, user, ConversationConstructor
 
 from chat_handler import ChatHandler
 from format import make_keyboard
@@ -14,7 +14,7 @@ QUESTIONS = [
 ]
 
 
-def check_chat(conversation: List[Tuple[bool, str, Optional[InlineKeyboardMarkup]]]):
+def check_chat(conversation: List[ConversationConstructor]):
     client = FakeTelegramClient()
     chat_id = 123
     chat_handler = ChatHandler.make_default(client, chat_id)

@@ -1,7 +1,7 @@
 from typing import List, Optional, Tuple
 
 from test_chat_handler import QUESTIONS
-from tutils import FakeTelegramClient, bot, check_conversation, user
+from tutils import FakeTelegramClient, bot, check_conversation, user, ConversationConstructor
 
 from bot_state import GameState
 from format import make_keyboard
@@ -10,7 +10,7 @@ from telegram_client import InlineKeyboardMarkup, Update
 
 
 def check_game_state(
-    conversation: List[Tuple[bool, str, Optional[InlineKeyboardMarkup]]]
+    conversation: List[ConversationConstructor]
 ):
     client = FakeTelegramClient()
     chat_id = 111

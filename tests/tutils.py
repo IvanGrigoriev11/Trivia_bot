@@ -1,4 +1,5 @@
 from typing import Callable, List, Optional, Tuple
+from dataclasses import dataclass
 
 from telegram_client import (
     Chat,
@@ -20,22 +21,33 @@ class FakeTelegramClient(TelegramClient):
     def send_message(self, payload: SendMessagePayload) -> None:
         self.sent_messages.append(payload)
 
+@dataclass
+class Container:
+    is_bot: bool
+    text_message: str
+    reply_markup: Optional[InlineKeyboardMarkup] = None
+
+
+@dataclass
+class ConversationConstructor:
+    container: List[Container]
+
 
 def bot(
     text_message: str, reply_markup: Optional[InlineKeyboardMarkup] = None
-) -> Tuple[bool, str, Optional[InlineKeyboardMarkup]]:
-    return True, text_message, reply_markup
+) -> ConversationConstructor:
+    return ConversationConstructor([True, text_message, reply_markup])
 
 
 def user(
     text_message: str, reply_markup: Optional[InlineKeyboardMarkup] = None
-) -> Tuple[bool, str, Optional[InlineKeyboardMarkup]]:
-    return False, text_message, reply_markup
+) -> ConversationConstructor:
+    return ConversationConstructor([True, text_message, reply_markup])
 
 
 def check_conversation(
     chat_id: int,
-    conversation: List[Tuple[bool, str, Optional[InlineKeyboardMarkup]]],
+    conversation: List[ConversationConstructor],
     client: FakeTelegramClient,
     handle: Callable[[Update], None],
 ):
