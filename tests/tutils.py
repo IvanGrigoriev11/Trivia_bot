@@ -1,5 +1,5 @@
-from typing import Callable, List, Optional, Tuple
 from dataclasses import dataclass
+from typing import Callable, List, Optional, Tuple
 
 from telegram_client import (
     Chat,
@@ -21,28 +21,22 @@ class FakeTelegramClient(TelegramClient):
     def send_message(self, payload: SendMessagePayload) -> None:
         self.sent_messages.append(payload)
 
+
 @dataclass
-class Container:
+class ConversationConstructor:
     is_bot: bool
     text_message: str
     reply_markup: Optional[InlineKeyboardMarkup] = None
 
 
-@dataclass
-class ConversationConstructor:
-    container: List[Container]
-
-
 def bot(
     text_message: str, reply_markup: Optional[InlineKeyboardMarkup] = None
 ) -> ConversationConstructor:
-    return ConversationConstructor([True, text_message, reply_markup])
+    return ConversationConstructor(True, text_message, reply_markup)
 
 
-def user(
-    text_message: str, reply_markup: Optional[InlineKeyboardMarkup] = None
-) -> ConversationConstructor:
-    return ConversationConstructor([True, text_message, reply_markup])
+def user(text_message: str) -> ConversationConstructor:
+    return ConversationConstructor(False, text_message)
 
 
 def check_conversation(
@@ -53,13 +47,17 @@ def check_conversation(
 ):
     last_message_from_bot = 0
     update_id = 111
-    for telegram_bot, message, reply_markup in conversation:
-        if telegram_bot:
+    for msg in conversation:
+        if msg.is_bot:
             assert client.sent_messages[last_message_from_bot] == SendMessagePayload(
-                chat_id, message, reply_markup
+                chat_id, msg.text_message, msg.reply_markup
             )
             last_message_from_bot += 1
         else:
             handle(
-                Update(update_id, Message(Chat(chat_id), message), callback_query=None)
+                Update(
+                    update_id,
+                    Message(Chat(chat_id), msg.text_message),
+                    callback_query=None,
+                )
             )
