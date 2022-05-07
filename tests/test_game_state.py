@@ -1,14 +1,19 @@
 from typing import List, Optional, Tuple
 
 import requests
-
 from test_chat_handler import QUESTIONS
 from tutils import FakeTelegramClient, bot, check_conversation, user
 
 from bot_state import GameState
 from format import make_keyboard
 from models import Question
-from telegram_client import InlineKeyboardMarkup, Update, SendMessagePayload, CallbackQuery, User
+from telegram_client import (
+    CallbackQuery,
+    InlineKeyboardMarkup,
+    SendMessagePayload,
+    Update,
+    User,
+)
 
 
 def check_game_state(
@@ -97,5 +102,4 @@ def test_callback_query():
     state = GameState(client, Question.make_some())
     chat_id = 111
     state.on_enter(chat_id)
-    state.process(Update(123, None, CallbackQuery(User(111), '1')))
-
+    state.process(Update(123, None, CallbackQuery(User(111), "1")))
