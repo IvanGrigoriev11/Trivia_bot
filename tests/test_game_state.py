@@ -1,4 +1,4 @@
-from typing import List, Optional, Tuple
+from typing import List
 
 from test_chat_handler import QUESTIONS
 from tutils import (
@@ -12,7 +12,7 @@ from tutils import (
 from bot_state import GameState
 from format import make_keyboard
 from models import Question
-from telegram_client import InlineKeyboardMarkup, Update
+from telegram_client import Update
 
 
 def check_game_state(conversation: List[ConversationConstructor]):
