@@ -1,7 +1,4 @@
-from typing import List
-
-from tutils import ConversationConstructor, FakeTelegramClient
-from tutils import bot,  check_conversation, user
+from tutils import *
 
 from chat_handler import ChatHandler
 from format import make_keyboard
