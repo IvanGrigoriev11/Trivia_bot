@@ -6,12 +6,7 @@ from tutils import FakeTelegramClient, MessageContent, bot, check_conversation, 
 from bot_state import GameState
 from format import make_keyboard
 from models import Question
-from telegram_client import (
-    CallbackQuery,
-    SendMessagePayload,
-    Update,
-    User,
-)
+from telegram_client import CallbackQuery, SendMessagePayload, Update, User
 
 
 def check_game_state(conversation: List[MessageContent]):
