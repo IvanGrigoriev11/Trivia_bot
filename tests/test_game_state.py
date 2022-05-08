@@ -1,13 +1,7 @@
 from typing import List
 
 from test_chat_handler import QUESTIONS
-from tutils import (
-    MessageContent,
-    FakeTelegramClient,
-    bot,
-    check_conversation,
-    user,
-)
+from tutils import FakeTelegramClient, MessageContent, bot, check_conversation, user
 
 from bot_state import GameState
 from format import make_keyboard

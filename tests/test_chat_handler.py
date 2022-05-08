@@ -1,12 +1,6 @@
 from typing import List
 
-from tutils import (
-    MessageContent,
-    FakeTelegramClient,
-    bot,
-    check_conversation,
-    user,
-)
+from tutils import FakeTelegramClient, MessageContent, bot, check_conversation, user
 
 from chat_handler import ChatHandler
 from format import make_keyboard
