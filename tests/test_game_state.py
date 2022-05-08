@@ -2,7 +2,7 @@ from typing import List
 
 from test_chat_handler import QUESTIONS
 from tutils import (
-    ConversationConstructor,
+    MessageContent,
     FakeTelegramClient,
     bot,
     check_conversation,
@@ -15,7 +15,7 @@ from models import Question
 from telegram_client import Update
 
 
-def check_game_state(conversation: List[ConversationConstructor]):
+def check_game_state(conversation: List[MessageContent]):
     client = FakeTelegramClient()
     chat_id = 111
     state = GameState(client, Question.make_some())

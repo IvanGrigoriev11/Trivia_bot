@@ -22,8 +22,8 @@ class FakeTelegramClient(TelegramClient):
         self.sent_messages.append(payload)
 
 
-@dataclass
-class ConversationConstructor:
+@dataclass(frozen=True)
+class MessageContent:
     is_bot: bool
     text_message: str
     reply_markup: Optional[InlineKeyboardMarkup] = None
@@ -31,17 +31,17 @@ class ConversationConstructor:
 
 def bot(
     text_message: str, reply_markup: Optional[InlineKeyboardMarkup] = None
-) -> ConversationConstructor:
-    return ConversationConstructor(True, text_message, reply_markup)
+) -> MessageContent:
+    return MessageContent(True, text_message, reply_markup)
 
 
-def user(text_message: str) -> ConversationConstructor:
-    return ConversationConstructor(False, text_message)
+def user(text_message: str) -> MessageContent:
+    return MessageContent(False, text_message)
 
 
 def check_conversation(
     chat_id: int,
-    conversation: List[ConversationConstructor],
+    conversation: List[MessageContent],
     client: FakeTelegramClient,
     handle: Callable[[Update], None],
 ):

@@ -1,7 +1,7 @@
 from typing import List
 
 from tutils import (
-    ConversationConstructor,
+    MessageContent,
     FakeTelegramClient,
     bot,
     check_conversation,
@@ -19,7 +19,7 @@ QUESTIONS = [
 ]
 
 
-def check_chat(conversation: List[ConversationConstructor]):
+def check_chat(conversation: List[MessageContent]):
     client = FakeTelegramClient()
     chat_id = 123
     chat_handler = ChatHandler.make_default(client, chat_id)
