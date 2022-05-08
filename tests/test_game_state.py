@@ -1,23 +1,20 @@
-from typing import List, Optional, Tuple
+from typing import List
 
 from test_chat_handler import QUESTIONS
-from tutils import FakeTelegramClient, bot, check_conversation, user
+from tutils import FakeTelegramClient, MessageContent, bot, check_conversation, user
 
 from bot_state import GameState
 from format import make_keyboard
 from models import Question
 from telegram_client import (
     CallbackQuery,
-    InlineKeyboardMarkup,
     SendMessagePayload,
     Update,
     User,
 )
 
 
-def check_game_state(
-    conversation: List[Tuple[bool, str, Optional[InlineKeyboardMarkup]]]
-):
+def check_game_state(conversation: List[MessageContent]):
     client = FakeTelegramClient()
     chat_id = 111
     state = GameState(client, Question.make_some())
