@@ -55,6 +55,15 @@ class IdleState(BotState):
         return self
 
 
+def check_date(update: Update) -> str:
+    if update.message is not None:
+        return update.message.text
+    if update.callback_query is not None:
+        return update.callback_query.data
+
+    assert False, "Unreachable"
+
+
 class GameState(BotState):
     """A state responsible for handling the game itself. Assumes the game has already started."""
 
@@ -74,10 +83,7 @@ class GameState(BotState):
 
     def _do_process(self, update: Update) -> "BotState":
         chat_id = update.chat_id
-        if update.callback_query is not None:
-            answer = parse_int(update.callback_query.data)
-        else:
-            answer = parse_int(update.message.text)
+        answer = parse_int(check_date(update))
 
         if answer is None:
             self._client.send_text(
