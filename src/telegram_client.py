@@ -75,6 +75,19 @@ class Update:
 
         assert False, "Unreachable"
 
+    @property
+    def data(self) -> str:
+        assert (
+            len([x for x in (self.message, self.callback_query) if x is not None]) == 1
+        )
+
+        if self.message is not None:
+            return self.message.text
+        if self.callback_query is not None:
+            return self.callback_query.data
+
+        assert False, "Unreachable"
+
 
 @dataclass
 class GetUpdatesResponse:

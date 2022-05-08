@@ -1,6 +1,5 @@
 from typing import List, Optional, Tuple
 
-import requests
 from test_chat_handler import QUESTIONS
 from tutils import FakeTelegramClient, bot, check_conversation, user
 
@@ -97,9 +96,26 @@ def test_enter_inappropriate_number():
     )
 
 
-def test_callback_query():
+def check_callback_query(button: str, expected_answer: str):
     client = FakeTelegramClient()
     state = GameState(client, Question.make_some())
     chat_id = 111
     state.on_enter(chat_id)
-    state.process(Update(123, None, CallbackQuery(User(111), "1")))
+    state.process(Update(123, None, CallbackQuery(User(111), f"{button}")))
+    assert client.sent_messages == [
+        (
+            SendMessagePayload(
+                111, "1.What is the color of sky?", make_keyboard(QUESTIONS[0])
+            )
+        ),
+        (SendMessagePayload(111, f"{expected_answer}")),
+        (SendMessagePayload(111, "2.How much is 2 + 5?", make_keyboard(QUESTIONS[1]))),
+    ]
+
+
+def test_positive_callback_query():
+    check_callback_query("1", "You are right")
+
+
+def test_negative_callback_query():
+    check_callback_query("0", "You are wrong")

@@ -74,10 +74,7 @@ class GameState(BotState):
 
     def _do_process(self, update: Update) -> "BotState":
         chat_id = update.chat_id
-        if update.message is not None:
-            answer = parse_int(update.message.text)
-        else:
-            answer = parse_int(update.callback_query.data)
+        answer = parse_int(update.data)
 
         if answer is None:
             self._client.send_text(
