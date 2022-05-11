@@ -92,9 +92,9 @@ class GameState(BotState):
             return self
 
         cur_question = self._questions[self._cur_question]
-        if answer < 0 or answer >= len(cur_question.answers):
+        if answer < 1 or answer > len(cur_question.answers):
             self._client.send_text(
-                chat_id, f"Type the number from 0 to {len(cur_question.answers) - 1}"
+                chat_id, f"Type the number from 1 to {len(cur_question.answers)}"
             )
             return self
 
