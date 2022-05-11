@@ -98,7 +98,7 @@ class GameState(BotState):
         elif update.callback_query is not None:
             answer = parse_int(update.callback_query.data)
             if answer is None:
-                raise InvalidCallbackDataException
+                raise Exception(InvalidCallbackDataException)
         else:
             return self
 
