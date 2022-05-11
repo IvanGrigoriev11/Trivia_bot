@@ -7,6 +7,16 @@ from telegram_client import TelegramClient, Update
 from utils import parse_int
 
 
+class BotStateException(Exception):
+    pass
+
+
+class InvalidCallbackDataException(BotStateException):
+    def __init__(self, data: str):
+        super().__init__()
+        self.data = data
+
+
 class BotState(ABC):
     """A class responsible for handling a single chat operation."""
 
@@ -55,15 +65,6 @@ class IdleState(BotState):
         return self
 
 
-def check_date(update: Update) -> str:
-    if update.message is not None:
-        return update.message.text
-    if update.callback_query is not None:
-        return update.callback_query.data
-
-    assert False, "Unreachable"
-
-
 class GameState(BotState):
     """A state responsible for handling the game itself. Assumes the game has already started."""
 
@@ -83,28 +84,25 @@ class GameState(BotState):
 
     def _do_process(self, update: Update) -> "BotState":
         chat_id = update.chat_id
-        answer = parse_int(check_date(update))
-
-        if answer is None:
-            self._client.send_text(
-                chat_id, "Please, type the number of your supposed answer"
-            )
-            return self
-
-        cur_question = self._questions[self._cur_question]
-        if answer < 1 or answer > len(cur_question.answers):
-            self._client.send_text(
-                chat_id, f"Type the number from 1 to {len(cur_question.answers)}"
-            )
-            return self
-
-        if answer == self._questions[self._cur_question].correct_answer:
-            self._client.send_text(chat_id, "You are right")
-            self._score += 1
+        if update.message is not None:
+            answer = parse_int(update.message.text)
+            if answer is None:
+                self._client.send_text(
+                    chat_id, "Please, type the number of your supposed answer"
+                )
+                self._send_question(
+                    chat_id,
+                    self._questions[self._cur_question],
+                )
+                return self
+        elif update.callback_query is not None:
+            answer = parse_int(update.callback_query.data)
+            if answer is None:
+                raise InvalidCallbackDataException
         else:
-            self._client.send_text(chat_id, "You are wrong")
+            return self
 
-        self._cur_question += 1
+        self._handle_answer(chat_id, answer)
 
         if self._cur_question != len(self._questions):
             self._send_question(
@@ -120,6 +118,23 @@ class GameState(BotState):
             + "If you want to try again, type /startGame to start a new game.",
         )
         return IdleState(self._client)
+
+    def _handle_answer(self, chat_id: int, answer: int):
+        cur_question = self._questions[self._cur_question]
+        if answer < 1 or answer > len(cur_question.answers):
+            self._client.send_text(
+                chat_id, f"Type the number from 1 to {len(cur_question.answers)}"
+            )
+            return self
+
+        if answer == self._questions[self._cur_question].correct_answer:
+            self._client.send_text(chat_id, "You are right")
+            self._score += 1
+        else:
+            self._client.send_text(chat_id, "You are wrong")
+
+        self._cur_question += 1
+        return self
 
     def _send_question(self, chat_id: int, question: Question):
         self._client.send_text(
