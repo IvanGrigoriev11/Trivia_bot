@@ -90,19 +90,31 @@ class GameState(BotState):
                 self._client.send_text(
                     chat_id, "Please, type the number of your supposed answer"
                 )
-                self._send_question(
-                    chat_id,
-                    self._questions[self._cur_question],
-                )
                 return self
+            answer -= 1
         elif update.callback_query is not None:
             answer = parse_int(update.callback_query.data)
             if answer is None:
-                raise Exception(InvalidCallbackDataException)
+                raise InvalidCallbackDataException(update.callback_query.data)
         else:
             return self
+        return self._handle_answer(chat_id, answer)
 
-        self._handle_answer(chat_id, answer)
+    def _handle_answer(self, chat_id: int, answer: int):
+        cur_question = self._questions[self._cur_question]
+        if answer < 0 or answer >= len(cur_question.answers):
+            self._client.send_text(
+                chat_id, f"Type the number from 1 to {len(cur_question.answers)}"
+            )
+            return self
+
+        if answer == self._questions[self._cur_question].correct_answer:
+            self._client.send_text(chat_id, "You are right")
+            self._score += 1
+        else:
+            self._client.send_text(chat_id, "You are wrong")
+
+        self._cur_question += 1
 
         if self._cur_question != len(self._questions):
             self._send_question(
@@ -118,23 +130,6 @@ class GameState(BotState):
             + "If you want to try again, type /startGame to start a new game.",
         )
         return IdleState(self._client)
-
-    def _handle_answer(self, chat_id: int, answer: int):
-        cur_question = self._questions[self._cur_question]
-        if answer < 1 or answer > len(cur_question.answers):
-            self._client.send_text(
-                chat_id, f"Type the number from 1 to {len(cur_question.answers)}"
-            )
-            return self
-
-        if answer == self._questions[self._cur_question].correct_answer:
-            self._client.send_text(chat_id, "You are right")
-            self._score += 1
-        else:
-            self._client.send_text(chat_id, "You are wrong")
-
-        self._cur_question += 1
-        return self
 
     def _send_question(self, chat_id: int, question: Question):
         self._client.send_text(

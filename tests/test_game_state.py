@@ -59,16 +59,8 @@ def test_gibberish_reply():
             ),
             user("first"),
             bot("Please, type the number of your supposed answer"),
-            bot(
-                "1.What is the color of sky?",
-                make_keyboard(QUESTIONS[0]),
-            ),
             user("second"),
             bot("Please, type the number of your supposed answer"),
-            bot(
-                "1.What is the color of sky?",
-                make_keyboard(QUESTIONS[0]),
-            ),
             user("2"),
             bot("You are right"),
         ]
@@ -84,16 +76,8 @@ def test_enter_inappropriate_number():
             ),
             user("-1"),
             bot("Type the number from 1 to 3"),
-            bot(
-                "1.What is the color of sky?",
-                make_keyboard(QUESTIONS[0]),
-            ),
             user("4"),
             bot("Type the number from 1 to 3"),
-            bot(
-                "1.What is the color of sky?",
-                make_keyboard(QUESTIONS[0]),
-            ),
             user("3"),
             bot("You are wrong"),
             bot(
@@ -122,8 +106,8 @@ def check_callback_query(button: str, expected_answer: str):
 
 
 def test_positive_callback_query():
-    check_callback_query("2", "You are right")
+    check_callback_query("1", "You are right")
 
 
 def test_negative_callback_query():
-    check_callback_query("1", "You are wrong")
+    check_callback_query("2", "You are wrong")

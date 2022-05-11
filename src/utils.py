@@ -9,7 +9,6 @@ def parse_int(s: str) -> Optional[int]:
 
 
 def transform_keywords(key: str) -> str:
-    """to avoid using the specific "from" function when we need an attribute "from_"
-    to get data updates from Telegram keyboard"""
+    """Appends "_" to keys which are Python-reserved keyword. E.g. `from` -> `from_`."""
 
     return key if key != "from" else "from_"
