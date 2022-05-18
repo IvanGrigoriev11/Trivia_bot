@@ -1,9 +1,9 @@
 from abc import ABC, abstractmethod
-from typing import List
+from typing import List, Optional
 
 from format import make_keyboard
 from models import Question
-from telegram_client import TelegramClient, Update
+from telegram_client import TelegramClient, Update, EditSendMessage
 from utils import parse_int
 
 
@@ -77,10 +77,11 @@ class GameState(BotState):
         self._questions = questions
         self._cur_question = 0
         self._score = 0
+        self._msg_id = 0
 
     def _do_on_enter(self, chat_id: int) -> None:
         # TODO: send the first question to the chat
-        self._send_question(chat_id, self._questions[0])
+        self._msg_id = self._send_question(chat_id, self._questions[0])
 
     def _do_process(self, update: Update) -> "BotState":
         chat_id = update.chat_id
@@ -109,15 +110,15 @@ class GameState(BotState):
             return self
 
         if answer == self._questions[self._cur_question].correct_answer:
-            self._client.send_text(chat_id, "You are right")
             self._score += 1
-        else:
-            self._client.send_text(chat_id, "You are wrong")
 
+        self._client.edit_message_test(
+            EditSendMessage(chat_id, self._msg_id,
+                            f'{self._edit_answer(answer, cur_question.correct_answer, cur_question.text, cur_question.answers)}'))
         self._cur_question += 1
 
         if self._cur_question != len(self._questions):
-            self._send_question(
+            self._msg_id = self._send_question(
                 chat_id,
                 self._questions[self._cur_question],
             )
@@ -131,9 +132,21 @@ class GameState(BotState):
         )
         return IdleState(self._client)
 
-    def _send_question(self, chat_id: int, question: Question):
-        self._client.send_text(
+    def _send_question(self, chat_id: int, question: Question) -> int:
+        return self._client.send_text(
             chat_id,
             f"{question.text}",
             make_keyboard(question),
         )
+
+    def _edit_answer(self, user_answer: int, correct_answer: int, text: str, default_answers: List[str]) -> str:
+        for elements in range(len(default_answers)):
+            if elements != correct_answer and elements != user_answer:
+                default_answers[elements] = '\u2B55' + f'{default_answers[elements]}'
+
+        if user_answer != correct_answer:
+            default_answers[user_answer] = '\u274C' + f'{default_answers[user_answer]}'
+
+        default_answers[correct_answer] = '\u2705' + f'{default_answers[correct_answer]}'
+        edit_answers = f'{text}' + "\n" + "\n".join(default_answers)
+        return edit_answers

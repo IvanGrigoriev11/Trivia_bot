@@ -1,3 +1,4 @@
+import json
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from typing import List, Optional
@@ -84,6 +85,16 @@ class GetUpdatesResponse:
 
 
 @dataclass
+class ReturnMessageID:
+    message_id: int
+
+
+@dataclass
+class GetValueMessageID:
+    result: ReturnMessageID
+
+
+@dataclass
 class InlineKeyboardButton:
     text: str
     callback_data: str
@@ -103,6 +114,13 @@ class SendMessagePayload:
     reply_markup: Optional[InlineKeyboardMarkup] = None
 
 
+@dataclass
+class EditSendMessage:
+    chat_id: int
+    message_id: int
+    text: str
+
+
 class TelegramClient(ABC):
     """An interface for communicating with Telegram backend."""
 
@@ -111,16 +129,20 @@ class TelegramClient(ABC):
         """Gets updates from the telegram with `update_id` bigger than `offset`."""
 
     @abstractmethod
-    def send_message(self, payload: SendMessagePayload) -> None:
+    def send_message(self, payload: SendMessagePayload) -> int:
         """Sends message with a given `payload` to Telegram."""
+
+    @abstractmethod
+    def edit_message_test(self, payload: EditSendMessage) -> None:
+        """write later"""
 
     def send_text(
         self,
         chat_id: int,
         text: str,
-        reply_markup: Optional[InlineKeyboardMarkup] = None,
-    ) -> None:
-        self.send_message(SendMessagePayload(chat_id, text, reply_markup))
+        reply_markup: Optional[InlineKeyboardMarkup] = None
+    ) -> int:
+        return self.send_message(SendMessagePayload(chat_id, text, reply_markup))
 
 
 class LiveTelegramClient(TelegramClient):
@@ -139,13 +161,21 @@ class LiveTelegramClient(TelegramClient):
         response = jsons.loads(
             data, cls=GetUpdatesResponse, key_transformer=transform_keywords
         )
-        print(response.result)
         return response.result
 
-    def send_message(self, payload: SendMessagePayload) -> None:
+    def send_message(self, payload: SendMessagePayload) -> int:
         # TODO: handle Telegram errors.
         data = jsons.dump(payload, strip_nulls=True)
         r = requests.post(
             f"https://api.telegram.org/bot{self._token}/sendMessage", json=data
+        )
+        message_id = jsons.loads(r.text, cls=GetValueMessageID).result.message_id
+        assert r.status_code == 200, f"Expected status code 200 but got {r.status_code}"
+        return message_id
+
+    def edit_message_test(self, payload: EditSendMessage) -> None:
+        data = jsons.dump(payload, strip_nulls=True)
+        r = requests.post(
+            f"https://api.telegram.org/bot{self._token}/editMessageText", json=data
         )
         assert r.status_code == 200, f"Expected status code 200 but got {r.status_code}"
