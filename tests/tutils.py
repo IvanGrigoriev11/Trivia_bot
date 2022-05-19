@@ -7,7 +7,7 @@ from telegram_client import (
     Message,
     SendMessagePayload,
     TelegramClient,
-    Update,
+    Update, EditSendMessage,
 )
 
 
@@ -20,6 +20,9 @@ class FakeTelegramClient(TelegramClient):
 
     def send_message(self, payload: SendMessagePayload) -> None:
         self.sent_messages.append(payload)
+
+    def edit_message_test(self, payload: EditSendMessage) -> None:
+        """write later"""
 
 
 @dataclass(frozen=True)

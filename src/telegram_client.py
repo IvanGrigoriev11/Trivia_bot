@@ -140,7 +140,7 @@ class TelegramClient(ABC):
         self,
         chat_id: int,
         text: str,
-        reply_markup: Optional[InlineKeyboardMarkup] = None
+        reply_markup: Optional[InlineKeyboardMarkup] = None,
     ) -> int:
         return self.send_message(SendMessagePayload(chat_id, text, reply_markup))
 

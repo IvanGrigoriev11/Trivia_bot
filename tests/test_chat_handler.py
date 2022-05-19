@@ -30,19 +30,16 @@ def test_entire_game():
                 make_keyboard(QUESTIONS[0]),
             ),
             user("1"),
-            bot("You are wrong"),
             bot(
                 "2.How much is 2 + 5?",
                 make_keyboard(QUESTIONS[1]),
             ),
             user("3"),
-            bot("You are right"),
             bot(
                 "3.What date is Christmas?",
                 make_keyboard(QUESTIONS[2]),
             ),
             user("4"),
-            bot("You are right"),
             bot(
                 "You got 2 points out of 3.\nIf you want to try again, type"
                 + " /startGame to start a new game."

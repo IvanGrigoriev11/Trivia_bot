@@ -3,7 +3,7 @@ from typing import List, Optional
 
 from format import make_keyboard
 from models import Question
-from telegram_client import TelegramClient, Update, EditSendMessage
+from telegram_client import EditSendMessage, TelegramClient, Update
 from utils import parse_int
 
 
@@ -113,8 +113,12 @@ class GameState(BotState):
             self._score += 1
 
         self._client.edit_message_test(
-            EditSendMessage(chat_id, self._msg_id,
-                            f'{self._edit_answer(answer, cur_question.correct_answer, cur_question.text, cur_question.answers)}'))
+            EditSendMessage(
+                chat_id,
+                self._msg_id,
+                f"{self._edit_answer(answer, cur_question.correct_answer, cur_question.text, cur_question.answers)}",
+            )
+        )
         self._cur_question += 1
 
         if self._cur_question != len(self._questions):
@@ -139,14 +143,23 @@ class GameState(BotState):
             make_keyboard(question),
         )
 
-    def _edit_answer(self, user_answer: int, correct_answer: int, text: str, default_answers: List[str]) -> str:
+    def _edit_answer(
+        self,
+        user_answer: int,
+        correct_answer: int,
+        text: str,
+        default_answers: List[str],
+    ) -> str:
         for elements in range(len(default_answers)):
             if elements != correct_answer and elements != user_answer:
-                default_answers[elements] = '\u2B55' + f'{default_answers[elements]}'
+                default_answers[elements] = "\u2B55" + f"{default_answers[elements]}"
 
         if user_answer != correct_answer:
-            default_answers[user_answer] = '\u274C' + f'{default_answers[user_answer]}'
+            default_answers[user_answer] = "\u274C" + f"{default_answers[user_answer]}"
 
-        default_answers[correct_answer] = '\u2705' + f'{default_answers[correct_answer]}'
-        edit_answers = f'{text}' + "\n" + "\n".join(default_answers)
+        default_answers[correct_answer] = (
+            "\u2705" + f"{default_answers[correct_answer]}"
+        )
+        edit_answers = f"{text}" + "\n" + "\n".join(default_answers)
+        print(edit_answers)
         return edit_answers
