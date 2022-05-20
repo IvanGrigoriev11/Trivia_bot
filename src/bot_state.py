@@ -134,7 +134,12 @@ class GameState(BotState):
             EditSendMessage(
                 chat_id,
                 self._msg_id,
-                edit_answer(answer, cur_question.correct_answer, cur_question.text, cur_question.answers)
+                edit_answer(
+                    answer,
+                    cur_question.correct_answer,
+                    cur_question.text,
+                    cur_question.answers,
+                ),
             )
         )
         self._cur_question += 1
