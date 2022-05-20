@@ -71,7 +71,7 @@ def edit_answer(
     text: str,
     default_answers: List[str],
 ) -> str:
-    for elements in range(len(default_answers)):
+    for elements, key in enumerate(default_answers):
         if elements not in (correct_answer, user_answer):
             default_answers[elements] = "\u2B55" + f"{default_answers[elements]}"
 
@@ -80,7 +80,6 @@ def edit_answer(
 
     default_answers[correct_answer] = "\u2705" + f"{default_answers[correct_answer]}"
     edit_answers = f"{text}" + "\n" + "\n".join(default_answers)
-    print(edit_answers)
     return edit_answers
 
 
@@ -135,7 +134,7 @@ class GameState(BotState):
             EditSendMessage(
                 chat_id,
                 self._msg_id,
-                f"{edit_answer(answer, cur_question.correct_answer, cur_question.text, cur_question.answers)}",
+                edit_answer(answer, cur_question.correct_answer, cur_question.text, cur_question.answers)
             )
         )
         self._cur_question += 1
