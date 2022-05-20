@@ -72,7 +72,7 @@ def edit_answer(
     default_answers: List[str],
 ) -> str:
     for elements in range(len(default_answers)):
-        if elements != correct_answer and elements != user_answer:
+        if elements not in (correct_answer, user_answer):
             default_answers[elements] = "\u2B55" + f"{default_answers[elements]}"
 
     if user_answer != correct_answer:
