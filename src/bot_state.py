@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import List, Optional
+from typing import List
 
 from format import make_keyboard
 from models import Question
@@ -65,6 +65,27 @@ class IdleState(BotState):
         return self
 
 
+def edit_answer(
+    user_answer: int,
+    correct_answer: int,
+    text: str,
+    default_answers: List[str],
+) -> str:
+    for elements in range(len(default_answers)):
+        if elements != correct_answer and elements != user_answer:
+            default_answers[elements] = "\u2B55" + f"{default_answers[elements]}"
+
+    if user_answer != correct_answer:
+        default_answers[user_answer] = "\u274C" + f"{default_answers[user_answer]}"
+
+    default_answers[correct_answer] = (
+        "\u2705" + f"{default_answers[correct_answer]}"
+    )
+    edit_answers = f"{text}" + "\n" + "\n".join(default_answers)
+    print(edit_answers)
+    return edit_answers
+
+
 class GameState(BotState):
     """A state responsible for handling the game itself. Assumes the game has already started."""
 
@@ -116,7 +137,7 @@ class GameState(BotState):
             EditSendMessage(
                 chat_id,
                 self._msg_id,
-                f"{self._edit_answer(answer, cur_question.correct_answer, cur_question.text, cur_question.answers)}",
+                f"{edit_answer(answer, cur_question.correct_answer, cur_question.text, cur_question.answers)}",
             )
         )
         self._cur_question += 1
@@ -142,24 +163,3 @@ class GameState(BotState):
             f"{question.text}",
             make_keyboard(question),
         )
-
-    def _edit_answer(
-        self,
-        user_answer: int,
-        correct_answer: int,
-        text: str,
-        default_answers: List[str],
-    ) -> str:
-        for elements in range(len(default_answers)):
-            if elements != correct_answer and elements != user_answer:
-                default_answers[elements] = "\u2B55" + f"{default_answers[elements]}"
-
-        if user_answer != correct_answer:
-            default_answers[user_answer] = "\u274C" + f"{default_answers[user_answer]}"
-
-        default_answers[correct_answer] = (
-            "\u2705" + f"{default_answers[correct_answer]}"
-        )
-        edit_answers = f"{text}" + "\n" + "\n".join(default_answers)
-        print(edit_answers)
-        return edit_answers

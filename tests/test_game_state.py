@@ -8,7 +8,6 @@ from format import make_keyboard
 from models import Question
 from telegram_client import (
     CallbackQuery,
-    EditSendMessage,
     SendMessagePayload,
     Update,
     User,
