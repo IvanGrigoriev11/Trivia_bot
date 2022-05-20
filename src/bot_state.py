@@ -78,9 +78,7 @@ def edit_answer(
     if user_answer != correct_answer:
         default_answers[user_answer] = "\u274C" + f"{default_answers[user_answer]}"
 
-    default_answers[correct_answer] = (
-        "\u2705" + f"{default_answers[correct_answer]}"
-    )
+    default_answers[correct_answer] = "\u2705" + f"{default_answers[correct_answer]}"
     edit_answers = f"{text}" + "\n" + "\n".join(default_answers)
     print(edit_answers)
     return edit_answers
