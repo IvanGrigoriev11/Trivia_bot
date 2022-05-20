@@ -72,8 +72,9 @@ def edit_answer(
     default_answers: List[str],
 ) -> str:
     for elements, key in enumerate(default_answers):
+        print(elements, key)
         if elements not in (correct_answer, user_answer):
-            default_answers[elements] = "\u2B55" + f"{default_answers[elements]}"
+            default_answers[elements] = "\u2B55" + f"{key}"
 
     if user_answer != correct_answer:
         default_answers[user_answer] = "\u274C" + f"{default_answers[user_answer]}"
