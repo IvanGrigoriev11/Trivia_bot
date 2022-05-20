@@ -3,11 +3,12 @@ from typing import Callable, List, Optional
 
 from telegram_client import (
     Chat,
+    EditSendMessage,
     InlineKeyboardMarkup,
     Message,
     SendMessagePayload,
     TelegramClient,
-    Update, EditSendMessage,
+    Update,
 )
 
 
