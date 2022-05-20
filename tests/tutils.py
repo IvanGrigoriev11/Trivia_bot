@@ -22,7 +22,7 @@ class FakeTelegramClient(TelegramClient):
     def send_message(self, payload: SendMessagePayload) -> None:
         self.sent_messages.append(payload)
 
-    def edit_message_test(self, payload: EditSendMessage) -> None:
+    def edit_message_text(self, payload: EditSendMessage) -> None:
         """write later"""
 
 

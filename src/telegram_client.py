@@ -1,4 +1,3 @@
-import json
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from typing import List, Optional
@@ -133,7 +132,7 @@ class TelegramClient(ABC):
         """Sends message with a given `payload` to Telegram."""
 
     @abstractmethod
-    def edit_message_test(self, payload: EditSendMessage) -> None:
+    def edit_message_text(self, payload: EditSendMessage) -> None:
         """write later"""
 
     def send_text(
@@ -173,7 +172,7 @@ class LiveTelegramClient(TelegramClient):
         assert r.status_code == 200, f"Expected status code 200 but got {r.status_code}"
         return message_id
 
-    def edit_message_test(self, payload: EditSendMessage) -> None:
+    def edit_message_text(self, payload: EditSendMessage) -> None:
         data = jsons.dump(payload, strip_nulls=True)
         r = requests.post(
             f"https://api.telegram.org/bot{self._token}/editMessageText", json=data

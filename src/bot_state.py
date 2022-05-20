@@ -112,7 +112,7 @@ class GameState(BotState):
         if answer == self._questions[self._cur_question].correct_answer:
             self._score += 1
 
-        self._client.edit_message_test(
+        self._client.edit_message_text(
             EditSendMessage(
                 chat_id,
                 self._msg_id,
