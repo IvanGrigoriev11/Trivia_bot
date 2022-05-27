@@ -4,7 +4,6 @@ from typing import List, Optional
 import requests
 import typer
 
-
 QUESTIONS = []
 
 
@@ -18,18 +17,24 @@ def request_token() -> str:
     """Get token from OpenTrivia API"""
 
     response = requests.post("https://opentdb.com/api_token.php?command=request")
-    assert response.status_code == 200, f"Expected status code 0 but got {response.status_code}"
-    session_token = response.json()['token']
+    assert (
+        response.status_code == 200
+    ), f"Expected status code 0 but got {response.status_code}"
+    session_token = response.json()["token"]
     return session_token
 
 
 def download_questions(session_token: str, first_launch: bool) -> ScrapperState:
     """Download the database of questions from OpenTriviaDB"""
 
-    package_of_questions = requests.post(f"https://opentdb.com/api.php?amount=50&token={session_token}")
-    assert package_of_questions.status_code == 200, f"Expected status code 0 but got {package_of_questions.status_code}"
+    package_of_questions = requests.post(
+        f"https://opentdb.com/api.php?amount=50&token={session_token}"
+    )
+    assert (
+        package_of_questions.status_code == 200
+    ), f"Expected status code 0 but got {package_of_questions.status_code}"
     data = package_of_questions.text
-    code = package_of_questions.json()['response_code']
+    code = package_of_questions.json()["response_code"]
 
     if code == 0:
         if first_launch:
@@ -54,7 +59,9 @@ def download_questions(session_token: str, first_launch: bool) -> ScrapperState:
 def reset_token_session(session_token: str):
     """Reset token which will wipe story about last connection with API"""
 
-    requests.post(f"https://opentdb.com/api_token.php?command=reset&token={session_token}")
+    requests.post(
+        f"https://opentdb.com/api_token.php?command=reset&token={session_token}"
+    )
     QUESTIONS.clear()
     print("The session was reset!")
 
@@ -62,7 +69,7 @@ def reset_token_session(session_token: str):
 def record_data(data: List[str]):
     """Save all recorded data into file"""
 
-    with open('questions.json', mode='w') as result:
+    with open("questions.json", mode="w") as result:
         for item in data:
             result.write(item)
     print("All information was recorded")
