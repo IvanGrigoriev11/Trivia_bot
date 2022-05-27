@@ -24,7 +24,9 @@ def request_token() -> str:
     return session_token
 
 
-def download_questions(session_token: Optional[str], first_launch: bool) -> ScrapperState:
+def download_questions(
+    session_token: Optional[str], first_launch: bool
+) -> ScrapperState:
     """Download the database of questions from OpenTriviaDB"""
 
     package_of_questions = requests.post(
