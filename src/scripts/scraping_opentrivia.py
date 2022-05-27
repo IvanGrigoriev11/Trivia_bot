@@ -9,7 +9,7 @@ QUESTIONS = []
 
 @dataclass
 class ScrapperState:
-    session_token: Optional[str]
+    session_token: str
     is_finished: bool
 
 
@@ -78,12 +78,11 @@ def record_data(data: List[str]):
 def main():
     max_number = 0
     session = download_questions(request_token(), True)
-    if session.session_token is not None:
-        while session.is_finished is not True:
-            max_number += 1
-            session = download_questions(session.session_token, False)
-        else:
-            print(f"the max number of the questions is: {max_number*50}")
+    while session.is_finished is not True:
+        max_number += 1
+        session = download_questions(session.session_token, False)
+    else:
+        print(f"the max number of the questions is: {max_number*50}")
 
 
 if __name__ == "__main__":
