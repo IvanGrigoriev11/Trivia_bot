@@ -9,8 +9,8 @@ QUESTIONS = []
 
 @dataclass
 class ScrapperState:
-    is_finished: bool
     session_token: Optional[str]
+    is_finished: bool
 
 
 def request_token() -> str:
@@ -25,7 +25,7 @@ def request_token() -> str:
 
 
 def download_questions(
-    session_token: Optional[str], first_launch: bool
+    session_token: str, first_launch: bool
 ) -> ScrapperState:
     """Download the database of questions from OpenTriviaDB"""
 
@@ -44,7 +44,7 @@ def download_questions(
 
         QUESTIONS.append(f",{data}")
         print("the process is running")
-        return ScrapperState(False, session_token)
+        return ScrapperState(session_token, False)
     elif code == 1:
         print("No Results")
     elif code == 2:
@@ -55,7 +55,7 @@ def download_questions(
     QUESTIONS.append(f"]")
     record_data(QUESTIONS)
     reset_token_session(session_token)
-    return ScrapperState(True, session_token)
+    return ScrapperState(session_token, True)
 
 
 def reset_token_session(session_token: str):
@@ -80,11 +80,12 @@ def record_data(data: List[str]):
 def main():
     max_number = 0
     session = download_questions(request_token(), True)
-    while session.is_finished is not True:
-        max_number += 1
-        session = download_questions(session.session_token, False)
-    else:
-        print(f"the max number of the questions is: {max_number*50}")
+    if session.session_token is not None:
+        while session.is_finished is not True:
+            max_number += 1
+            session = download_questions(session.session_token, False)
+        else:
+            print(f"the max number of the questions is: {max_number*50}")
 
 
 if __name__ == "__main__":
