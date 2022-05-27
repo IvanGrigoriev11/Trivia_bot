@@ -9,8 +9,8 @@ QUESTIONS = []
 
 @dataclass
 class ScrapperState:
-    session_token: Optional[str]
     is_finished: bool
+    session_token: Optional[str] = None
 
 
 def request_token() -> str:
@@ -42,7 +42,7 @@ def download_questions(session_token: str, first_launch: bool) -> ScrapperState:
 
         QUESTIONS.append(f",{data}")
         print("the process is running")
-        return ScrapperState(session_token, False)
+        return ScrapperState(False, session_token)
     elif code == 1:
         print("No Results")
     elif code == 2:
@@ -53,7 +53,7 @@ def download_questions(session_token: str, first_launch: bool) -> ScrapperState:
     QUESTIONS.append(f"]")
     record_data(QUESTIONS)
     reset_token_session(session_token)
-    return ScrapperState(session_token, True)
+    return ScrapperState(True, session_token)
 
 
 def reset_token_session(session_token: str):
