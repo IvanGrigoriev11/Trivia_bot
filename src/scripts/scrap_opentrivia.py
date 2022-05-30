@@ -1,5 +1,5 @@
 import json
-from typing import Dict, List
+from typing import Dict, List, Optional
 
 import requests
 import typer
@@ -38,13 +38,16 @@ def get_questions(session_token: str) -> List[Dict]:
         return []
 
 
-def main(max_questions: int = typer.Option(4050)):
-    """
-    Enter the MAX_QUESTIONS optionally with --max-questions.
-
-    You can choose the number from 0 to 4050 multiples of 50.
-    If the field is left empty, the script downloads all questions from API.
-    """
+def main(
+    max_questions: Optional[int] = typer.Option(
+        None,
+        help="""
+        Enter the MAX_QUESTIONS optionally with --max-questions.
+         
+        You can choose the number from 0 to 4050 multiples of 50.
+        If the field is left empty, the script downloads all questions from API.""",
+    )
+):
     session_token = request_token()
     all_questions = []
     while True:
@@ -55,7 +58,7 @@ def main(max_questions: int = typer.Option(4050)):
         else:
             break
 
-        if len(all_questions) >= max_questions:
+        if max_questions and max_questions <= len(all_questions):
             break
 
     with open("questions.json", "w") as f:
