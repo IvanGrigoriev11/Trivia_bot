@@ -6,10 +6,9 @@ import typer
 
 
 def request_token() -> str:
-    """Get session_token from OpenTrivia API.
-
-    Returns:
-        session_token (str): a unique key which helps to keep track of the question the API has already retrieved.
+    """
+    Returns a new session token for OpenTrivia API.
+    The token is used for tracking the set of returned questions and to avoid getting duplicates.
     """
 
     response = requests.post("https://opentdb.com/api_token.php?command=request")
@@ -42,10 +41,8 @@ def main(
     max_questions: Optional[int] = typer.Option(
         None,
         help="""
-        Enter the MAX_QUESTIONS optionally with --max-questions.
-         
-        You can choose the number from 0 to 4050 multiples of 50.
-        If the field is left empty, the script downloads all questions from API.""",
+        Puts a limit on the number of questions to be downloaded. If not set, the script will download all questions.
+        """,
     )
 ):
     session_token = request_token()
