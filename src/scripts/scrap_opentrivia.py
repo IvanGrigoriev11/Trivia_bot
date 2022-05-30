@@ -26,7 +26,6 @@ def get_questions(session_token: str) -> List[Dict]:
     )
     code = response.json()["response_code"]
     if code == 0:
-        print("the process is running")
         return json.loads(response.text)["results"]
     else:
         termination_reason = {
@@ -39,26 +38,29 @@ def get_questions(session_token: str) -> List[Dict]:
         return []
 
 
-def show_max_number(all_questions: List[Dict]) -> int:
-    """Counts the max number of questions to download from OpenTrivia API."""
+def main(max_questions: int = typer.Option(4050)):
+    """
+    Enter the MAX_QUESTIONS optionally with --max-questions.
 
-    max_number = len(all_questions)
-    return max_number
-
-
-def main():
+    You can choose the number from 0 to 4050 multiples of 50.
+    If the field is left empty, the script downloads all questions from API.
+    """
     session_token = request_token()
     all_questions = []
     while True:
         questions = get_questions(session_token)
         if questions:
             all_questions.extend(questions)
+            print(f"Downloaded {len(all_questions)} questions")
         else:
-            typer.echo(show_max_number(all_questions))
+            break
+
+        if len(all_questions) >= max_questions:
             break
 
     with open("questions.json", "w") as f:
         f.write(json.dumps(all_questions))
+        print("All finished")
 
 
 if __name__ == "__main__":
