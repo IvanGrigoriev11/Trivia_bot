@@ -3,7 +3,7 @@ from typing import Callable, List, Optional
 
 from telegram_client import (
     Chat,
-    EditSendMessage,
+    MessageEdit,
     InlineKeyboardMarkup,
     Message,
     SendMessagePayload,
@@ -14,16 +14,17 @@ from telegram_client import (
 
 class FakeTelegramClient(TelegramClient):
     def __init__(self):
-        self.sent_messages: List[SendMessagePayload] = []
+        self.sent_messages: List[SendMessagePayload | MessageEdit] = []
 
     def get_updates(self, offset: int = 0) -> List[Update]:
         raise NotImplementedError()
 
-    def send_message(self, payload: SendMessagePayload) -> None:
+    def send_message(self, payload: SendMessagePayload) -> int:
         self.sent_messages.append(payload)
+        return 0
 
-    def edit_message_text(self, payload: EditSendMessage) -> None:
-        """write later"""
+    def edit_message_text(self, payload: MessageEdit) -> None:
+        self.sent_messages.append(payload)
 
 
 @dataclass(frozen=True)
@@ -55,7 +56,7 @@ def check_conversation(
         if msg.is_bot:
             assert client.sent_messages[last_message_from_bot] == SendMessagePayload(
                 chat_id, msg.text_message, msg.reply_markup
-            )
+            ) or MessageEdit(chat_id, last_message_from_bot - 1, msg.text_message)
             last_message_from_bot += 1
         else:
             handle(

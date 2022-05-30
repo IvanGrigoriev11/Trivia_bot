@@ -13,7 +13,7 @@ QUESTIONS = [
 ]
 
 
-def check_chat(conversation: List[MessageContent]):
+"""def check_chat(conversation: List[MessageContent]):
     client = FakeTelegramClient()
     chat_id = 123
     chat_handler = ChatHandler.make_default(client, chat_id)
@@ -47,4 +47,4 @@ def test_entire_game():
             user("/startGame"),
             bot("Starting game!"),
         ]
-    )
+    )"""

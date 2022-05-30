@@ -84,13 +84,13 @@ class GetUpdatesResponse:
 
 
 @dataclass
-class ReturnMessageID:
+class SendMessageResponseResult:
     message_id: int
 
 
 @dataclass
-class GetValueMessageID:
-    result: ReturnMessageID
+class SendMessageResponse:
+    result: SendMessageResponseResult
 
 
 @dataclass
@@ -114,7 +114,7 @@ class SendMessagePayload:
 
 
 @dataclass
-class EditSendMessage:
+class MessageEdit:
     chat_id: int
     message_id: int
     text: str
@@ -129,11 +129,11 @@ class TelegramClient(ABC):
 
     @abstractmethod
     def send_message(self, payload: SendMessagePayload) -> int:
-        """Sends message with a given `payload` to Telegram."""
+        """Sends message with a given `payload` to Telegram and returns the id of this message"""
 
     @abstractmethod
-    def edit_message_text(self, payload: EditSendMessage) -> None:
-        """write later"""
+    def edit_message_text(self, payload: MessageEdit) -> None:
+        """Sends edited message to Telegram in response to the previous user-selected answer"""
 
     def send_text(
         self,
@@ -168,11 +168,11 @@ class LiveTelegramClient(TelegramClient):
         r = requests.post(
             f"https://api.telegram.org/bot{self._token}/sendMessage", json=data
         )
-        message_id = jsons.loads(r.text, cls=GetValueMessageID).result.message_id
+        message_id = jsons.loads(r.text, cls=SendMessageResponse).result.message_id
         assert r.status_code == 200, f"Expected status code 200 but got {r.status_code}"
         return message_id
 
-    def edit_message_text(self, payload: EditSendMessage) -> None:
+    def edit_message_text(self, payload: MessageEdit) -> None:
         data = jsons.dump(payload, strip_nulls=True)
         r = requests.post(
             f"https://api.telegram.org/bot{self._token}/editMessageText", json=data
