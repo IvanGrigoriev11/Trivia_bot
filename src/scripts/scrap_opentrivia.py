@@ -60,7 +60,8 @@ def main(
 
     with open("questions.json", "w") as f:
         f.write(json.dumps(all_questions))
-        print("All finished")
+
+    print("All finished")
 
 
 if __name__ == "__main__":
