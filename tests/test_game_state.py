@@ -1,12 +1,18 @@
 from typing import List
 
-from test_chat_handler import QUESTIONS
 from tutils import FakeTelegramClient, MessageContent, bot, check_conversation, user
 
 from bot_state import GameState
 from format import make_keyboard, make_answered_question_message, make_question_message
 from models import Question
 from telegram_client import CallbackQuery, SendMessagePayload, Update, User, MessageEdit
+
+
+QUESTIONS = [
+    Question("1.What is the color of sky?", ["orange", "blue", "green"], 1),
+    Question("2.How much is 2 + 5?", ["4", "10", "7", "8"], 2),
+    Question("3.What date is Christmas?", ["Dec 24", "Apr 15", "Jan 1", "Dec 25"], 3),
+]
 
 
 def check_game_state(conversation: List[MessageContent]):
@@ -69,7 +75,7 @@ def check_game_state(conversation: List[MessageContent]):
 """
 
 
-def test_enter_inappropriate_number():
+"""def test_enter_inappropriate_number():
     check_game_state(
         [
             bot(
@@ -87,7 +93,7 @@ def test_enter_inappropriate_number():
                 make_keyboard(QUESTIONS[1]),
             ),
         ]
-    )
+    )"""
 
 
 def check_callback_query(button: str):
@@ -96,14 +102,13 @@ def check_callback_query(button: str):
     chat_id = 111
     state.on_enter(chat_id)
     state.process(Update(123, None, CallbackQuery(User(111), f"{button}")))
+    print(client.sent_messages)
     assert client.sent_messages == [
-        (
             SendMessagePayload(
                 111, "1.What is the color of sky?", make_keyboard(QUESTIONS[0])
-            )
-        ),
-        #(MessageEdit(111, 0, "1.What is the color of sky?\n\u274Corange\n\u2705blue\n\u2B55green"))
-        #(SendMessagePayload(111, f"{expected_answer}", make_keyboard(QUESTIONS[1]))),
+            ),
+            MessageEdit(111, 0, '1.What is the color of sky?\n\u2B55orange\n\u2705blue\n\u2B55green'),
+            SendMessagePayload(111, "2.How much is 2 + 5?", make_keyboard(QUESTIONS[1]))
     ]
 
 

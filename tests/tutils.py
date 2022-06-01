@@ -54,9 +54,9 @@ def check_conversation(
     update_id = 111
     for msg in conversation:
         if msg.is_bot:
-            assert client.sent_messages[last_message_from_bot] == SendMessagePayload(
+            assert client.sent_messages[last_message_from_bot] ==[SendMessagePayload(
                 chat_id, msg.text_message, msg.reply_markup
-            ) or MessageEdit(chat_id, last_message_from_bot - 1, msg.text_message)
+            )]
             last_message_from_bot += 1
         else:
             handle(
