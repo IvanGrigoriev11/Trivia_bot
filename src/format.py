@@ -35,10 +35,10 @@ def make_answered_question_message(user_answer: int, questions: Question) -> str
     Returns edited form after adding some unicode symbols to the text of answers.
     """
     empty_list = []
-    for elements, key in enumerate(questions.answers):
+    for element, key in enumerate(questions.answers):
         empty_list.append(key)
 
-    for index in range(len(empty_list)):
+    for index, word in enumerate(empty_list):
         if index == questions.correct_answer:
             empty_list[index] = (
                 f"{CHECK_MARK}" + f"{questions.answers[questions.correct_answer]}"
@@ -46,7 +46,7 @@ def make_answered_question_message(user_answer: int, questions: Question) -> str
         elif index != questions.correct_answer and index == user_answer:
             empty_list[index] = f"{CROSS_MARK}" + f"{questions.answers[user_answer]}"
         else:
-            empty_list[index] = f"{RED_CIRCLE_MARK}" + f"{empty_list[index]}"
+            empty_list[index] = f"{RED_CIRCLE_MARK}" + f"{word}"
 
     edit_answers = f"{questions.text}" + "\n" + "\n".join(empty_list)
     return edit_answers
