@@ -36,7 +36,7 @@ def make_answered_question_message(user_answer: int, questions: Question) -> str
     """
     empty_list = []
     for element, key in enumerate(questions.answers):
-        empty_list.append(key)
+        empty_list.insert(element, key)
 
     for index, word in enumerate(empty_list):
         if index == questions.correct_answer:
