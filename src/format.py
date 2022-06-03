@@ -14,7 +14,9 @@ def make_keyboard(question: Question) -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup([buttons])
 
 
-def make_question_message(client: TelegramClient, chat_id: int, question: Question) -> int:
+def make_question_message(
+    client: TelegramClient, chat_id: int, question: Question
+) -> int:
     """
     Builds the original form of question and directs it to the "send_message" interface,
     returns the id of the last sent message with question to the user.
@@ -27,22 +29,24 @@ def make_question_message(client: TelegramClient, chat_id: int, question: Questi
     )
 
 
-def make_answered_question_message(
-    user_answer: int,
-    questions: Question
-) -> str:
+def make_answered_question_message(user_answer: int, questions: Question) -> str:
     """
     Edits the text of last sent question depends on user's answer.
     Returns edited form after adding some unicode symbols to the text of answers.
     """
-
+    empty_list = []
     for elements, key in enumerate(questions.answers):
-        if elements not in (questions.correct_answer, user_answer):
-            questions.answers[elements] = f"{RED_CIRCLE_MARK}"+f"{key}"
+        empty_list.append(key)
 
-    if user_answer != questions.correct_answer:
-        questions.answers[user_answer] = f"{CROSS_MARK}"+f"{questions.answers[user_answer]}"
+    for index in range(len(empty_list)):
+        if index == questions.correct_answer:
+            empty_list[index] = (
+                f"{CHECK_MARK}" + f"{questions.answers[questions.correct_answer]}"
+            )
+        elif index != questions.correct_answer and index == user_answer:
+            empty_list[index] = f"{CROSS_MARK}" + f"{questions.answers[user_answer]}"
+        else:
+            empty_list[index] = f"{RED_CIRCLE_MARK}" + f"{empty_list[index]}"
 
-    questions.answers[questions.correct_answer] = f"{CHECK_MARK}" + f"{questions.answers[questions.correct_answer]}"
-    edit_answers = f"{questions.text}" + "\n" + "\n".join(questions.answers)
+    edit_answers = f"{questions.text}" + "\n" + "\n".join(empty_list)
     return edit_answers

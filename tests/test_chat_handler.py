@@ -3,7 +3,7 @@ from typing import List
 from tutils import FakeTelegramClient, MessageContent, bot, check_conversation, user
 
 from chat_handler import ChatHandler
-from format import make_keyboard
+from format import make_answered_question_message, make_keyboard
 from models import Question
 
 QUESTIONS = [
@@ -13,7 +13,7 @@ QUESTIONS = [
 ]
 
 
-"""def check_chat(conversation: List[MessageContent]):
+def check_chat(conversation: List[MessageContent]):
     client = FakeTelegramClient()
     chat_id = 123
     chat_handler = ChatHandler.make_default(client, chat_id)
@@ -24,27 +24,34 @@ def test_entire_game():
     check_chat(
         [
             user("/startGame"),
-            bot("Starting game!"),
+            bot("send_mode", "Starting game!"),
             bot(
+                "send_mode",
                 "1.What is the color of sky?",
                 make_keyboard(QUESTIONS[0]),
             ),
             user("1"),
+            bot("edit_mode", make_answered_question_message(0, QUESTIONS[0])),
             bot(
+                "send_mode",
                 "2.How much is 2 + 5?",
                 make_keyboard(QUESTIONS[1]),
             ),
             user("3"),
+            bot("edit_mode", make_answered_question_message(2, QUESTIONS[1])),
             bot(
+                "send_mode",
                 "3.What date is Christmas?",
                 make_keyboard(QUESTIONS[2]),
             ),
             user("4"),
+            bot("edit_mode", make_answered_question_message(3, QUESTIONS[2])),
             bot(
+                "send_mode",
                 "You got 2 points out of 3.\nIf you want to try again, type"
-                + " /startGame to start a new game."
+                + " /startGame to start a new game.",
             ),
             user("/startGame"),
-            bot("Starting game!"),
+            bot("send_mode", "Starting game!"),
         ]
-    )"""
+    )
