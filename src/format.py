@@ -1,5 +1,5 @@
 from models import Question
-from telegram_client import InlineKeyboardButton, InlineKeyboardMarkup, TelegramClient
+from telegram_client import InlineKeyboardButton, InlineKeyboardMarkup
 
 CHECK_MARK = "\u2705"
 CROSS_MARK = "\u274C"
@@ -14,39 +14,21 @@ def make_keyboard(question: Question) -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup([buttons])
 
 
-def make_question_message(
-    client: TelegramClient, chat_id: int, question: Question
-) -> int:
+def make_answered_question_message(user_answer: int, question: Question) -> str:
     """
-    Builds the original form of question and directs it to the "send_message" interface,
-    returns the id of the last sent message with question to the user.
+    Creates a question message that reflects the user's answer.
     """
 
-    return client.send_text(
-        chat_id,
-        f"{question.text}",
-        make_keyboard(question),
-    )
-
-
-def make_answered_question_message(user_answer: int, questions: Question) -> str:
-    """
-    Edits the text of last sent question depends on user's answer.
-    Returns edited form after adding some unicode symbols to the text of answers.
-    """
-    empty_list = []
-    for element, key in enumerate(questions.answers):
-        empty_list.insert(element, key)
-
-    for index, word in enumerate(empty_list):
-        if index == questions.correct_answer:
-            empty_list[index] = (
-                f"{CHECK_MARK}" + f"{questions.answers[questions.correct_answer]}"
+    edited_answers = []
+    for index, word in enumerate(question.answers):
+        if index == question.correct_answer:
+            edited_answers.append(
+                f"{CHECK_MARK}" + f"{question.answers[question.correct_answer]}"
             )
-        elif index != questions.correct_answer and index == user_answer:
-            empty_list[index] = f"{CROSS_MARK}" + f"{questions.answers[user_answer]}"
+        elif index != question.correct_answer and index == user_answer:
+            edited_answers.append(f"{CROSS_MARK}" + f"{question.answers[user_answer]}")
         else:
-            empty_list[index] = f"{RED_CIRCLE_MARK}" + f"{word}"
+            edited_answers.append(f"{RED_CIRCLE_MARK}" + f"{word}")
 
-    edit_answers = f"{questions.text}" + "\n" + "\n".join(empty_list)
+    edit_answers = f"{question.text}" + "\n" + "\n".join(edited_answers)
     return edit_answers

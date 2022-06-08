@@ -28,6 +28,17 @@ class User:
 
 @dataclass
 class CallbackQuery:
+    """A class used to represent the special data from keyboard.
+
+    Attributes
+    ----------
+    from_ : User
+        unique user's identifier
+
+    data : str
+        unique information sent by the user after clicking any button
+    """
+
     from_: User
     data: str
 
@@ -55,7 +66,11 @@ class Update:
     Attributes
     ----------
     update_id : int
-        An increasing update identifier. Each subsequent updates will have larger update_id.
+        An increasing update identifier. Each subsequent updates will have larger update_id
+    message : Optional[Message]
+        An attribute represents a message from user
+    callback_query : Optional[CallbackQuery]
+        An attribute represents a data from keyboard
     """
 
     update_id: int
@@ -78,7 +93,7 @@ class Update:
 
 @dataclass
 class GetUpdatesResponse:
-    """Http response from Telegram for recieving updates."""
+    """Http response from Telegram for receiving updates."""
 
     result: List[Update]
 
@@ -90,17 +105,29 @@ class SendMessageResponseResult:
 
 @dataclass
 class SendMessageResponse:
+    """Http response from Telegram for receiving message id.
+
+    Attributes
+    ----------
+    result : SendMessageResponseResult
+        response result with a unique message identifier
+    """
+
     result: SendMessageResponseResult
 
 
 @dataclass
 class InlineKeyboardButton:
+    """A class contains special data about button."""
+
     text: str
     callback_data: str
 
 
 @dataclass
 class InlineKeyboardMarkup:
+    """This class represents a keyboard that appears right next to the message it belongs to."""
+
     inline_keyboard: List[List[InlineKeyboardButton]]
 
 
@@ -115,6 +142,8 @@ class SendMessagePayload:
 
 @dataclass
 class MessageEdit:
+    """Bot request to edit a necessary message."""
+
     chat_id: int
     message_id: int
     text: str
@@ -129,11 +158,11 @@ class TelegramClient(ABC):
 
     @abstractmethod
     def send_message(self, payload: SendMessagePayload) -> int:
-        """Sends message with a given `payload` to Telegram and returns the id of this message"""
+        """Sends message with a given `payload` to Telegram and returns the id of this message."""
 
     @abstractmethod
     def edit_message_text(self, payload: MessageEdit) -> None:
-        """Sends edited message to Telegram in response to the previous user-selected answer"""
+        """Sends edited message to Telegram in response to the previous user-selected answer."""
 
     def send_text(
         self,
@@ -141,6 +170,8 @@ class TelegramClient(ABC):
         text: str,
         reply_markup: Optional[InlineKeyboardMarkup] = None,
     ) -> int:
+        """Forms the right construction of the message."""
+
         return self.send_message(SendMessagePayload(chat_id, text, reply_markup))
 
 
@@ -163,13 +194,12 @@ class LiveTelegramClient(TelegramClient):
         return response.result
 
     def send_message(self, payload: SendMessagePayload) -> int:
-        # TODO: handle Telegram errors.
         data = jsons.dump(payload, strip_nulls=True)
         r = requests.post(
             f"https://api.telegram.org/bot{self._token}/sendMessage", json=data
         )
-        message_id = jsons.loads(r.text, cls=SendMessageResponse).result.message_id
         assert r.status_code == 200, f"Expected status code 200 but got {r.status_code}"
+        message_id = jsons.loads(r.text, cls=SendMessageResponse).result.message_id
         return message_id
 
     def edit_message_text(self, payload: MessageEdit) -> None:

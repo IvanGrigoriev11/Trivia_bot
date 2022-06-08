@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from typing import List
 
-from format import make_answered_question_message, make_question_message
+from format import make_answered_question_message, make_keyboard
 from models import Question
 from telegram_client import MessageEdit, TelegramClient, Update
 from utils import parse_int
@@ -81,8 +81,8 @@ class GameState(BotState):
 
     def _do_on_enter(self, chat_id: int) -> None:
         # TODO: send the first question to the chat
-        self._last_question_msg_id = make_question_message(
-            self._client, chat_id, self._questions[0]
+        self._last_question_msg_id = self._client.send_text(
+            chat_id, self._questions[0].text, make_keyboard(self._questions[0])
         )
 
     def _do_process(self, update: Update) -> "BotState":
@@ -126,10 +126,10 @@ class GameState(BotState):
         self._cur_question += 1
 
         if self._cur_question != len(self._questions):
-            self._last_question_msg_id = make_question_message(
-                self._client,
+            self._last_question_msg_id = self._client.send_text(
                 chat_id,
-                self._questions[self._cur_question],
+                self._questions[self._cur_question].text,
+                make_keyboard(self._questions[self._cur_question]),
             )
             return self
 

@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 from typing import Callable, List, Optional
+from enum import Enum
 
 from telegram_client import (
     Chat,
@@ -27,21 +28,30 @@ class FakeTelegramClient(TelegramClient):
         self.sent_messages.append(payload)
 
 
+@dataclass
+class Mode(Enum):
+    USER = "user_mode"
+    BOT_MSG = "bot_msg"
+    BOT_EDIT = "bot_edit"
+
+
 @dataclass(frozen=True)
 class MessageContent:
-    mode: str
+    mode: Mode
     text_message: str
     reply_markup: Optional[InlineKeyboardMarkup] = None
 
 
-def bot(
-    mode: str, text_message: str, reply_markup: Optional[InlineKeyboardMarkup] = None
-) -> MessageContent:
-    return MessageContent(mode, text_message, reply_markup)
+def bot_edit(text_message: str, reply_markup: Optional[InlineKeyboardMarkup] = None) -> MessageContent:
+    return MessageContent(Mode.BOT_EDIT, text_message, reply_markup)
+
+
+def bot_msg(text_message: str, reply_markup: Optional[InlineKeyboardMarkup] = None) -> MessageContent:
+    return MessageContent(Mode.BOT_MSG, text_message, reply_markup)
 
 
 def user(text_message: str) -> MessageContent:
-    return MessageContent("user_mode", text_message)
+    return MessageContent(Mode.USER, text_message)
 
 
 def check_conversation(
@@ -53,12 +63,12 @@ def check_conversation(
     last_message_from_bot = 0
     update_id = 111
     for msg in conversation:
-        if msg.mode == "send_mode":
+        if msg.mode == "bot_msg":
             assert client.sent_messages[last_message_from_bot] == SendMessagePayload(
                 chat_id, msg.text_message, msg.reply_markup
             )
             last_message_from_bot += 1
-        elif msg.mode == "edit_mode":
+        elif msg.mode == "bot_edit":
             assert client.sent_messages[last_message_from_bot] == MessageEdit(
                 chat_id, 0, msg.text_message
             )

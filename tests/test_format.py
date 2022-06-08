@@ -1,10 +1,12 @@
-from format import make_answered_question_message, make_keyboard
+from format import (
+    CHECK_MARK,
+    CROSS_MARK,
+    RED_CIRCLE_MARK,
+    make_answered_question_message,
+    make_keyboard,
+)
 from models import Question
 from telegram_client import InlineKeyboardButton, InlineKeyboardMarkup
-
-CHECK_MARK = "\u2705"
-CROSS_MARK = "\u274C"
-RED_CIRCLE_MARK = "\u2B55"
 
 
 def test_keyboard():
@@ -26,15 +28,8 @@ def test_keyboard():
 
 
 def test_edit_text_message():
-    expected_answer = (
-        "1.What is the color of sky?"
-        + "\n"
-        + f"{RED_CIRCLE_MARK}orange"
-        + "\n"
-        + f"{CHECK_MARK}blue"
-        + "\n"
-        + f"{CROSS_MARK}green"
-    )
+    expected_answer = "\n".join(["1.What is the color of sky?",
+                                 f"{RED_CIRCLE_MARK}orange", f"{CHECK_MARK}blue", f"{CROSS_MARK}green"])
 
     user_answer = 2
     formed_answer = make_answered_question_message(
