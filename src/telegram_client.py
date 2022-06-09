@@ -162,7 +162,7 @@ class TelegramClient(ABC):
 
     @abstractmethod
     def edit_message_text(self, payload: MessageEdit) -> None:
-        """Sends edited message to Telegram in response to the previous user-selected answer."""
+        """Edits the text of the selected message."""
 
     def send_text(
         self,
