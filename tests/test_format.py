@@ -28,8 +28,14 @@ def test_keyboard():
 
 
 def test_edit_text_message():
-    expected_answer = "\n".join(["1.What is the color of sky?",
-                                 f"{RED_CIRCLE_MARK}orange", f"{CHECK_MARK}blue", f"{CROSS_MARK}green"])
+    expected_answer = "\n".join(
+        [
+            "1.What is the color of sky?",
+            f"{RED_CIRCLE_MARK}orange",
+            f"{CHECK_MARK}blue",
+            f"{CROSS_MARK}green",
+        ]
+    )
 
     user_answer = 2
     formed_answer = make_answered_question_message(

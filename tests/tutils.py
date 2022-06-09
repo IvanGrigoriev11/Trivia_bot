@@ -1,6 +1,6 @@
 from dataclasses import dataclass
-from typing import Callable, List, Optional
 from enum import Enum
+from typing import Callable, List, Optional
 
 from telegram_client import (
     Chat,
@@ -42,11 +42,15 @@ class MessageContent:
     reply_markup: Optional[InlineKeyboardMarkup] = None
 
 
-def bot_edit(text_message: str, reply_markup: Optional[InlineKeyboardMarkup] = None) -> MessageContent:
+def bot_edit(
+    text_message: str, reply_markup: Optional[InlineKeyboardMarkup] = None
+) -> MessageContent:
     return MessageContent(Mode.BOT_EDIT, text_message, reply_markup)
 
 
-def bot_msg(text_message: str, reply_markup: Optional[InlineKeyboardMarkup] = None) -> MessageContent:
+def bot_msg(
+    text_message: str, reply_markup: Optional[InlineKeyboardMarkup] = None
+) -> MessageContent:
     return MessageContent(Mode.BOT_MSG, text_message, reply_markup)
 
 

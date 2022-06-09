@@ -1,6 +1,13 @@
 from typing import List
 
-from tutils import FakeTelegramClient, MessageContent, check_conversation, user, bot_edit, bot_msg
+from tutils import (
+    FakeTelegramClient,
+    MessageContent,
+    bot_edit,
+    bot_msg,
+    check_conversation,
+    user,
+)
 
 from chat_handler import ChatHandler
 from format import make_answered_question_message, make_keyboard
@@ -34,7 +41,9 @@ def test_entire_game():
             bot_msg("3.What date is Christmas?", make_keyboard(QUESTIONS[2])),
             user("4"),
             bot_edit(make_answered_question_message(3, QUESTIONS[2])),
-            bot_msg("You got 2 points out of 3.\nIf you want to try again, type /startGame to start a new game."),
+            bot_msg(
+                "You got 2 points out of 3.\nIf you want to try again, type /startGame to start a new game."
+            ),
             user("/startGame"),
             bot_msg("Starting game!"),
         ]
