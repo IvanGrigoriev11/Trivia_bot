@@ -46,7 +46,8 @@ def test_game_state():
             user("2"),
             bot_edit(make_answered_question_message(1, QUESTIONS[2])),
             bot_msg(
-                "You got 1 points out of 3.\nIf you want to try again, type /startGame to start a new game."
+                "You got 1 points out of 3.\n"
+                "If you want to try again, type /startGame to start a new game."
             ),
         ]
     )

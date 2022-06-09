@@ -42,7 +42,8 @@ def test_entire_game():
             user("4"),
             bot_edit(make_answered_question_message(3, QUESTIONS[2])),
             bot_msg(
-                "You got 2 points out of 3.\nIf you want to try again, type /startGame to start a new game."
+                "You got 2 points out of 3.\n"
+                "If you want to try again, type /startGame to start a new game."
             ),
             user("/startGame"),
             bot_msg("Starting game!"),
