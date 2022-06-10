@@ -28,8 +28,7 @@ class FakeTelegramClient(TelegramClient):
         self.sent_messages.append(payload)
 
 
-@dataclass
-class Mode(Enum):
+class MessageType(Enum):
     USER = "user_mode"
     BOT_MSG = "bot_msg"
     BOT_EDIT = "bot_edit"
@@ -37,7 +36,7 @@ class Mode(Enum):
 
 @dataclass(frozen=True)
 class MessageContent:
-    mode: Mode
+    mode: MessageType
     text_message: str
     reply_markup: Optional[InlineKeyboardMarkup] = None
 
@@ -45,17 +44,17 @@ class MessageContent:
 def bot_edit(
     text_message: str, reply_markup: Optional[InlineKeyboardMarkup] = None
 ) -> MessageContent:
-    return MessageContent(Mode.BOT_EDIT, text_message, reply_markup)
+    return MessageContent(MessageType.BOT_EDIT, text_message, reply_markup)
 
 
 def bot_msg(
     text_message: str, reply_markup: Optional[InlineKeyboardMarkup] = None
 ) -> MessageContent:
-    return MessageContent(Mode.BOT_MSG, text_message, reply_markup)
+    return MessageContent(MessageType.BOT_MSG, text_message, reply_markup)
 
 
 def user(text_message: str) -> MessageContent:
-    return MessageContent(Mode.USER, text_message)
+    return MessageContent(MessageType.USER, text_message)
 
 
 def check_conversation(

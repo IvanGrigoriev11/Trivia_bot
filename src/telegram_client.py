@@ -28,15 +28,15 @@ class User:
 
 @dataclass
 class CallbackQuery:
-    """A class used to represent the special data from keyboard.
+    """A class represents a special kind of message when a user taps a preconfigured button attached to a message.
 
     Attributes
     ----------
     from_ : User
-        unique user's identifier
+        The user who tapped the button.
 
     data : str
-        unique information sent by the user after clicking any button
+        The information attached to the button when a message with a preconfigured button was sent.
     """
 
     from_: User
@@ -62,15 +62,7 @@ class Message:
 @dataclass
 class Update:
     """A class used to represent Telegram updates that a bot can receive.
-
-    Attributes
-    ----------
-    update_id : int
-        An increasing update identifier. Each subsequent updates will have larger update_id
-    message : Optional[Message]
-        An attribute represents a message from user
-    callback_query : Optional[CallbackQuery]
-        An attribute represents a data from keyboard
+    The class contains two optional fields which represent special type of Telegram messages.
     """
 
     update_id: int
@@ -105,13 +97,7 @@ class SendMessageResponseResult:
 
 @dataclass
 class SendMessageResponse:
-    """Http response from Telegram for receiving message id.
-
-    Attributes
-    ----------
-    result : SendMessageResponseResult
-        response result with a unique message identifier
-    """
+    """Http response from Telegram for receiving message id."""
 
     result: SendMessageResponseResult
 
@@ -126,7 +112,8 @@ class InlineKeyboardButton:
 
 @dataclass
 class InlineKeyboardMarkup:
-    """This class represents a keyboard that appears right next to the message it belongs to."""
+    """Layout of an inline keyboard that can be attached to messages.
+    https://core.telegram.org/bots/api#inlinekeyboardmarkup"""
 
     inline_keyboard: List[List[InlineKeyboardButton]]
 
@@ -170,7 +157,6 @@ class TelegramClient(ABC):
         text: str,
         reply_markup: Optional[InlineKeyboardMarkup] = None,
     ) -> int:
-        """Forms the right construction of the message."""
 
         return self.send_message(SendMessagePayload(chat_id, text, reply_markup))
 

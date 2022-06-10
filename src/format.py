@@ -1,9 +1,9 @@
 from models import Question
 from telegram_client import InlineKeyboardButton, InlineKeyboardMarkup
 
-CHECK_MARK = "\u2705"
-CROSS_MARK = "\u274C"
-RED_CIRCLE_MARK = "\u2B55"
+CHECK_MARK = "✅"
+CROSS_MARK = "❌"
+RED_CIRCLE_MARK = "⭕"
 
 
 def make_keyboard(question: Question) -> InlineKeyboardMarkup:
@@ -30,5 +30,5 @@ def make_answered_question_message(user_answer: int, question: Question) -> str:
         else:
             edited_answers.append(f"{RED_CIRCLE_MARK}" + f"{word}")
 
-    edit_answers = f"{question.text}" + "\n" + "\n".join(edited_answers)
-    return edit_answers
+    message = f"{question.text}" + "\n" + "\n".join(edited_answers)
+    return message

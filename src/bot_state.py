@@ -80,7 +80,6 @@ class GameState(BotState):
         self._last_question_msg_id = 0
 
     def _do_on_enter(self, chat_id: int) -> None:
-        # TODO: send the first question to the chat
         self._last_question_msg_id = self._client.send_text(
             chat_id, self._questions[0].text, make_keyboard(self._questions[0])
         )

@@ -10,7 +10,13 @@ from tutils import (
 )
 
 from bot_state import GameState
-from format import make_answered_question_message, make_keyboard
+from format import (
+    CHECK_MARK,
+    CROSS_MARK,
+    RED_CIRCLE_MARK,
+    make_answered_question_message,
+    make_keyboard,
+)
 from models import Question
 from telegram_client import CallbackQuery, MessageEdit, SendMessagePayload, Update, User
 
@@ -94,7 +100,9 @@ def check_callback_query(button: str):
             111, "1.What is the color of sky?", make_keyboard(QUESTIONS[0])
         ),
         MessageEdit(
-            111, 0, "1.What is the color of sky?\n\u2B55orange\n\u2705blue\n\u274Cgreen"
+            111,
+            0,
+            f"1.What is the color of sky?\n{RED_CIRCLE_MARK}orange\n{CHECK_MARK}blue\n{CROSS_MARK}green",
         ),
         SendMessagePayload(111, "2.How much is 2 + 5?", make_keyboard(QUESTIONS[1])),
     ]
