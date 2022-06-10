@@ -28,7 +28,8 @@ class User:
 
 @dataclass
 class CallbackQuery:
-    """A class represents a special kind of message when a user taps a preconfigured button attached to a message.
+    """A class represents a special kind of message
+    when a user taps a preconfigured button attached to a message.
 
     Attributes
     ----------

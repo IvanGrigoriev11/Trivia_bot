@@ -102,7 +102,8 @@ def check_callback_query(button: str):
         MessageEdit(
             111,
             0,
-            f"1.What is the color of sky?\n{RED_CIRCLE_MARK}orange\n{CHECK_MARK}blue\n{CROSS_MARK}green",
+            f"1.What is the color of sky?\n"
+            f"{RED_CIRCLE_MARK}orange\n{CHECK_MARK}blue\n{CROSS_MARK}green",
         ),
         SendMessagePayload(111, "2.How much is 2 + 5?", make_keyboard(QUESTIONS[1])),
     ]
