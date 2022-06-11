@@ -98,14 +98,21 @@ class SendMessageResponseResult:
 
 @dataclass
 class SendMessageResponse:
-    """Http response from Telegram for receiving message id."""
-
     result: SendMessageResponseResult
 
 
 @dataclass
 class InlineKeyboardButton:
-    """A class contains special data about button."""
+    """A button of an inline keyboard attachable to a message.
+
+    Attributes
+    ----------
+    text: str
+        text displayed on the button
+    callback_data: str
+        any string associated with the button that will be send back to the bot once the button is pressed.
+    The maximum size for this field is 64 bytes.
+    """
 
     text: str
     callback_data: str
