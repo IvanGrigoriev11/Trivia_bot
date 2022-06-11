@@ -137,7 +137,7 @@ class SendMessagePayload:
 
 @dataclass
 class MessageEdit:
-    """Bot request to edit a necessary message."""
+    """Bot request to edit a previously sent message."""
 
     chat_id: int
     message_id: int

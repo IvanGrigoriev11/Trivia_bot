@@ -36,7 +36,7 @@ class MessageKind(Enum):
 
 @dataclass(frozen=True)
 class MessageContent:
-    mode: MessageKind
+    kind: MessageKind
     text_message: str
     reply_markup: Optional[InlineKeyboardMarkup] = None
 
@@ -66,12 +66,12 @@ def check_conversation(
     last_message_from_bot = 0
     update_id = 111
     for msg in conversation:
-        if msg.mode == "bot_msg":
+        if msg.kind == "bot_msg":
             assert client.sent_messages[last_message_from_bot] == SendMessagePayload(
                 chat_id, msg.text_message, msg.reply_markup
             )
             last_message_from_bot += 1
-        elif msg.mode == "bot_edit":
+        elif msg.kind == "bot_edit":
             assert client.sent_messages[last_message_from_bot] == MessageEdit(
                 chat_id, 0, msg.text_message
             )
