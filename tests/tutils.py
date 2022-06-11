@@ -1,10 +1,12 @@
 from dataclasses import dataclass
+from enum import Enum
 from typing import Callable, List, Optional
 
 from telegram_client import (
     Chat,
     InlineKeyboardMarkup,
     Message,
+    MessageEdit,
     SendMessagePayload,
     TelegramClient,
     Update,
@@ -13,30 +15,46 @@ from telegram_client import (
 
 class FakeTelegramClient(TelegramClient):
     def __init__(self):
-        self.sent_messages: List[SendMessagePayload] = []
+        self.sent_messages: List[SendMessagePayload | MessageEdit] = []
 
     def get_updates(self, offset: int = 0) -> List[Update]:
         raise NotImplementedError()
 
-    def send_message(self, payload: SendMessagePayload) -> None:
+    def send_message(self, payload: SendMessagePayload) -> int:
         self.sent_messages.append(payload)
+        return 0
+
+    def edit_message_text(self, payload: MessageEdit) -> None:
+        self.sent_messages.append(payload)
+
+
+class MessageKind(Enum):
+    USER = "user_mode"
+    BOT_MSG = "bot_msg"
+    BOT_EDIT = "bot_edit"
 
 
 @dataclass(frozen=True)
 class MessageContent:
-    is_bot: bool
+    kind: MessageKind
     text_message: str
     reply_markup: Optional[InlineKeyboardMarkup] = None
 
 
-def bot(
+def bot_edit(
     text_message: str, reply_markup: Optional[InlineKeyboardMarkup] = None
 ) -> MessageContent:
-    return MessageContent(True, text_message, reply_markup)
+    return MessageContent(MessageKind.BOT_EDIT, text_message, reply_markup)
+
+
+def bot_msg(
+    text_message: str, reply_markup: Optional[InlineKeyboardMarkup] = None
+) -> MessageContent:
+    return MessageContent(MessageKind.BOT_MSG, text_message, reply_markup)
 
 
 def user(text_message: str) -> MessageContent:
-    return MessageContent(False, text_message)
+    return MessageContent(MessageKind.USER, text_message)
 
 
 def check_conversation(
@@ -48,9 +66,14 @@ def check_conversation(
     last_message_from_bot = 0
     update_id = 111
     for msg in conversation:
-        if msg.is_bot:
+        if msg.kind == "bot_msg":
             assert client.sent_messages[last_message_from_bot] == SendMessagePayload(
                 chat_id, msg.text_message, msg.reply_markup
+            )
+            last_message_from_bot += 1
+        elif msg.kind == "bot_edit":
+            assert client.sent_messages[last_message_from_bot] == MessageEdit(
+                chat_id, 0, msg.text_message
             )
             last_message_from_bot += 1
         else:

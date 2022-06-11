@@ -28,6 +28,18 @@ class User:
 
 @dataclass
 class CallbackQuery:
+    """A class represents a special kind of message
+    when a user taps a preconfigured button attached to a message.
+
+    Attributes
+    ----------
+    from_ : User
+        The user who tapped the button.
+
+    data : str
+        The information attached to the button when a message with a preconfigured button was sent.
+    """
+
     from_: User
     data: str
 
@@ -51,11 +63,7 @@ class Message:
 @dataclass
 class Update:
     """A class used to represent Telegram updates that a bot can receive.
-
-    Attributes
-    ----------
-    update_id : int
-        An increasing update identifier. Each subsequent updates will have larger update_id.
+    The class contains two optional fields which represent special type of Telegram messages.
     """
 
     update_id: int
@@ -78,19 +86,43 @@ class Update:
 
 @dataclass
 class GetUpdatesResponse:
-    """Http response from Telegram for recieving updates."""
+    """Http response from Telegram for receiving updates."""
 
     result: List[Update]
 
 
 @dataclass
+class SendMessageResponseResult:
+    message_id: int
+
+
+@dataclass
+class SendMessageResponse:
+    result: SendMessageResponseResult
+
+
+@dataclass
 class InlineKeyboardButton:
+    """A button of an inline keyboard attachable to a message.
+
+    Attributes
+    ----------
+    text: str
+        text displayed on the button
+    callback_data: str
+        any string associated with the button that will be sent back to the bot once
+        the button is pressed. The maximum size for this field is 64 bytes.
+    """
+
     text: str
     callback_data: str
 
 
 @dataclass
 class InlineKeyboardMarkup:
+    """Layout of an inline keyboard that can be attached to messages.
+    https://core.telegram.org/bots/api#inlinekeyboardmarkup"""
+
     inline_keyboard: List[List[InlineKeyboardButton]]
 
 
@@ -103,6 +135,15 @@ class SendMessagePayload:
     reply_markup: Optional[InlineKeyboardMarkup] = None
 
 
+@dataclass
+class MessageEdit:
+    """Bot request to edit a previously sent message."""
+
+    chat_id: int
+    message_id: int
+    text: str
+
+
 class TelegramClient(ABC):
     """An interface for communicating with Telegram backend."""
 
@@ -111,16 +152,21 @@ class TelegramClient(ABC):
         """Gets updates from the telegram with `update_id` bigger than `offset`."""
 
     @abstractmethod
-    def send_message(self, payload: SendMessagePayload) -> None:
-        """Sends message with a given `payload` to Telegram."""
+    def send_message(self, payload: SendMessagePayload) -> int:
+        """Sends message with a given `payload` to Telegram and returns the id of this message."""
+
+    @abstractmethod
+    def edit_message_text(self, payload: MessageEdit) -> None:
+        """Edits the text of the selected message."""
 
     def send_text(
         self,
         chat_id: int,
         text: str,
         reply_markup: Optional[InlineKeyboardMarkup] = None,
-    ) -> None:
-        self.send_message(SendMessagePayload(chat_id, text, reply_markup))
+    ) -> int:
+
+        return self.send_message(SendMessagePayload(chat_id, text, reply_markup))
 
 
 class LiveTelegramClient(TelegramClient):
@@ -139,13 +185,20 @@ class LiveTelegramClient(TelegramClient):
         response = jsons.loads(
             data, cls=GetUpdatesResponse, key_transformer=transform_keywords
         )
-        print(response.result)
         return response.result
 
-    def send_message(self, payload: SendMessagePayload) -> None:
-        # TODO: handle Telegram errors.
+    def send_message(self, payload: SendMessagePayload) -> int:
         data = jsons.dump(payload, strip_nulls=True)
         r = requests.post(
             f"https://api.telegram.org/bot{self._token}/sendMessage", json=data
+        )
+        assert r.status_code == 200, f"Expected status code 200 but got {r.status_code}"
+        message_id = jsons.loads(r.text, cls=SendMessageResponse).result.message_id
+        return message_id
+
+    def edit_message_text(self, payload: MessageEdit) -> None:
+        data = jsons.dump(payload, strip_nulls=True)
+        r = requests.post(
+            f"https://api.telegram.org/bot{self._token}/editMessageText", json=data
         )
         assert r.status_code == 200, f"Expected status code 200 but got {r.status_code}"
