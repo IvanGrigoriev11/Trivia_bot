@@ -110,8 +110,8 @@ class InlineKeyboardButton:
     text: str
         text displayed on the button
     callback_data: str
-        any string associated with the button that will be send back to the bot once the button is pressed.
-    The maximum size for this field is 64 bytes.
+        any string associated with the button that will be sent back to the bot once
+        the button is pressed. The maximum size for this field is 64 bytes.
     """
 
     text: str
