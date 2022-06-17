@@ -81,8 +81,12 @@ def main(
                         ),
                     )
                 print("'questions' and 'answers' tables were created")
-                print(f"Questions in the database: {index + 1}")
-
+                cur.execute(
+                    """
+                    SELECT COUNT (*) FROM questions;
+                    """
+                )
+                print(f"Questions in the database: {cur.fetchone()}")
             print("Connection was closed")
     else:
         print("Database not found")
