@@ -27,6 +27,7 @@ def main(
         password = os.environ["PASSWORD_FOR_DB"]
 
         # Connect to an existing database
+        # pylint: disable=not-context-manager
         with psycopg.connect(
             host=host, dbname=dbname, user=user, password=password, port=port
         ) as conn:
