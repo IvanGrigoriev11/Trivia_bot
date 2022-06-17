@@ -1,9 +1,16 @@
 from typing import List
 
-from tutils import FakeTelegramClient, MessageContent, bot, check_conversation, user
+from tutils import (
+    FakeTelegramClient,
+    MessageContent,
+    bot_edit,
+    bot_msg,
+    check_conversation,
+    user,
+)
 
 from chat_handler import ChatHandler
-from format import make_keyboard
+from format import make_answered_question_message, make_keyboard
 from models import Question
 
 QUESTIONS = [
@@ -24,30 +31,21 @@ def test_entire_game():
     check_chat(
         [
             user("/startGame"),
-            bot("Starting game!"),
-            bot(
-                "1.What is the color of sky?",
-                make_keyboard(QUESTIONS[0]),
-            ),
+            bot_edit("Starting game!"),
+            bot_msg("1.What is the color of sky?", make_keyboard(QUESTIONS[0])),
             user("1"),
-            bot("You are wrong"),
-            bot(
-                "2.How much is 2 + 5?",
-                make_keyboard(QUESTIONS[1]),
-            ),
+            bot_msg(make_answered_question_message(0, QUESTIONS[0])),
+            bot_msg("2.How much is 2 + 5?", make_keyboard(QUESTIONS[1])),
             user("3"),
-            bot("You are right"),
-            bot(
-                "3.What date is Christmas?",
-                make_keyboard(QUESTIONS[2]),
-            ),
+            bot_edit(make_answered_question_message(2, QUESTIONS[1])),
+            bot_msg("3.What date is Christmas?", make_keyboard(QUESTIONS[2])),
             user("4"),
-            bot("You are right"),
-            bot(
-                "You got 2 points out of 3.\nIf you want to try again, type"
-                + " /startGame to start a new game."
+            bot_edit(make_answered_question_message(3, QUESTIONS[2])),
+            bot_msg(
+                "You got 2 points out of 3.\n"
+                "If you want to try again, type /startGame to start a new game."
             ),
             user("/startGame"),
-            bot("Starting game!"),
+            bot_msg("Starting game!"),
         ]
     )

@@ -1,9 +1,9 @@
 from abc import ABC, abstractmethod
 from typing import List
 
-from format import make_keyboard
+from format import make_answered_question_message, make_keyboard
 from models import Question
-from telegram_client import TelegramClient, Update
+from telegram_client import MessageEdit, TelegramClient, Update
 from utils import parse_int
 
 
@@ -77,10 +77,12 @@ class GameState(BotState):
         self._questions = questions
         self._cur_question = 0
         self._score = 0
+        self._last_question_msg_id = 0
 
     def _do_on_enter(self, chat_id: int) -> None:
-        # TODO: send the first question to the chat
-        self._send_question(chat_id, self._questions[0])
+        self._last_question_msg_id = self._client.send_text(
+            chat_id, self._questions[0].text, make_keyboard(self._questions[0])
+        )
 
     def _do_process(self, update: Update) -> "BotState":
         chat_id = update.chat_id
@@ -109,17 +111,24 @@ class GameState(BotState):
             return self
 
         if answer == self._questions[self._cur_question].correct_answer:
-            self._client.send_text(chat_id, "You are right")
             self._score += 1
-        else:
-            self._client.send_text(chat_id, "You are wrong")
 
+        self._client.edit_message_text(
+            MessageEdit(
+                chat_id,
+                self._last_question_msg_id,
+                make_answered_question_message(
+                    answer, self._questions[self._cur_question]
+                ),
+            ),
+        )
         self._cur_question += 1
 
         if self._cur_question != len(self._questions):
-            self._send_question(
+            self._last_question_msg_id = self._client.send_text(
                 chat_id,
-                self._questions[self._cur_question],
+                self._questions[self._cur_question].text,
+                make_keyboard(self._questions[self._cur_question]),
             )
             return self
 
@@ -130,10 +139,3 @@ class GameState(BotState):
             + "If you want to try again, type /startGame to start a new game.",
         )
         return IdleState(self._client)
-
-    def _send_question(self, chat_id: int, question: Question):
-        self._client.send_text(
-            chat_id,
-            f"{question.text}",
-            make_keyboard(question),
-        )
