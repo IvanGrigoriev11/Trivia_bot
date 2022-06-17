@@ -26,15 +26,14 @@ def get_questions(session_token: str) -> List[Dict]:
     code = response.json()["response_code"]
     if code == 0:
         return json.loads(response.text)["results"]
-    else:
-        termination_reason = {
-            1: "No results",
-            2: "Invalid parameter",
-            3: "Token not found",
-            4: "Token Empty",
-        }.get(code, f"Unknown. Code = {code}")
-        print(termination_reason)
-        return []
+    termination_reason = {
+        1: "No results",
+        2: "Invalid parameter",
+        3: "Token not found",
+        4: "Token Empty",
+    }.get(code, f"Unknown. Code = {code}")
+    print(termination_reason)
+    return []
 
 
 def main(
@@ -58,7 +57,7 @@ def main(
         if max_questions and max_questions <= len(all_questions):
             break
 
-    with open("questions.json", "w") as f:
+    with open("questions.json", "w", encoding="utf-8") as f:
         f.write(json.dumps(all_questions))
 
     print("All finished")

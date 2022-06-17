@@ -26,7 +26,7 @@ def main(
         user = os.environ["USER_FOR_DATABASE"]
         password = os.environ["PASSWORD_FOR_DB"]
 
-        # Connect to an existing database
+        # pylint: disable = not-context-manager
         with psycopg.connect(
             host=host, dbname=dbname, user=user, password=password, port=port
         ) as conn:
@@ -56,7 +56,7 @@ def main(
                         )
                     """
                 )
-                with open("questions.json", mode="r") as my_file:
+                with open("questions.json", mode="r", encoding="utf-8") as my_file:
                     all_questions = json.loads(my_file.read())
 
                 for index, question in enumerate(all_questions):
