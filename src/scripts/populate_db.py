@@ -59,33 +59,29 @@ def main(
                 with open("questions.json", mode="r") as my_file:
                     all_questions = json.loads(my_file.read())
 
-                for i in range(len(all_questions)):
+                for index, question in enumerate(all_questions):
                     cur.execute(
-                        "INSERT INTO questions (id, category, type, difficulty, question) VALUES (%s, %s, %s, %s, %s)",
+                        "INSERT INTO questions (id, category, type, difficulty, question)"
+                        "VALUES (%s, %s, %s, %s, %s)",
                         (
-                            i + 1,
-                            f"{all_questions[i]['category']}",
-                            f"{all_questions[i]['type']}",
-                            f"{all_questions[i]['difficulty']}",
-                            f"{all_questions[i]['question']}",
+                            index + 1,
+                            f"{question['category']}",
+                            f"{question['type']}",
+                            f"{question['difficulty']}",
+                            f"{question['question']}",
                         ),
                     )
                     cur.execute(
-                        "INSERT INTO answers (question_id, correct_answer, incorrect_answers) VALUES (%s, %s, %s)",
+                        "INSERT INTO answers (question_id, correct_answer, incorrect_answers)"
+                        "VALUES (%s, %s, %s)",
                         (
-                            i + 1,
-                            f"{all_questions[i]['correct_answer']}",
-                            f"{all_questions[i]['incorrect_answers']}",
+                            index + 1,
+                            f"{question['correct_answer']}",
+                            f"{question['incorrect_answers']}",
                         ),
                     )
                 print("'questions' and 'answers' tables were created")
-
-                cur.execute(
-                    """
-                    SELECT COUNT (*) FROM questions;
-                    """
-                )
-                print(f"Questions in the database: {cur.fetchone()}")
+                print(f"Questions in the database: {index + 1}")
 
             print("Connection was closed")
     else:
