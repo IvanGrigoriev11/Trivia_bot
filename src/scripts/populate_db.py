@@ -67,7 +67,6 @@ def create(conn, file):
                 )
             """
         )
-
         cur.execute(
             """
             CREATE TABLE IF NOT EXISTS answers (
@@ -117,7 +116,6 @@ def create(conn, file):
                     True,
                 ),
             )
-
         print("'questions' and 'answers' tables were created")
         count_rows_in_table(cur, "questions")
         count_rows_in_table(cur, "answers")
