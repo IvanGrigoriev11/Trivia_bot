@@ -74,7 +74,8 @@ def create(conn, file):
                 question_id integer,
                 text text,
                 is_correct bool,
-                FOREIGN KEY (question_id) REFERENCES questions(id) 
+                FOREIGN KEY (question_id) 
+                REFERENCES questions(id) 
                 )
             """
         )
