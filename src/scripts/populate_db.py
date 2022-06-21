@@ -1,6 +1,5 @@
 import json
 import os
-from dataclasses import dataclass
 
 import html2text
 import psycopg
