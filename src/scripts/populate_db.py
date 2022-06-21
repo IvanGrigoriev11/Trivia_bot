@@ -7,16 +7,7 @@ import psycopg
 import typer
 
 
-@dataclass()
-class Common:
-    dbname: str
-    host: str
-    port: int
-    file: str
-
-
-def connect(
-    ctx: typer.Context,
+def populated_db(
     dbname: str = typer.Argument(
         ..., help="The name of the database which you are calling"
     ),
@@ -28,14 +19,12 @@ def connect(
         5432,
         help="Type the number of port. 5432 is set by default.",
     ),
-    file: str = typer.Option(
+    questions_file: str = typer.Option(
         "questions.json",
         help="Type the name of the file which you want to populate to the database.",
     ),
 ):
     """Connects to the selected database."""
-
-    ctx.obj = Common(dbname, host, port, file)
 
     user = os.environ["TRIVIA_POSTGRES_USER"]
     password = os.environ["TRIVIA_POSTGRES_PASSWD"]
@@ -46,7 +35,7 @@ def connect(
     ) as conn:
 
         print("Connection is set up")
-        create(conn, ctx.obj.file)
+        create(conn, questions_file)
     print("Connection was closed")
 
 
@@ -80,9 +69,7 @@ def create(conn, file):
             all_questions = json.load(f)
 
         for index, question in enumerate(all_questions):
-            question["question"] = html2text.html2text(
-                f"{question['question']}"
-            ).strip()
+            modified_question = html2text.html2text(f"{question['question']}").strip()
             cur.execute(
                 "INSERT INTO questions (id, category, type, difficulty, question)"
                 "VALUES (%s, %s, %s, %s, %s) RETURNING id;",
@@ -91,17 +78,17 @@ def create(conn, file):
                     f"{question['category']}",
                     f"{question['type']}",
                     f"{question['difficulty']}",
-                    f"{question['question']}",
+                    f"{modified_question}",
                 ),
             )
             question_id = cur.fetchone()[0]
-            for answer in range(len(question["incorrect_answers"])):
+            for answer in question["incorrect_answers"]:
                 cur.execute(
                     "INSERT INTO answers (question_id, text, is_correct)"
                     "VALUES (%s, %s, %s)",
                     (
                         question_id,
-                        f"{question['incorrect_answers'][answer]}",
+                        f"{answer}",
                         False,
                     ),
                 )
@@ -131,4 +118,4 @@ def count_rows_in_table(cur, table_name: str):
 
 
 if __name__ == "__main__":
-    typer.run(connect)
+    typer.run(populated_db)
