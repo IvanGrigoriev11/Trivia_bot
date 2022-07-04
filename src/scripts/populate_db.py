@@ -70,20 +70,23 @@ def _create(cur: Cursor, questions_fpath: Path):
                 f"{cleaned_question}",
             ),
         )
-        question_id = cur.fetchone()[0]
-        answers = [(a, False) for a in question["incorrect_answers"]] + [
-            (question["correct_answer"], True)
-        ]
-        for text, answer in answers:
-            cur.execute(
-                "INSERT INTO answers (question_id, text, is_correct)"
-                "VALUES (%s, %s, %s)",
-                (
-                    question_id,
-                    f"{text}",
-                    f"{answer}",
-                ),
-            )
+        question_row = cur.fetchone()
+        if question_row is not None:
+            question_id = question_row[0]
+
+            answers = [(a, False) for a in question["incorrect_answers"]] + [
+                (question["correct_answer"], True)
+            ]
+            for text, answer in answers:
+                cur.execute(
+                    "INSERT INTO answers (question_id, text, is_correct)"
+                    "VALUES (%s, %s, %s)",
+                    (
+                        question_id,
+                        f"{text}",
+                        f"{answer}",
+                    ),
+                )
     print("'questions' and 'answers' tables were created")
     _print_rows_in_table(cur, "questions")
     _print_rows_in_table(cur, "answers")
@@ -97,7 +100,9 @@ def _print_rows_in_table(cur: Cursor, table_name: str):
         SELECT COUNT (*) FROM {table_name};
         """
     )
-    print(f"Number of entries in {table_name} table: {cur.fetchone()[0]}")
+    row = cur.fetchone()
+    if row is not None:
+        print(f"Number of entries in {table_name} table: {row[0]}")
 
 
 if __name__ == "__main__":
