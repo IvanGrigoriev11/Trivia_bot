@@ -73,18 +73,17 @@ def _create(cur: Cursor, questions_fpath: Path):
         question_row = cur.fetchone()
         if question_row is not None:
             question_id = question_row[0]
-            # pylint: disable = reportGeneralTypeIssues
-            answers = [(a, False) for a in question["incorrect_answers"]] + [
+            answers = [(a, False) for a in question["incorrect_answers"]] + [  # type: ignore
                 (question["correct_answer"], True)
             ]
-            for text, answer in answers:
+            for text, is_correct in answers:
                 cur.execute(
                     "INSERT INTO answers (question_id, text, is_correct)"
                     "VALUES (%s, %s, %s)",
                     (
                         question_id,
                         f"{text}",
-                        f"{answer}",
+                        f"{is_correct}",
                     ),
                 )
     print("'questions' and 'answers' tables were created")
