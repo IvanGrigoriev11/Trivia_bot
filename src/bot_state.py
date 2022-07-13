@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 from typing import List
 
 from format import make_answered_question_message, make_keyboard
-from models import Question, InMemoryStorage, QuestionInterface
+from models import Question, QuestionStorage, InMemoryStorage, Context, PostgresMemory
 from telegram_client import MessageEdit, TelegramClient, Update
 from utils import parse_int
 
@@ -59,8 +59,7 @@ class IdleState(BotState):
 
             if text == "/startgame":
                 self._client.send_text(chat_id, "Starting game!")
-                self.strategy = QuestionInterface().set_strategy(InMemoryStorage)
-                return GameState(self._client, self.strategy.execute_strategy())
+                return GameState(self._client, Context(PostgresMemory()).execute())
 
             self._client.send_text(chat_id, "Type /startGame to start a new game.")
         return self

@@ -17,7 +17,7 @@ from format import (
     make_answered_question_message,
     make_keyboard,
 )
-from models import Question
+from models import Question, InMemoryStorage, Context
 from telegram_client import CallbackQuery, MessageEdit, SendMessagePayload, Update, User
 
 QUESTIONS = [
@@ -30,7 +30,7 @@ QUESTIONS = [
 def check_game_state(conversation: List[MessageContent]):
     client = FakeTelegramClient()
     chat_id = 111
-    state = GameState(client, Question.make_some())
+    state = GameState(client, Context(InMemoryStorage()).execute())
     state.on_enter(chat_id)
 
     def process(u: Update):
