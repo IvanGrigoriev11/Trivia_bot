@@ -1,9 +1,10 @@
+import os
+import random
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from typing import List, Tuple
+
 import psycopg
-import os
-import random
 
 
 class QuestionStorage(ABC):
@@ -24,7 +25,7 @@ class PostgresMemory(QuestionStorage):
         password = os.environ["TRIVIA_POSTGRES_PASSWD"]
         # pylint: disable = not-context-manager
         with psycopg.connect(
-                host="localhost", dbname="postgres", user=user, password=password, port=5432
+            host="localhost", dbname="postgres", user=user, password=password, port=5432
         ) as conn:
             questions = []
             with conn.cursor() as cur:
@@ -34,7 +35,7 @@ class PostgresMemory(QuestionStorage):
                         "INNER JOIN answers ON questions.id = answers.question_id\n"
                         "WHERE question_id = {}\n"
                         "ORDER BY text ASC;".format(value)
-                        )
+                    )
                     for record in cur:
                         questions.append(record)
             return _format_to_question_model(random_value_list, questions)
@@ -75,10 +76,12 @@ class Question:
     correct_answer: int
 
 
-def _format_to_question_model(list_of_ids: List[int], questions: List[Tuple]) -> List[Question]:
+def _format_to_question_model(
+    list_of_ids: List[int], questions: List[Tuple]
+) -> List[Question]:
     element = 0
     temp = 0
-    text = ''
+    text = ""
     correct_answer = 0
     answer = []
     list_of_questions = []

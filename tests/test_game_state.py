@@ -17,7 +17,7 @@ from format import (
     make_answered_question_message,
     make_keyboard,
 )
-from models import Question, InMemoryStorage, Context
+from models import Context, InMemoryStorage, Question
 from telegram_client import CallbackQuery, MessageEdit, SendMessagePayload, Update, User
 
 QUESTIONS = [
