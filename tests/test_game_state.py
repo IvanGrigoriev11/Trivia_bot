@@ -91,7 +91,7 @@ def test_enter_inappropriate_number():
 
 def check_callback_query(button: str):
     client = FakeTelegramClient()
-    state = GameState(client, QUESTIONS)
+    state = GameState(client, Context(InMemoryStorage()).execute())
     chat_id = 111
     state.on_enter(chat_id)
     state.process(Update(123, None, CallbackQuery(User(111), f"{button}")))
