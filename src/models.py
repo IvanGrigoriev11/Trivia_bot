@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from typing import List, Optional
+from typing import List, Tuple
 import psycopg
 import os
 import random
@@ -20,23 +20,25 @@ class PostgresMemory(QuestionStorage):
     def execute(self) -> List["Question"]:
         max_num_questions = 5
         random_value_list = random.sample(range(0, 4050), max_num_questions)
-        print(random_value_list)
         user = os.environ["TRIVIA_POSTGRES_USER"]
         password = os.environ["TRIVIA_POSTGRES_PASSWD"]
-
+        print(random_value_list)
         # pylint: disable = not-context-manager
         with psycopg.connect(
                 host="localhost", dbname="postgres", user=user, password=password, port=5432
         ) as conn:
+            questions = []
             with conn.cursor() as cur:
                 for value in random_value_list:
                     cur.execute(
-                        "SELECT id, question, text, is_correct FROM questions"
-                        "INNER JOIN answers ON questions.id = answers.question_id"
-                        "WHERE question_id = {};".format(value)
+                        "SELECT id, question, text, is_correct FROM questions\n"
+                        "INNER JOIN answers ON questions.id = answers.question_id\n"
+                        "WHERE question_id = {}\n"
+                        "ORDER BY text ASC;".format(value)
                         )
-                    questions_list = questions_list.append(cur.fetchall())
-        return [Question("from database", ["yes", "no"], 1)]
+                    for record in cur:
+                        questions.append(record)
+            return format_to_question_model(random_value_list, questions)
 
 
 class InMemoryStorage(QuestionStorage):
@@ -74,9 +76,28 @@ class Question:
     correct_answer: int
 
 
-"""@dataclass
-class Question:
-    id: int
-    question: str
-    text: str
-    is_correct: bool"""
+def format_to_question_model(list_of_ids: List[int], questions: List[Tuple]) -> List[Question]:
+    element = 0
+    temp = 0
+    text = ''
+    correct_answer = 0
+    answer = []
+    list_of_questions = []
+    for question in questions:
+        if question[0] == list_of_ids[element]:
+            text = question[1]
+            answer.append(question[2])
+            if question[3]:
+                correct_answer = temp
+            temp += 1
+        else:
+            list_of_questions.append(Question(text, answer, correct_answer))
+            element += 1
+            temp = 0
+            answer = [question[2]]
+            if question[3]:
+                correct_answer = temp
+            temp += 1
+
+    list_of_questions.append(Question(text, answer, correct_answer))
+    return list_of_questions
