@@ -22,7 +22,6 @@ class PostgresMemory(QuestionStorage):
         random_value_list = random.sample(range(0, 4050), max_num_questions)
         user = os.environ["TRIVIA_POSTGRES_USER"]
         password = os.environ["TRIVIA_POSTGRES_PASSWD"]
-        print(random_value_list)
         # pylint: disable = not-context-manager
         with psycopg.connect(
                 host="localhost", dbname="postgres", user=user, password=password, port=5432
@@ -38,7 +37,7 @@ class PostgresMemory(QuestionStorage):
                         )
                     for record in cur:
                         questions.append(record)
-            return format_to_question_model(random_value_list, questions)
+            return _format_to_question_model(random_value_list, questions)
 
 
 class InMemoryStorage(QuestionStorage):
@@ -76,7 +75,7 @@ class Question:
     correct_answer: int
 
 
-def format_to_question_model(list_of_ids: List[int], questions: List[Tuple]) -> List[Question]:
+def _format_to_question_model(list_of_ids: List[int], questions: List[Tuple]) -> List[Question]:
     element = 0
     temp = 0
     text = ''
