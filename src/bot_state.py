@@ -139,23 +139,3 @@ class GameState(BotState):
             + "If you want to try again, type /startGame to start a new game.",
         )
         return IdleState(self._client)
-
-
-class BotStateFactory:
-    def make_state(self, params, state: BotState):
-        state = self._get_state(state)
-        return state(params)
-
-    def _get_state(self, state: BotState):
-        if type(state) == GameState:
-            return self._make_game_state
-        elif type(state) == IdleState:
-            return self._make_idle_state
-        else:
-            raise ValueError(state)
-
-    def _make_game_state(self, client: TelegramClient, questions: Question):
-        return client, questions
-
-    def _make_idle_state(self, client: TelegramClient):
-        return client
