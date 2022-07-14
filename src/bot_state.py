@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 from typing import List
 
 from format import make_answered_question_message, make_keyboard
-from models import Context, InMemoryStorage, PostgresMemory, Question, QuestionStorage
+from models import Context, PostgresMemory, Question
 from telegram_client import MessageEdit, TelegramClient, Update
 from utils import parse_int
 

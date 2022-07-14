@@ -31,10 +31,10 @@ class PostgresMemory(QuestionStorage):
             with conn.cursor() as cur:
                 for value in random_value_list:
                     cur.execute(
-                        "SELECT id, question, text, is_correct FROM questions\n"
-                        "INNER JOIN answers ON questions.id = answers.question_id\n"
-                        "WHERE question_id = {}\n"
-                        "ORDER BY text ASC;".format(value)
+                        f"SELECT id, question, text, is_correct FROM questions\n"
+                        f"INNER JOIN answers ON questions.id = answers.question_id\n"
+                        f"WHERE question_id = {value}\n"
+                        f"ORDER BY text ASC;"
                     )
                     for record in cur:
                         questions.append(record)
@@ -60,7 +60,7 @@ class Context:
     question: QuestionStorage
 
     def __init__(self, question):
-        if type(question) is InMemoryStorage:
+        if isinstance(question, InMemoryStorage):
             self.question = InMemoryStorage()
         else:
             self.question = PostgresMemory()
