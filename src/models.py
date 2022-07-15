@@ -53,21 +53,6 @@ class InMemoryStorage(QuestionStorage):
         ]
 
 
-class QuestionStorageBehaviour:
-    """This is the object whose behavior will change."""
-
-    question: QuestionStorage
-
-    def __init__(self, question):
-        if isinstance(question, InMemoryStorage):
-            self.question = InMemoryStorage()
-        else:
-            self.question = PostgresQuestionStorage()
-
-    def get_questions(self, max_num_questions: Optional[int]) -> List["Question"]:
-        return self.question.get_questions(max_num_questions)
-
-
 @dataclass
 class Question:
     text: str
