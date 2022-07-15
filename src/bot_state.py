@@ -146,14 +146,17 @@ class GameState(BotState):
 class BotStateFactory:
     def make_state(self, client: TelegramClient, state: str, questions: List[Question]):
         if state == "GameState":
-            return self._make_game_state(client, questions)
-        elif state == "IdleState":
-            return self._make_idle_state(client)
-        else:
-            raise ValueError(state)
+            return _make_game_state(client, questions)
 
-    def _make_game_state(self, client: TelegramClient, questions: List[Question]):
-        return GameState(client, questions)
+        if state == "IdleState":
+            return _make_idle_state(client)
 
-    def _make_idle_state(self, client: TelegramClient):
-        return IdleState(client)
+        raise ValueError(state)
+
+
+def _make_game_state(client: TelegramClient, questions: List[Question]):
+    return GameState(client, questions)
+
+
+def _make_idle_state(client: TelegramClient):
+    return IdleState(client)
