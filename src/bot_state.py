@@ -59,8 +59,8 @@ class IdleState(BotState):
 
             if text == "/startgame":
                 self._client.send_text(chat_id, "Starting game!")
-                return BotStateFactory().make_state(
-                    self._client, "GameState", Question.make_some()
+                return BotStateFactory().make_game_state(
+                    self._client, Question.make_some()
                 )
 
             self._client.send_text(chat_id, "Type /startGame to start a new game.")
@@ -140,23 +140,12 @@ class GameState(BotState):
             + "\n"
             + "If you want to try again, type /startGame to start a new game.",
         )
-        return IdleState(self._client)
+        return BotStateFactory().make_idle_state(self._client)
 
 
 class BotStateFactory:
-    def make_state(self, client: TelegramClient, state: str, questions: List[Question]):
-        if state == "GameState":
-            return _make_game_state(client, questions)
+    def make_game_state(self, client: TelegramClient, questions: List[Question]):
+        return GameState(client, questions)
 
-        if state == "IdleState":
-            return _make_idle_state(client)
-
-        raise ValueError(state)
-
-
-def _make_game_state(client: TelegramClient, questions: List[Question]):
-    return GameState(client, questions)
-
-
-def _make_idle_state(client: TelegramClient):
-    return IdleState(client)
+    def make_idle_state(self, client: TelegramClient):
+        return IdleState(client)
