@@ -1,7 +1,6 @@
 from abc import ABC, abstractmethod
 from typing import List
 
-import bot_state
 from format import make_answered_question_message, make_keyboard
 from models import Question
 from telegram_client import MessageEdit, TelegramClient, Update
@@ -60,8 +59,9 @@ class IdleState(BotState):
 
             if text == "/startgame":
                 self._client.send_text(chat_id, "Starting game!")
-                return BotStateFactory().make_state(self._client, "GameState")
-                #return GameState(self._client, Question.make_some())
+                return BotStateFactory().make_state(
+                    self._client, "GameState", Question.make_some()
+                )
 
             self._client.send_text(chat_id, "Type /startGame to start a new game.")
         return self
@@ -144,20 +144,16 @@ class GameState(BotState):
 
 
 class BotStateFactory:
-    def make_state(self, client, state):
-        return self._get_state(client, state)
-
-    def _get_state(self, client, state):
+    def make_state(self, client: TelegramClient, state: str, questions: List[Question]):
         if state == "GameState":
-            return self._make_game_state(client)
+            return self._make_game_state(client, questions)
         elif state == "IdleState":
             return self._make_idle_state(client)
         else:
             raise ValueError(state)
 
-    def _make_game_state(self, client):
-        return GameState(client, Question.make_some())
+    def _make_game_state(self, client: TelegramClient, questions: List[Question]):
+        return GameState(client, questions)
 
-    def _make_idle_state(self, client):
+    def _make_idle_state(self, client: TelegramClient):
         return IdleState(client)
-
