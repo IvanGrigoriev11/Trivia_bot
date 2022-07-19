@@ -11,7 +11,7 @@ from tutils import (
 
 from chat_handler import ChatHandler
 from format import make_answered_question_message, make_keyboard
-from models import Question
+from question_storage import Question
 
 QUESTIONS = [
     Question("1.What is the color of sky?", ["orange", "blue", "green"], 1),

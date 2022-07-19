@@ -5,7 +5,7 @@ from format import (
     make_answered_question_message,
     make_keyboard,
 )
-from models import Question
+from question_storage import Question
 from telegram_client import InlineKeyboardButton, InlineKeyboardMarkup
 
 

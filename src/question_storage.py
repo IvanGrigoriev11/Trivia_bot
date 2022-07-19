@@ -1,10 +1,10 @@
 import os
-import random
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from typing import List, Tuple, Optional
 
 import psycopg
+from psycopg import Connection
 
 
 class QuestionStorage(ABC):
@@ -18,22 +18,33 @@ class QuestionStorage(ABC):
 class PostgresQuestionStorage(QuestionStorage):
     """Concrete implementation for questions from PostgreSQL database."""
 
+    def __init__(self):
+        self.user = os.environ["TRIVIA_POSTGRES_USER"]
+        self.password = os.environ["TRIVIA_POSTGRES_PASSWD"]
+        self.host = "localhost"
+        self.dbname = "postgres"
+        self.port = 5432
+        self.conninfo = f"postgresql://{self.user}:{self.password}@{self.host}:{self.port}/{self.dbname}"
+
     def get_questions(self, max_num_questions: int) -> List["Question"]:
-        random_value_list = random.sample(range(0, 4050), max_num_questions)
-        user = os.environ["TRIVIA_POSTGRES_USER"]
-        password = os.environ["TRIVIA_POSTGRES_PASSWD"]
         # pylint: disable = not-context-manager
-        with psycopg.connect(
-            host="localhost", dbname="postgres", user=user, password=password, port=5432
-        ) as conn:
+        with psycopg.connect(self.conninfo) as conn:
             questions = []
             with conn.cursor() as cur:
+                cur.execute(
+                    f"SELECT id FROM questions\n"
+                    f"ORDER BY random()\n"
+                    f"LIMIT {max_num_questions};"
+                    )
+                psycopg_questions_id = cur.fetchall()
+                # transform psycopg list containing questions' id to the most pythonic list
+                random_value_list = [question_id[0] for question_id in psycopg_questions_id]
                 for value in random_value_list:
                     cur.execute(
                         f"SELECT id, question, text, is_correct FROM questions\n"
                         f"INNER JOIN answers ON questions.id = answers.question_id\n"
-                        f"WHERE question_id = {value}\n"
-                        f"ORDER BY text ASC;"
+                        f"WHERE id = {value}\n"
+                        f"ORDER BY id, text;"
                     )
                     for record in cur:
                         questions.append(record)
