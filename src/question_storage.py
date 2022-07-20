@@ -23,7 +23,8 @@ class PostgresQuestionStorage(QuestionStorage):
         self.host = "localhost"
         self.dbname = "postgres"
         self.port = 5432
-        self.conninfo = f"postgresql://{self.user}:{self.password}@{self.host}:{self.port}/{self.dbname}"
+        self.conninfo = \
+            f"postgresql://{self.user}:{self.password}@{self.host}:{self.port}/{self.dbname}"
 
     def get_questions(self, max_num_questions: int) -> List["Question"]:
         # pylint: disable = not-context-manager
