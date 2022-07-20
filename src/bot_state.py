@@ -151,7 +151,10 @@ class BotStateFactory:
         self._storage = storage
 
     def make_game_state(self):
-        return GameState(self._client, self._storage.get_questions(max_num_questions=5))
+        _max_num_questions = 5
+        if self._storage is not None:
+            return GameState(self._client, self._storage.get_questions(_max_num_questions))
+        raise TypeError("Storage must be chosen for creating game state")
 
     def make_idle_state(self):
         return IdleState(self._client)
