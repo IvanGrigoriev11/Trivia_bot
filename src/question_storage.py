@@ -10,7 +10,7 @@ class QuestionStorage(ABC):
     """An interface for accessing questions."""
 
     @abstractmethod
-    def get_questions(self, max_num_questions: Optional[int]) -> List["Question"]:
+    def get_questions(self, max_num_questions: int) -> List["Question"]:
         """pass"""
 
 
@@ -58,7 +58,7 @@ class PostgresQuestionStorage(QuestionStorage):
 class InMemoryStorage(QuestionStorage):
     """Concrete implementation for questions from local memory."""
 
-    def get_questions(self, max_num_questions: None) -> List["Question"]:
+    def get_questions(self, max_num_questions: int) -> List["Question"]:
         return [
             Question("1.What is the color of sky?", ["orange", "blue", "green"], 1),
             Question("2.How much is 2 + 5?", ["4", "10", "7", "8"], 2),

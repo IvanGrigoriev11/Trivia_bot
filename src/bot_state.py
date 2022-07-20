@@ -151,7 +151,7 @@ class BotStateFactory:
         self._storage = storage
 
     def make_game_state(self):
-        return GameState(self._client, self._storage.get_questions(5))
+        return GameState(self._client, self._storage.get_questions(max_num_questions=5))
 
     def make_idle_state(self):
         return IdleState(self._client)
