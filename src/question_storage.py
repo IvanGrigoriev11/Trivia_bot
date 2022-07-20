@@ -1,10 +1,9 @@
 import os
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from typing import List, Tuple, Optional
+from typing import List, Optional, Tuple
 
 import psycopg
-from psycopg import Connection
 
 
 class QuestionStorage(ABC):
@@ -35,10 +34,12 @@ class PostgresQuestionStorage(QuestionStorage):
                     f"SELECT id FROM questions\n"
                     f"ORDER BY random()\n"
                     f"LIMIT {max_num_questions};"
-                    )
+                )
                 psycopg_questions_id = cur.fetchall()
                 # transform psycopg list containing questions' id to the most pythonic list
-                random_value_list = [question_id[0] for question_id in psycopg_questions_id]
+                random_value_list = [
+                    question_id[0] for question_id in psycopg_questions_id
+                ]
                 for value in random_value_list:
                     cur.execute(
                         f"SELECT id, question, text, is_correct FROM questions\n"

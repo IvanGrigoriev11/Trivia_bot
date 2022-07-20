@@ -2,7 +2,7 @@ from typing import Optional
 
 from tutils import FakeTelegramClient
 
-from bot_state import IdleState
+from bot_state import BotStateFactory
 from telegram_client import CallbackQuery, Chat, Message, SendMessagePayload, Update
 
 
@@ -12,7 +12,7 @@ def check_idle_state(
     callback_query: Optional[CallbackQuery] = None,
 ):
     client = FakeTelegramClient()
-    state = IdleState(client)
+    state = BotStateFactory(client, None).make_idle_state()
     chat_id = 111
     state.on_enter(chat_id)
     state.process(Update(123, Message(Chat(chat_id), user_message), callback_query))

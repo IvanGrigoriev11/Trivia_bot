@@ -9,7 +9,7 @@ from tutils import (
     user,
 )
 
-from bot_state import GameState
+from bot_state import BotStateFactory
 from format import (
     CHECK_MARK,
     CROSS_MARK,
@@ -17,7 +17,7 @@ from format import (
     make_answered_question_message,
     make_keyboard,
 )
-from question_storage import Context, InMemoryStorage, Question
+from question_storage import InMemoryStorage, Question
 from telegram_client import CallbackQuery, MessageEdit, SendMessagePayload, Update, User
 
 QUESTIONS = [
@@ -30,7 +30,7 @@ QUESTIONS = [
 def check_game_state(conversation: List[MessageContent]):
     client = FakeTelegramClient()
     chat_id = 111
-    state = GameState(client, Context(InMemoryStorage()).execute())
+    state = BotStateFactory(client, InMemoryStorage()).make_game_state()
     state.on_enter(chat_id)
 
     def process(u: Update):
@@ -91,7 +91,8 @@ def test_enter_inappropriate_number():
 
 def check_callback_query(button: str):
     client = FakeTelegramClient()
-    state = GameState(client, Context(InMemoryStorage()).execute())
+
+    state = BotStateFactory(client, InMemoryStorage()).make_game_state()
     chat_id = 111
     state.on_enter(chat_id)
     state.process(Update(123, None, CallbackQuery(User(111), f"{button}")))

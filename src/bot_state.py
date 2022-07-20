@@ -1,8 +1,8 @@
 from abc import ABC, abstractmethod
-from typing import List
+from typing import List, Optional
 
 from format import make_answered_question_message, make_keyboard
-from question_storage import PostgresQuestionStorage, Question
+from question_storage import PostgresQuestionStorage, Question, QuestionStorage
 from telegram_client import MessageEdit, TelegramClient, Update
 from utils import parse_int
 
@@ -59,7 +59,9 @@ class IdleState(BotState):
 
             if text == "/startgame":
                 self._client.send_text(chat_id, "Starting game!")
-                return GameState(self._client, PostgresQuestionStorage().get_questions(5))
+                return BotStateFactory(
+                    self._client, PostgresQuestionStorage()
+                ).make_game_state()
 
             self._client.send_text(chat_id, "Type /startGame to start a new game.")
         return self
@@ -138,4 +140,18 @@ class GameState(BotState):
             + "\n"
             + "If you want to try again, type /startGame to start a new game.",
         )
+        return BotStateFactory(self._client, None).make_idle_state()
+
+
+class BotStateFactory:
+    """A factory responsible for creating new bot states."""
+
+    def __init__(self, client: TelegramClient, storage: Optional[QuestionStorage]):
+        self._client = client
+        self._storage = storage
+
+    def make_game_state(self):
+        return GameState(self._client, self._storage.get_questions(5))
+
+    def make_idle_state(self):
         return IdleState(self._client)
