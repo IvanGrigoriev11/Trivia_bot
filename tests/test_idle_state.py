@@ -2,7 +2,7 @@ from typing import Optional
 
 from tutils import FakeTelegramClient
 
-from bot_state import BotStateFactory, IdleState
+from bot_state import BotStateFactory
 from question_storage import InMemoryStorage
 from telegram_client import CallbackQuery, Chat, Message, SendMessagePayload, Update
 

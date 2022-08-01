@@ -1,6 +1,5 @@
 from typing import List
 
-from bot_state import BotStateFactory
 from tutils import (
     FakeTelegramClient,
     MessageContent,
@@ -10,9 +9,10 @@ from tutils import (
     user,
 )
 
+from bot_state import BotStateFactory
 from chat_handler import ChatHandler
 from format import make_answered_question_message, make_keyboard
-from question_storage import Question, InMemoryStorage
+from question_storage import InMemoryStorage, Question
 
 QUESTIONS = [
     Question("1.What is the color of sky?", ["orange", "blue", "green"], 1),

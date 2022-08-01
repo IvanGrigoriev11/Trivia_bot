@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 from typing import List, Optional
 
 from format import make_answered_question_message, make_keyboard
-from question_storage import PostgresQuestionStorage, Question, QuestionStorage
+from question_storage import Question, QuestionStorage
 from telegram_client import MessageEdit, TelegramClient, Update
 from utils import parse_int
 
@@ -45,9 +45,10 @@ class BotState(ABC):
 class IdleState(BotState):
     """A state when there is no active game in place."""
 
-    def __init__(self, client: TelegramClient):
+    def __init__(self, client: TelegramClient, state_factory: "BotStateFactory"):
         super().__init__()
         self._client = client
+        self._state_factory = state_factory
 
     def _do_on_enter(self, chat_id: int) -> None:
         pass
@@ -59,9 +60,7 @@ class IdleState(BotState):
 
             if text == "/startgame":
                 self._client.send_text(chat_id, "Starting game!")
-                return BotStateFactory(
-                    self._client, PostgresQuestionStorage()
-                ).make_game_state()
+                return self._state_factory.make_game_state()
 
             self._client.send_text(chat_id, "Type /startGame to start a new game.")
         return self
@@ -70,13 +69,19 @@ class IdleState(BotState):
 class GameState(BotState):
     """A state responsible for handling the game itself. Assumes the game has already started."""
 
-    def __init__(self, client: TelegramClient, questions: List[Question]):
+    def __init__(
+        self,
+        client: TelegramClient,
+        questions: List[Question],
+        state_factory: "BotStateFactory",
+    ):
         """
         questions -- questions for this particular game.
         """
         super().__init__()
         self._client = client
         self._questions = questions
+        self._state_factory = state_factory
         self._cur_question = 0
         self._score = 0
         self._last_question_msg_id = 0
@@ -140,11 +145,27 @@ class GameState(BotState):
             + "\n"
             + "If you want to try again, type /startGame to start a new game.",
         )
-        return BotStateFactory(self._client, None).make_idle_state()
+        return self._state_factory.make_idle_state()
+
+
+class GreetingState(BotState):
+    """A state responsible for greetings and introducing new user information about this bot."""
+
+    def __init__(self, client: TelegramClient, state_factory: "BotStateFactory"):
+        super().__init__()
+        self._client = client
+        self._state_factory = state_factory
+
+    def _do_on_enter(self, chat_id: int) -> None:
+        pass
+
+    def _do_process(self, update: Update) -> "BotState":
+        self._client.send_text(update.chat_id, "Hello. I am Trivia Bot.")
+        return self._state_factory.make_idle_state()
 
 
 class BotStateFactory:
-    """A factory responsible for creating new bot states."""
+    """A factory responsible for creating new bot state."""
 
     def __init__(self, client: TelegramClient, storage: Optional[QuestionStorage]):
         self._client = client
@@ -154,9 +175,12 @@ class BotStateFactory:
         _max_num_questions = 5
         if self._storage is not None:
             return GameState(
-                self._client, self._storage.get_questions(_max_num_questions)
+                self._client, self._storage.get_questions(_max_num_questions), self
             )
         raise TypeError("Storage must be chosen for creating game state")
 
     def make_idle_state(self):
-        return IdleState(self._client)
+        return IdleState(self._client, self)
+
+    def make_greeting_state(self):
+        return GreetingState(self._client, self)

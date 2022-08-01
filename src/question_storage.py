@@ -1,7 +1,6 @@
-import os
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from typing import List, Tuple
+from typing import List, Optional, Tuple
 
 import psycopg
 
@@ -11,26 +10,35 @@ class QuestionStorage(ABC):
 
     @abstractmethod
     def get_questions(self, max_num_questions: int) -> List["Question"]:
-        """pass"""
+        """Request a list of questions from any source."""
 
 
 class PostgresQuestionStorage(QuestionStorage):
-    """Concrete implementation for questions from PostgreSQL database."""
+    """Representing the implementation for questions from PostgreSQL database."""
 
-    def __init__(self):
-        self.user = os.environ["TRIVIA_POSTGRES_USER"]
-        self.password = os.environ["TRIVIA_POSTGRES_PASSWD"]
-        self.host = "localhost"
-        self.dbname = "postgres"
-        self.port = 5432
-        self.conninfo = (
-            f"postgresql://{self.user}:{self.password}@"
-            f"{self.host}:{self.port}/{self.dbname}"
-        )
+    def __init__(self, conninfo: str):
+        self._conninfo = conninfo
+        self._connection: Optional[psycopg.Connection] = None
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_value, exc_tb):
+        self.close_connection()
+
+    def _get_connection(self) -> psycopg.Connection:
+        if self._connection is None or self._connection.closed:
+            self._connection = psycopg.connect(self._conninfo)
+
+        return self._connection
+
+    def close_connection(self):
+        if self._connection:
+            self._connection.close()
 
     def get_questions(self, max_num_questions: int) -> List["Question"]:
         # pylint: disable = not-context-manager
-        with psycopg.connect(self.conninfo) as conn:
+        with psycopg.connect(self._conninfo) as conn:
             questions = []
             with conn.cursor() as cur:
                 cur.execute(
@@ -56,7 +64,7 @@ class PostgresQuestionStorage(QuestionStorage):
 
 
 class InMemoryStorage(QuestionStorage):
-    """Concrete implementation for questions from local memory."""
+    """Representing the implementation for questions from local memory."""
 
     def get_questions(self, max_num_questions: int) -> List["Question"]:
         return [
@@ -78,6 +86,10 @@ class Question:
 def _format_to_question_model(
     list_of_ids: List[int], questions: List[Tuple]
 ) -> List[Question]:
+    """
+    Reformat a list of questions into a convenient game form for handling answer during the game.
+    """
+
     element = 0
     temp = 0
     text = ""
