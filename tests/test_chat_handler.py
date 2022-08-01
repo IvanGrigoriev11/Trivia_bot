@@ -1,5 +1,6 @@
 from typing import List
 
+from bot_state import BotStateFactory
 from tutils import (
     FakeTelegramClient,
     MessageContent,
@@ -11,7 +12,7 @@ from tutils import (
 
 from chat_handler import ChatHandler
 from format import make_answered_question_message, make_keyboard
-from question_storage import Question
+from question_storage import Question, InMemoryStorage
 
 QUESTIONS = [
     Question("1.What is the color of sky?", ["orange", "blue", "green"], 1),
@@ -23,7 +24,9 @@ QUESTIONS = [
 def check_chat(conversation: List[MessageContent]):
     client = FakeTelegramClient()
     chat_id = 123
-    chat_handler = ChatHandler.make_default(client, chat_id)
+    storage = InMemoryStorage()
+    state_factory = BotStateFactory(client, storage)
+    chat_handler = ChatHandler.create(state_factory.make_greeting_state(), chat_id)
     check_conversation(chat_id, conversation, client, chat_handler.process)
 
 

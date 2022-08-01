@@ -65,6 +65,7 @@ def check_conversation(
 ):
     last_message_from_bot = 0
     update_id = 111
+    print(client.sent_messages)
     for msg in conversation:
         if msg.kind == "bot_msg":
             assert client.sent_messages[last_message_from_bot] == SendMessagePayload(
