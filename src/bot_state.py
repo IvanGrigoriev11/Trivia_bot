@@ -160,7 +160,11 @@ class GreetingState(BotState):
         pass
 
     def _do_process(self, update: Update) -> "BotState":
-        self._client.send_text(update.chat_id, "Hello. I am Trivia Bot.")
+        self._client.send_text(
+            update.chat_id,
+            "Hello. I am Trivia Bot. If you want to play the game,\n"
+            "please type /startGame",
+        )
         return self._state_factory.make_idle_state()
 
 
