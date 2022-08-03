@@ -149,7 +149,7 @@ class GameState(BotState):
 
 
 class GreetingState(BotState):
-    """A state responsible for greetings and introducing new user information about this bot."""
+    """A state responsible for greeting and introducing new user to the bot."""
 
     def __init__(self, client: TelegramClient, state_factory: "BotStateFactory"):
         super().__init__()
