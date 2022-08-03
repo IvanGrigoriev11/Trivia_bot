@@ -9,7 +9,7 @@ class QuestionStorage(ABC):
     """An interface for accessing questions."""
 
     @abstractmethod
-    def get_questions(self, max_num_questions: int) -> List["Question"]:
+    def get_questions(self, question_count: int) -> List["Question"]:
         """Request a list of questions from any source."""
 
 
