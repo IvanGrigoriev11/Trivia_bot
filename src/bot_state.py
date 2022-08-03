@@ -169,7 +169,7 @@ class GreetingState(BotState):
 
 
 class BotStateFactory:
-    """A factory responsible for creating new bot state."""
+    """A factory responsible for creating a new bot state."""
 
     def __init__(self, client: TelegramClient, storage: Optional[QuestionStorage]):
         self._client = client
