@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import List, Optional
+from typing import List
 
 from format import make_answered_question_message, make_keyboard
 from question_storage import Question, QuestionStorage
@@ -149,7 +149,7 @@ class GameState(BotState):
 
 
 class GreetingState(BotState):
-    """A state responsible for greetings and introducing new user information about this bot."""
+    """A state responsible for greeting and introducing new user to the bot."""
 
     def __init__(self, client: TelegramClient, state_factory: "BotStateFactory"):
         super().__init__()
@@ -169,9 +169,9 @@ class GreetingState(BotState):
 
 
 class BotStateFactory:
-    """A factory responsible for creating new bot state."""
+    """A factory responsible for creating a new bot state."""
 
-    def __init__(self, client: TelegramClient, storage: Optional[QuestionStorage]):
+    def __init__(self, client: TelegramClient, storage: QuestionStorage):
         self._client = client
         self._storage = storage
 

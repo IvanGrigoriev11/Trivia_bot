@@ -9,12 +9,13 @@ class QuestionStorage(ABC):
     """An interface for accessing questions."""
 
     @abstractmethod
-    def get_questions(self, max_num_questions: int) -> List["Question"]:
-        """Request a list of questions from any source."""
+    def get_questions(self, question_count: int) -> List["Question"]:
+        """Gets `question_count` questions. Questions may be selected at random.
+        Calling the method multiple time will result in a different set of questions."""
 
 
 class PostgresQuestionStorage(QuestionStorage):
-    """Representing the implementation for questions from PostgreSQL database."""
+    """Questions storage over a PostgreSQL database."""
 
     def __init__(self, conninfo: str):
         self._conninfo = conninfo
@@ -36,7 +37,7 @@ class PostgresQuestionStorage(QuestionStorage):
         if self._connection:
             self._connection.close()
 
-    def get_questions(self, max_num_questions: int) -> List["Question"]:
+    def get_questions(self, question_count: int) -> List["Question"]:
         # pylint: disable = not-context-manager
         with psycopg.connect(self._conninfo) as conn:
             questions = []
@@ -44,14 +45,14 @@ class PostgresQuestionStorage(QuestionStorage):
                 cur.execute(
                     f"SELECT id FROM questions\n"
                     f"ORDER BY random()\n"
-                    f"LIMIT {max_num_questions};"
+                    f"LIMIT {question_count};"
                 )
                 psycopg_questions_id = cur.fetchall()
                 # transform psycopg list containing questions' id to the most pythonic list
-                random_value_list = [
+                question_ids = [
                     question_id[0] for question_id in psycopg_questions_id
                 ]
-                for value in random_value_list:
+                for value in question_ids:
                     cur.execute(
                         f"SELECT id, question, text, is_correct FROM questions\n"
                         f"INNER JOIN answers ON questions.id = answers.question_id\n"
@@ -60,13 +61,13 @@ class PostgresQuestionStorage(QuestionStorage):
                     )
                     for record in cur:
                         questions.append(record)
-            return _format_to_question_model(random_value_list, questions)
+            return _format_to_question_model(question_ids, questions)
 
 
 class InMemoryStorage(QuestionStorage):
-    """Representing the implementation for questions from local memory."""
+    """Storage that holds data in-memory."""
 
-    def get_questions(self, max_num_questions: int) -> List["Question"]:
+    def get_questions(self, question_count: int) -> List["Question"]:
         return [
             Question("1.What is the color of sky?", ["orange", "blue", "green"], 1),
             Question("2.How much is 2 + 5?", ["4", "10", "7", "8"], 2),
@@ -87,7 +88,7 @@ def _format_to_question_model(
     list_of_ids: List[int], questions: List[Tuple]
 ) -> List[Question]:
     """
-    Reformat a list of questions into a convenient game form for handling answer during the game.
+    Transforms postgres transaction output into a list of `Question`.
     """
 
     element = 0

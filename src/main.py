@@ -18,7 +18,6 @@ def main():
     token = os.environ["TELEGRAM_BOT_TOKEN"]
     client = LiveTelegramClient(token)
     with PostgresQuestionStorage(conninfo) as storage:
-
         state_factory = BotStateFactory(client, storage)
 
         # chat_id -> handler
