@@ -10,7 +10,7 @@ class QuestionStorage(ABC):
 
     @abstractmethod
     def get_questions(self, question_count: int) -> List["Question"]:
-        """Request a list of questions from any source."""
+        """Gets `question_count` questions. Questions may be selected at random. Calling the method multiple time will result in a different set of questions."""
 
 
 class PostgresQuestionStorage(QuestionStorage):
