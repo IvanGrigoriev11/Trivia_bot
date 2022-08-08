@@ -1,10 +1,10 @@
 from dataclasses import dataclass
 from enum import Enum
-from typing import Callable, List, Optional
+from typing import List, Optional
 
 from bot_state import BotStateFactory
 from chat_handler import ChatHandler
-from question_storage import InMemoryStorage
+from question_storage import InMemoryStorage, Question
 from telegram_client import (
     Chat,
     InlineKeyboardMarkup,
@@ -14,6 +14,12 @@ from telegram_client import (
     TelegramClient,
     Update,
 )
+
+QUESTIONS = [
+    Question("1.What is the color of sky?", ["orange", "blue", "green"], 1),
+    Question("2.How much is 2 + 5?", ["4", "10", "7", "8"], 2),
+    Question("3.What date is Christmas?", ["Dec 24", "Apr 15", "Jan 1", "Dec 25"], 3),
+]
 
 
 class FakeTelegramClient(TelegramClient):
@@ -50,12 +56,6 @@ class MessageContent:
     reply_markup: Optional[InlineKeyboardMarkup] = None
 
 
-@dataclass
-class StateContent:
-    desired_state: StateKind
-    conversation: List[MessageContent]
-
-
 def bot_edit(
     text_message: str, reply_markup: Optional[InlineKeyboardMarkup] = None
 ) -> MessageContent:
@@ -72,42 +72,34 @@ def user(text_message: str) -> MessageContent:
     return MessageContent(MessageKind.USER, text_message)
 
 
-def greeting(conversation: List[MessageContent]) -> StateContent:
-    return StateContent(StateKind.GREETING_STATE, conversation)
+def make_handler_greet():
+    return StateKind.GREETING_STATE
 
 
-def idle(conversation: List[MessageContent]) -> StateContent:
-    return StateContent(StateKind.IDLE_STATE, conversation)
+def make_handler_idle():
+    return StateKind.IDLE_STATE
 
 
-def game(conversation: List[MessageContent]) -> StateContent:
-    return StateContent(StateKind.GAME_STATE, conversation)
+def make_handler_game():
+    return StateKind.GAME_STATE
 
 
-def check_state(state_content: StateContent):
+def check_conversation(
+    desired_state: StateKind,
+    conversation: List[MessageContent],
+):
     client = FakeTelegramClient()
-    storage = InMemoryStorage()
+    storage = InMemoryStorage(QUESTIONS)
     chat_id = 111
     state_factory = BotStateFactory(client, storage)
-    if state_content.desired_state == StateKind.GREETING_STATE:
+    if desired_state == StateKind.GREETING_STATE:
         state = state_factory.make_greeting_state()
-    elif state_content.desired_state == StateKind.IDLE_STATE:
+    elif desired_state == StateKind.IDLE_STATE:
         state = state_factory.make_idle_state()
     else:
         state = state_factory.make_game_state()
 
     chat_handler = ChatHandler.create(state, chat_id)
-    check_conversation(
-        chat_id, state_content.conversation, client, chat_handler.process
-    )
-
-
-def check_conversation(
-    chat_id: int,
-    conversation: List[MessageContent],
-    client: FakeTelegramClient,
-    handle: Callable[[Update], None],
-):
     last_message_from_bot = 0
     update_id = 111
     for msg in conversation:
@@ -122,7 +114,7 @@ def check_conversation(
             )
             last_message_from_bot += 1
         else:
-            handle(
+            chat_handler.process(
                 Update(
                     update_id,
                     Message(Chat(chat_id), msg.text_message),

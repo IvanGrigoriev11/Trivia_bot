@@ -1,9 +1,9 @@
+import itertools
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from typing import List
 
 from psycopg_pool import ConnectionPool
-import itertools
 
 
 @dataclass
@@ -40,7 +40,8 @@ class PostgresQuestionStorage(QuestionStorage):
         # pylint: disable = not-context-manager
         with self._pool.connection() as conn:
             with conn.cursor() as cur:
-                cur.execute(f"""
+                cur.execute(
+                    f"""
                     SELECT id, question, text, is_correct FROM questions
                     INNER JOIN answers ON questions.id = answers.question_id
                     WHERE id IN (
@@ -49,10 +50,11 @@ class PostgresQuestionStorage(QuestionStorage):
                         LIMIT {question_count}
                     )
                     ORDER BY id, text;
-                """)
+                """
+                )
                 questions = [PostgresQuestionRecord(*r) for r in cur]
         game_questions = []
-        for qid, group_ in itertools.groupby(questions, lambda q: q.id):
+        for _, group_ in itertools.groupby(questions, lambda q: q.id):
             group: List[PostgresQuestionRecord] = list(group_)
             text = group[0].question
             answers = [x.answer for x in group]
