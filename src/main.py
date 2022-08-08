@@ -5,6 +5,7 @@ from bot_state import BotStateFactory
 from chat_handler import ChatHandler
 from question_storage import PostgresQuestionStorage
 from telegram_client import LiveTelegramClient
+from psycopg_pool import ConnectionPool
 
 
 def main():
@@ -17,7 +18,9 @@ def main():
 
     token = os.environ["TELEGRAM_BOT_TOKEN"]
     client = LiveTelegramClient(token)
-    with PostgresQuestionStorage(conninfo) as storage:
+    pool = ConnectionPool(conninfo)
+    with pool:
+        storage = PostgresQuestionStorage(pool)
         state_factory = BotStateFactory(client, storage)
 
         # chat_id -> handler
