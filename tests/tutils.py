@@ -2,9 +2,8 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import List, Optional
 
-from bot_state import BotStateFactory
 from chat_handler import ChatHandler
-from question_storage import InMemoryStorage, Question
+from question_storage import Question
 from telegram_client import (
     Chat,
     InlineKeyboardMarkup,
@@ -43,17 +42,18 @@ class MessageKind(Enum):
     BOT_EDIT = "bot_edit"
 
 
-class StateKind(Enum):
-    GREETING_STATE = "GreetingState"
-    IDLE_STATE = "IdleState"
-    GAME_STATE = "GameState"
-
-
 @dataclass(frozen=True)
 class MessageContent:
     kind: MessageKind
     text_message: str
     reply_markup: Optional[InlineKeyboardMarkup] = None
+
+
+@dataclass
+class Config:
+    chat_handler: ChatHandler
+    client: FakeTelegramClient
+    chat_id: int
 
 
 def bot_edit(
@@ -72,34 +72,13 @@ def user(text_message: str) -> MessageContent:
     return MessageContent(MessageKind.USER, text_message)
 
 
-def make_handler_greet():
-    return StateKind.GREETING_STATE
-
-
-def make_handler_idle():
-    return StateKind.IDLE_STATE
-
-
-def make_handler_game():
-    return StateKind.GAME_STATE
-
-
 def check_conversation(
-    desired_state: StateKind,
+    configuration: Config,
     conversation: List[MessageContent],
 ):
-    client = FakeTelegramClient()
-    storage = InMemoryStorage(QUESTIONS)
-    chat_id = 111
-    state_factory = BotStateFactory(client, storage)
-    if desired_state == StateKind.GREETING_STATE:
-        state = state_factory.make_greeting_state()
-    elif desired_state == StateKind.IDLE_STATE:
-        state = state_factory.make_idle_state()
-    else:
-        state = state_factory.make_game_state()
-
-    chat_handler = ChatHandler.create(state, chat_id)
+    chat_handler = configuration.chat_handler
+    chat_id = configuration.chat_id
+    client = configuration.client
     last_message_from_bot = 0
     update_id = 111
     for msg in conversation:

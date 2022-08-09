@@ -1,14 +1,15 @@
 from tutils import (
     QUESTIONS,
+    Config,
     FakeTelegramClient,
     bot_edit,
     bot_msg,
     check_conversation,
-    make_handler_game,
     user,
 )
 
 from bot_state import BotStateFactory
+from chat_handler import ChatHandler
 from format import (
     CHECK_MARK,
     CROSS_MARK,
@@ -18,6 +19,15 @@ from format import (
 )
 from question_storage import InMemoryStorage
 from telegram_client import CallbackQuery, MessageEdit, SendMessagePayload, Update, User
+
+
+def make_handler_game():
+    client = FakeTelegramClient()
+    storage = InMemoryStorage(QUESTIONS)
+    state_factory = BotStateFactory(client, storage)
+    state = state_factory.make_game_state()
+    chat_id = 111
+    return Config(ChatHandler.create(state, chat_id), client, chat_id)
 
 
 def test_game_state():

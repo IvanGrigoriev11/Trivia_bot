@@ -1,11 +1,5 @@
-from tutils import (
-    QUESTIONS,
-    bot_edit,
-    bot_msg,
-    check_conversation,
-    make_handler_greet,
-    user,
-)
+from test_idle_state import make_handler_greet
+from tutils import QUESTIONS, bot_edit, bot_msg, check_conversation, user
 
 from format import make_answered_question_message, make_keyboard
 
