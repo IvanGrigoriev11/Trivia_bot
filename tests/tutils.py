@@ -1,7 +1,9 @@
 from dataclasses import dataclass
 from enum import Enum
-from typing import Callable, List, Optional
+from typing import List, Optional
 
+from chat_handler import ChatHandler
+from question_storage import Question
 from telegram_client import (
     Chat,
     InlineKeyboardMarkup,
@@ -11,6 +13,12 @@ from telegram_client import (
     TelegramClient,
     Update,
 )
+
+QUESTIONS = [
+    Question("1.What is the color of sky?", ["orange", "blue", "green"], 1),
+    Question("2.How much is 2 + 5?", ["4", "10", "7", "8"], 2),
+    Question("3.What date is Christmas?", ["Dec 24", "Apr 15", "Jan 1", "Dec 25"], 3),
+]
 
 
 class FakeTelegramClient(TelegramClient):
@@ -41,6 +49,13 @@ class MessageContent:
     reply_markup: Optional[InlineKeyboardMarkup] = None
 
 
+@dataclass
+class ConvConfig:
+    chat_handler: ChatHandler
+    client: FakeTelegramClient
+    chat_id: int
+
+
 def bot_edit(
     text_message: str, reply_markup: Optional[InlineKeyboardMarkup] = None
 ) -> MessageContent:
@@ -58,26 +73,27 @@ def user(text_message: str) -> MessageContent:
 
 
 def check_conversation(
-    chat_id: int,
+    configuration: ConvConfig,
     conversation: List[MessageContent],
-    client: FakeTelegramClient,
-    handle: Callable[[Update], None],
 ):
+    chat_handler = configuration.chat_handler
+    chat_id = configuration.chat_id
+    client = configuration.client
     last_message_from_bot = 0
     update_id = 111
     for msg in conversation:
-        if msg.kind == "bot_msg":
+        if msg.kind == MessageKind.BOT_MSG:
             assert client.sent_messages[last_message_from_bot] == SendMessagePayload(
                 chat_id, msg.text_message, msg.reply_markup
             )
             last_message_from_bot += 1
-        elif msg.kind == "bot_edit":
+        elif msg.kind == MessageKind.BOT_EDIT:
             assert client.sent_messages[last_message_from_bot] == MessageEdit(
                 chat_id, 0, msg.text_message
             )
             last_message_from_bot += 1
         else:
-            handle(
+            chat_handler.process(
                 Update(
                     update_id,
                     Message(Chat(chat_id), msg.text_message),
