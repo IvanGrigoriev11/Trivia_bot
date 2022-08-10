@@ -1,4 +1,4 @@
-from test_idle_state import make_conv_conf
+from test_greeting_state import make_conv_conf
 from tutils import QUESTIONS, bot_edit, bot_msg, check_conversation, user
 
 from format import make_answered_question_message, make_keyboard
