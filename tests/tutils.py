@@ -50,7 +50,7 @@ class MessageContent:
 
 
 @dataclass
-class Config:
+class ConvConfig:
     chat_handler: ChatHandler
     client: FakeTelegramClient
     chat_id: int
@@ -73,7 +73,7 @@ def user(text_message: str) -> MessageContent:
 
 
 def check_conversation(
-    configuration: Config,
+    configuration: ConvConfig,
     conversation: List[MessageContent],
 ):
     chat_handler = configuration.chat_handler

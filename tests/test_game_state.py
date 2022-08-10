@@ -1,6 +1,6 @@
 from tutils import (
     QUESTIONS,
-    Config,
+    ConvConfig,
     FakeTelegramClient,
     bot_edit,
     bot_msg,
@@ -21,18 +21,18 @@ from question_storage import InMemoryStorage
 from telegram_client import CallbackQuery, MessageEdit, SendMessagePayload, Update, User
 
 
-def make_handler_game():
+def make_conv_conf():
     client = FakeTelegramClient()
     storage = InMemoryStorage(QUESTIONS)
     state_factory = BotStateFactory(client, storage)
     state = state_factory.make_game_state()
     chat_id = 111
-    return Config(ChatHandler.create(state, chat_id), client, chat_id)
+    return ConvConfig(ChatHandler.create(state, chat_id), client, chat_id)
 
 
-def test_game_state():
+def test_game_till_end():
     check_conversation(
-        make_handler_game(),
+        make_conv_conf(),
         [
             bot_msg("1.What is the color of sky?", make_keyboard(QUESTIONS[0])),
             user("2"),
@@ -53,7 +53,7 @@ def test_game_state():
 
 def test_gibberish_reply():
     check_conversation(
-        make_handler_game(),
+        make_conv_conf(),
         [
             bot_msg("1.What is the color of sky?", make_keyboard(QUESTIONS[0])),
             user("first"),
@@ -69,7 +69,7 @@ def test_gibberish_reply():
 
 def test_enter_inappropriate_number():
     check_conversation(
-        make_handler_game(),
+        make_conv_conf(),
         [
             bot_msg("1.What is the color of sky?", make_keyboard(QUESTIONS[0])),
             user("-1"),
