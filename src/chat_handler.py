@@ -1,4 +1,4 @@
-from bot_state import BotState
+from bot_state import BotState, GameState, GreetingState, IdleState
 from telegram_client import Update
 
 
@@ -11,6 +11,7 @@ class ChatHandler:
         initial_state -- initial state responsible for handling chat updates.
         chat_id -- id of the chat this handler is responsible for.
         """
+
         self._state = initial_state
         self._chat_id = chat_id
 
@@ -30,3 +31,21 @@ class ChatHandler:
 
         state.on_enter(chat_id)
         return ChatHandler(state, chat_id)
+
+    @property
+    def state(self):
+        return self._state
+
+    @property
+    def chat_id(self):
+        return self._chat_id
+
+    def __eq__(self, other):
+        if self._chat_id == other.chat_id:
+            if isinstance(self._state, GreetingState):
+                return isinstance(other.state, GreetingState)
+            if isinstance(self._state, IdleState):
+                return isinstance(other.state, IdleState)
+            if isinstance(self._state, GameState):
+                return isinstance(other.state, GameState)
+        return False

@@ -50,6 +50,14 @@ class IdleState(BotState):
         self._client = client
         self._state_factory = state_factory
 
+    @property
+    def client(self):
+        return self._client
+
+    @property
+    def state_factory(self):
+        return self._state_factory
+
     def _do_on_enter(self, chat_id: int) -> None:
         pass
 
@@ -85,6 +93,22 @@ class GameState(BotState):
         self._cur_question = 0
         self._score = 0
         self._last_question_msg_id = 0
+
+    @property
+    def client(self):
+        return self._client
+
+    @property
+    def state_factory(self):
+        return self._state_factory
+
+    @property
+    def questions(self):
+        return self._questions
+
+    @property
+    def game_params(self):
+        return [self._cur_question, self._score, self._last_question_msg_id]
 
     def _do_on_enter(self, chat_id: int) -> None:
         self._last_question_msg_id = self._client.send_text(
@@ -167,6 +191,14 @@ class GreetingState(BotState):
         )
         return self._state_factory.make_idle_state()
 
+    @property
+    def client(self):
+        return self._client
+
+    @property
+    def state_factory(self):
+        return self._state_factory
+
 
 class BotStateFactory:
     """A factory responsible for creating a new bot state."""
@@ -174,6 +206,10 @@ class BotStateFactory:
     def __init__(self, client: TelegramClient, storage: QuestionStorage):
         self._client = client
         self._storage = storage
+
+    @property
+    def storage(self):
+        return self._storage
 
     def make_game_state(self):
         _question_count = 5
