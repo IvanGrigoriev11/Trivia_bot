@@ -1,18 +1,24 @@
 import json
 
-from tutils import QUESTIONS
-
 from bot_state import BotStateFactory, GameState, GreetingState, IdleState
 from chat_handler import ChatHandler
-from question_storage import InMemoryStorage
-from telegram_client import TelegramClient
+from question_storage import InMemoryStorage, Question
+
+QUESTIONS = [
+    Question("1.What is the color of sky?", ["orange", "blue", "green"], 1),
+    Question("2.How much is 2 + 5?", ["4", "10", "7", "8"], 2),
+    Question("3.What date is Christmas?", ["Dec 24", "Apr 15", "Jan 1", "Dec 25"], 3),
+]
 
 
 class ChatHandlerEncoder(json.JSONEncoder):
+    """JSON encoder for ChatHandler class.
+    Return JSON dict from ChatHandler object."""
+
     def default(self, o):
         if isinstance(o, ChatHandler):
             return {
-                "chat_handler": True,
+                "__chat_handler__": True,
                 "chat_id": o.chat_id,
                 "state": ChatHandlerEncoder.default(self, o.state),
             }
@@ -20,13 +26,13 @@ class ChatHandlerEncoder(json.JSONEncoder):
         if isinstance(o, GreetingState):
             return {
                 "state_name": f"{type(o)}",
-                "client": ChatHandlerEncoder.default(self, o.client),
+                "client": f"{type(o.client)}",
                 "state_factory": ChatHandlerEncoder.default(self, o.state_factory),
             }
         if isinstance(o, IdleState):
             return {
                 "state_name": f"{type(o)}",
-                "client": ChatHandlerEncoder.default(self, o.client),
+                "client": f"{type(o.client)}",
                 "state_factory": ChatHandlerEncoder.default(self, o.state_factory),
             }
         if isinstance(o, GameState):
@@ -34,12 +40,9 @@ class ChatHandlerEncoder(json.JSONEncoder):
                 "state_name": f"{type(o)}",
                 "questions": o.questions,
                 "game_parameters": o.game_params,
-                "client": ChatHandlerEncoder.default(self, o.client),
+                "client": f"{type(o.client)}",
                 "state_factory": ChatHandlerEncoder.default(self, o.state_factory),
             }
-
-        if isinstance(o, TelegramClient):
-            return f"{type(o)}"
 
         if isinstance(o, BotStateFactory):
             return {
@@ -47,9 +50,13 @@ class ChatHandlerEncoder(json.JSONEncoder):
                 "storage": f"{type(o.storage)}",
             }
 
+        raise TypeError
 
-def chat_handler_deserialization(dct):
-    if "chat_handler" in dct:
+
+def decode_chat_handler(dct: dict):
+    """Return ChatHandler object from JSON dict."""
+
+    if "__chat_handler__" in dct:
         chat_id = dct["chat_id"]
         state_name = dct["state"]["state_name"]
         client = dct["state"]["client"]
@@ -61,7 +68,7 @@ def chat_handler_deserialization(dct):
             state = IdleState(client, BotStateFactory(client, storage))
         else:
             storage = InMemoryStorage(QUESTIONS)
-            questions = dct["questions"]
+            questions = dct["state"]["questions"]
             state = GameState(client, questions, BotStateFactory(client, storage))
 
         return ChatHandler.create(state, chat_id)
@@ -69,7 +76,9 @@ def chat_handler_deserialization(dct):
 
 
 class ChatHandlerDecoder(json.JSONDecoder):
+    """JSON decoder for ChatHandler class."""
+
     def __init__(self, *args, **kwargs):
         json.JSONDecoder.__init__(
-            self, object_hook=chat_handler_deserialization, *args, **kwargs
+            self, object_hook=decode_chat_handler, *args, **kwargs
         )
