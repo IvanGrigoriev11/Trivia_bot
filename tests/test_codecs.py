@@ -4,11 +4,11 @@ from tutils import QUESTIONS, FakeTelegramClient
 
 from bot_state import BotStateFactory
 from chat_handler import ChatHandler
-from codecs import ChatHandlerEncoder, ChatHandlerDecoder
+from custom_codecs import ChatHandlerDecoder, ChatHandlerEncoder
 from question_storage import InMemoryStorage
 
 
-def chat_handler_encoder():
+def test_chat_handler_codecs():
     client = FakeTelegramClient()
     chat_id = 111
     state_factory = BotStateFactory(client, storage=InMemoryStorage(QUESTIONS))
@@ -16,7 +16,9 @@ def chat_handler_encoder():
     initial_chat_handler = ChatHandler.create(state, chat_id)
 
     ch = json.dumps(initial_chat_handler, cls=ChatHandlerEncoder)
-    json_chat_handler = json.loads(ch, cls=ChatHandlerDecoder)
+    json_chat_handler = json.loads(
+        ch, object_hook=ChatHandlerDecoder(client, state_factory).decode_chat_handler
+    )
 
     wrong_state = state_factory.make_greeting_state()
     wrong_chat_handler = ChatHandler.create(wrong_state, chat_id)
@@ -25,4 +27,3 @@ def chat_handler_encoder():
         initial_chat_handler == json_chat_handler
         and wrong_chat_handler != json_chat_handler
     )
-

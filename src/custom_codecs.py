@@ -32,19 +32,19 @@ class ChatHandlerEncoder(json.JSONEncoder):
                 "game_parameters": o.game_params,
             }
 
-        raise TypeError(f"{o} type object is not subscriptable."
-                        f"An object of type ChatHandler is expected to be encoded, not {o}.")
+        raise TypeError(
+            f"{o} type object is not subscriptable."
+            f"An object of type ChatHandler is expected to be encoded, not {o}."
+        )
 
 
 class ChatHandlerDecoder(json.JSONDecoder):
     """JSON decoder for ChatHandler class."""
 
-    def __init__(self, client: TelegramClient, state_factory: BotStateFactory, *args, **kwargs):
+    def __init__(self, client: TelegramClient, state_factory: BotStateFactory):
+        super().__init__()
         self.client = client
         self.state_factory = state_factory
-        json.JSONDecoder.__init__(
-            self, object_hook=ChatHandlerDecoder.decode_chat_handler, *args, **kwargs
-        )
 
     def decode_chat_handler(self, dct: dict):
         """Return ChatHandler object from JSON dict."""

@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
-from typing import List, Optional
 from dataclasses import dataclass
+from typing import List
+
 from format import make_answered_question_message, make_keyboard
 from question_storage import Question, QuestionStorage
 from telegram_client import MessageEdit, TelegramClient, Update
@@ -98,7 +99,9 @@ class GameState(BotState):
         return self._questions
 
     def game_params(self):
-        return GameStatistics(self._cur_question, self._score, self._last_question_msg_id)
+        return GameStatistics(
+            self._cur_question, self._score, self._last_question_msg_id
+        )
 
     def _do_on_enter(self, chat_id: int) -> None:
         self._last_question_msg_id = self._client.send_text(
