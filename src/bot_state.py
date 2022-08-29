@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
-from typing import List
-
+from typing import List, Optional
+from dataclasses import dataclass
 from format import make_answered_question_message, make_keyboard
 from question_storage import Question, QuestionStorage
 from telegram_client import MessageEdit, TelegramClient, Update
@@ -50,14 +50,6 @@ class IdleState(BotState):
         self._client = client
         self._state_factory = state_factory
 
-    @property
-    def client(self):
-        return self._client
-
-    @property
-    def state_factory(self):
-        return self._state_factory
-
     def _do_on_enter(self, chat_id: int) -> None:
         pass
 
@@ -72,6 +64,13 @@ class IdleState(BotState):
 
             self._client.send_text(chat_id, "Type /startGame to start a new game.")
         return self
+
+
+@dataclass(frozen=True)
+class GameStatistics:
+    current_question: int
+    score: int
+    last_question_msg_id: int
 
 
 class GameState(BotState):
@@ -95,20 +94,11 @@ class GameState(BotState):
         self._last_question_msg_id = 0
 
     @property
-    def client(self):
-        return self._client
-
-    @property
-    def state_factory(self):
-        return self._state_factory
-
-    @property
     def questions(self):
         return self._questions
 
-    @property
     def game_params(self):
-        return [self._cur_question, self._score, self._last_question_msg_id]
+        return GameStatistics(self._cur_question, self._score, self._last_question_msg_id)
 
     def _do_on_enter(self, chat_id: int) -> None:
         self._last_question_msg_id = self._client.send_text(
@@ -190,14 +180,6 @@ class GreetingState(BotState):
             "please type /startGame",
         )
         return self._state_factory.make_idle_state()
-
-    @property
-    def client(self):
-        return self._client
-
-    @property
-    def state_factory(self):
-        return self._state_factory
 
 
 class BotStateFactory:

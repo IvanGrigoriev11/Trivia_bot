@@ -1,5 +1,12 @@
 from bot_state import BotState, GameState, GreetingState, IdleState
 from telegram_client import Update
+from dataclasses import dataclass
+
+
+@dataclass(frozen=True)
+class ChatHandlerParams:
+    state: BotState
+    chat_id: int
 
 
 class ChatHandler:
@@ -33,12 +40,8 @@ class ChatHandler:
         return ChatHandler(state, chat_id)
 
     @property
-    def state(self):
-        return self._state
-
-    @property
-    def chat_id(self):
-        return self._chat_id
+    def chat_handler_params(self):
+        return ChatHandlerParams(self._state, self._chat_id)
 
     def __eq__(self, other):
         if self._chat_id == other.chat_id:
