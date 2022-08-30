@@ -6,6 +6,8 @@ from telegram_client import Update
 
 @dataclass(frozen=True)
 class ChatHandlerParams:
+    """Used to display the current state and chat_id of ChatHandler object."""
+
     state: BotState
     chat_id: int
 

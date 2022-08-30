@@ -69,6 +69,9 @@ class IdleState(BotState):
 
 @dataclass
 class GameStatistics:
+    """Used to display and hold the number of the current question, the number of correct answers,
+    and the field responsible for holding the message_id with the question."""
+
     current_question: int
     score: int
     last_question_msg_id: int
