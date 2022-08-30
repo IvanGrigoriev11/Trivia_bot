@@ -58,7 +58,10 @@ class ChatHandlerDecoder(json.JSONDecoder):
                 state = IdleState(self.client, self.state_factory)
             elif state_name == f"{GameState}":
                 questions = dct["state"]["questions"]
-                state = GameState(self.client, questions, self.state_factory)
+                game_params = dct["state"]["game_parameters"]
+                state = GameState(
+                    self.client, questions, self.state_factory, game_params
+                )
             else:
                 raise TypeError("Unknown value of 'state_name' key")
 

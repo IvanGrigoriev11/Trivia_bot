@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from typing import List
+from typing import List, Optional
 
 from format import make_answered_question_message, make_keyboard
 from question_storage import Question, QuestionStorage
@@ -67,7 +67,7 @@ class IdleState(BotState):
         return self
 
 
-@dataclass(frozen=True)
+@dataclass
 class GameStatistics:
     current_question: int
     score: int
@@ -82,6 +82,7 @@ class GameState(BotState):
         client: TelegramClient,
         questions: List[Question],
         state_factory: "BotStateFactory",
+        game_params: Optional[GameStatistics] = None,
     ):
         """
         questions -- questions for this particular game.
@@ -90,14 +91,27 @@ class GameState(BotState):
         self._client = client
         self._questions = questions
         self._state_factory = state_factory
-        self._cur_question = 0
-        self._score = 0
-        self._last_question_msg_id = 0
+        self._game_param = self.check_game_params(game_params)
+        self._cur_question = self._game_param.current_question
+        self._score = self._game_param.score
+        self._last_question_msg_id = self._game_param.last_question_msg_id
+
+    @staticmethod
+    def check_game_params(game_parameter: Optional[GameStatistics]) -> GameStatistics:
+        if game_parameter is None:
+            return GameStatistics(0, 0, 0)
+
+        return GameStatistics(
+            game_parameter.current_question,
+            game_parameter.score,
+            game_parameter.last_question_msg_id,
+        )
 
     @property
     def questions(self):
         return self._questions
 
+    @property
     def game_params(self):
         return GameStatistics(
             self._cur_question, self._score, self._last_question_msg_id
