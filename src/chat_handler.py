@@ -1,11 +1,11 @@
 from dataclasses import dataclass
 
-from bot_state import BotState, GameState, GreetingState, IdleState
+from bot_state import BotState
 from telegram_client import Update
 
 
 @dataclass(frozen=True)
-class ChatHandlerParams:
+class ProtoChatHandler:
     """Used to display the current state and chat_id of ChatHandler object."""
 
     state: BotState
@@ -44,16 +44,10 @@ class ChatHandler:
 
     @property
     def chat_handler_params(self):
-        return ChatHandlerParams(self._state, self._chat_id)
+        return ProtoChatHandler(self._state, self._chat_id)
 
     def __eq__(self, other):
         if isinstance(other, ChatHandler):
-            if self._chat_id == other._chat_id:
-                if isinstance(self._state, GreetingState):
-                    return isinstance(other._state, GreetingState)
-                if isinstance(self._state, IdleState):
-                    return isinstance(other._state, IdleState)
-                if isinstance(self._state, GameState):
-                    return isinstance(other._state, GameState)
+            return self._chat_id == other._chat_id and self._state == other._state
 
         return False

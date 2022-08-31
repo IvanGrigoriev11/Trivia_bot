@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from typing import List, Optional
+from typing import List
 
 from format import make_answered_question_message, make_keyboard
 from question_storage import Question, QuestionStorage
@@ -42,6 +42,10 @@ class BotState(ABC):
     def _do_process(self, update: Update) -> "BotState":
         """A callback for handling an update."""
 
+    @abstractmethod
+    def __eq__(self, other):
+        pass
+
 
 class IdleState(BotState):
     """A state when there is no active game in place."""
@@ -50,6 +54,9 @@ class IdleState(BotState):
         super().__init__()
         self._client = client
         self._state_factory = state_factory
+
+    def __eq__(self, other):
+        return isinstance(other, IdleState)
 
     def _do_on_enter(self, chat_id: int) -> None:
         pass
@@ -68,10 +75,11 @@ class IdleState(BotState):
 
 
 @dataclass
-class GameStatistics:
-    """Used to display and hold the number of the current question, the number of correct answers,
-    and the field responsible for holding the message_id with the question."""
+class ProtoGameState:
+    """Used to display and hold list of questions, the number of the current question, the number of
+    correct answers, and the field responsible for holding the message_id with the question."""
 
+    questions: List[Question]
     current_question: int
     score: int
     last_question_msg_id: int
@@ -83,42 +91,27 @@ class GameState(BotState):
     def __init__(
         self,
         client: TelegramClient,
-        questions: List[Question],
         state_factory: "BotStateFactory",
-        game_params: Optional[GameStatistics] = None,
+        game_params: ProtoGameState,
     ):
         """
         questions -- questions for this particular game.
         """
         super().__init__()
         self._client = client
-        self._questions = questions
         self._state_factory = state_factory
-        self._game_param = self.check_game_params(game_params)
-        self._cur_question = self._game_param.current_question
-        self._score = self._game_param.score
-        self._last_question_msg_id = self._game_param.last_question_msg_id
+        self._questions = game_params.questions
+        self._cur_question = game_params.current_question
+        self._score = game_params.score
+        self._last_question_msg_id = game_params.last_question_msg_id
 
-    @staticmethod
-    def check_game_params(game_parameter: Optional[GameStatistics]) -> GameStatistics:
-        if game_parameter is None:
-            return GameStatistics(0, 0, 0)
-
-        return GameStatistics(
-            game_parameter.current_question,
-            game_parameter.score,
-            game_parameter.last_question_msg_id,
-        )
-
-    @property
-    def questions(self):
-        return self._questions
+    def __eq__(self, other):
+        if isinstance(other, GameState):
+            return self.game_params == other.game_params
 
     @property
     def game_params(self):
-        return GameStatistics(
-            self._cur_question, self._score, self._last_question_msg_id
-        )
+        return ProtoGameState(self._questions, self._cur_question, self._score, self._last_question_msg_id)
 
     def _do_on_enter(self, chat_id: int) -> None:
         self._last_question_msg_id = self._client.send_text(
@@ -190,6 +183,9 @@ class GreetingState(BotState):
         self._client = client
         self._state_factory = state_factory
 
+    def __eq__(self, other):
+        return isinstance(other, GreetingState)
+
     def _do_on_enter(self, chat_id: int) -> None:
         pass
 
@@ -209,15 +205,11 @@ class BotStateFactory:
         self._client = client
         self._storage = storage
 
-    @property
-    def storage(self):
-        return self._storage
-
     def make_game_state(self):
         _question_count = 5
         if self._storage is not None:
             return GameState(
-                self._client, self._storage.get_questions(_question_count), self
+                self._client, self, ProtoGameState(self._storage.get_questions(_question_count), 0, 0, 0)
             )
         raise TypeError("Storage must be chosen for creating game state")
 
