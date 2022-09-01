@@ -7,9 +7,7 @@ from chat_handler import ChatHandler
 from custom_codecs import ChatHandlerDecoder, ChatHandlerEncoder
 from question_storage import InMemoryStorage, Question
 
-OTHER_QUESTION = [
-    Question("22.How much is 3 + 5?", ["4", "10", "7", "8"], 3)
-]
+OTHER_QUESTION = [Question("22.How much is 3 + 5?", ["4", "10", "7", "8"], 3)]
 
 
 def chat_handler_codecs(desired_state: str):
@@ -29,13 +27,15 @@ def chat_handler_codecs(desired_state: str):
     )
 
     # to verify the correctness of states' equality
-    wrong_state_factory = BotStateFactory(client, storage=InMemoryStorage(OTHER_QUESTION))
+    wrong_state_factory = BotStateFactory(
+        client, storage=InMemoryStorage(OTHER_QUESTION)
+    )
     wrong_state = wrong_state_factory.make_game_state()
     wrong_chat_handler = ChatHandler.create(wrong_state, chat_id)
 
     assert (
-            initial_chat_handler == reassembled_chat_handler
-            and wrong_chat_handler != reassembled_chat_handler
+        initial_chat_handler == reassembled_chat_handler
+        and wrong_chat_handler != reassembled_chat_handler
     )
 
 

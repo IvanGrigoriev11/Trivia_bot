@@ -1,7 +1,13 @@
 import json
 from json import JSONDecodeError
 
-from bot_state import BotStateFactory, GameState, GreetingState, IdleState, ProtoGameState
+from bot_state import (
+    BotStateFactory,
+    GameState,
+    GreetingState,
+    IdleState,
+    ProtoGameState,
+)
 from chat_handler import ChatHandler, ProtoChatHandler
 from question_storage import Question
 from telegram_client import TelegramClient
@@ -12,46 +18,66 @@ class ChatHandlerEncoder(json.JSONEncoder):
     Return JSON dict from ChatHandler object."""
 
     def default(self, o):
-        if isinstance(o, ChatHandler):
-            return {
-                "__chat_handler__": True,
-                "chat_handler": json.dumps(o.chat_handler_params, cls=ChatHandlerEncoder),
-            }
-        if isinstance(o, ProtoChatHandler):
-            return {
-                "chat_id": json.dumps(o.chat_id, cls=ChatHandlerEncoder),
-                "__state__": json.dumps(o.state, cls=ChatHandlerEncoder),
-            }
+        data = {}
+        try:
+            if isinstance(o, ChatHandler):
+                data.update(
+                    {
+                        "__chat_handler__": True,
+                        "chat_handler": json.dumps(
+                            o.chat_handler_params, cls=ChatHandlerEncoder
+                        ),
+                    }
+                )
+            if isinstance(o, ProtoChatHandler):
+                data.update(
+                    {
+                        "chat_id": json.dumps(o.chat_id, cls=ChatHandlerEncoder),
+                        "__state__": json.dumps(o.state, cls=ChatHandlerEncoder),
+                    }
+                )
 
-        if isinstance(o, GreetingState):
-            return {
-                "state_name": "GreetingState",
-            }
-        if isinstance(o, IdleState):
-            return {
-                "state_name": "IdleState",
-            }
-        if isinstance(o, GameState):
-            return {
-                "state_name": "GameState",
-                "game_parameters": json.dumps(o.game_params, cls=ChatHandlerEncoder),
-            }
-        if isinstance(o, ProtoGameState):
-            return {
-                "questions": json.dumps(o.questions, cls=ChatHandlerEncoder),
-                "current_question": o.current_question,
-                "score": o.score,
-                "last_question_message_id": o.last_question_msg_id,
-            }
-        if isinstance(o, Question):
-            return {
-                "text": o.text,
-                "answers": o.answers,
-                "correct_answer": o.correct_answer,
-            }
-        raise TypeError(
-            f"{o} type object is not subscriptable."
-        )
+            if isinstance(o, GreetingState):
+                data.update(
+                    {
+                        "state_name": "GreetingState",
+                    }
+                )
+            if isinstance(o, IdleState):
+                data.update(
+                    {
+                        "state_name": "IdleState",
+                    }
+                )
+            if isinstance(o, GameState):
+                data.update(
+                    {
+                        "state_name": "GameState",
+                        "game_parameters": json.dumps(
+                            o.game_params, cls=ChatHandlerEncoder
+                        ),
+                    }
+                )
+            if isinstance(o, ProtoGameState):
+                data.update(
+                    {
+                        "questions": json.dumps(o.questions, cls=ChatHandlerEncoder),
+                        "current_question": o.current_question,
+                        "score": o.score,
+                        "last_question_message_id": o.last_question_msg_id,
+                    }
+                )
+            if isinstance(o, Question):
+                data.update(
+                    {
+                        "text": o.text,
+                        "answers": o.answers,
+                        "correct_answer": o.correct_answer,
+                    }
+                )
+        except TypeError:
+            print(f"{o} type object is not subscriptable.")
+        return data
 
 
 class ChatHandlerDecoder(json.JSONDecoder):
@@ -101,7 +127,9 @@ class ChatHandlerDecoder(json.JSONDecoder):
             score = game_params["score"]
             last_question_msg_id = game_params["last_question_message_id"]
             state = GameState(
-                self.client, self.state_factory, ProtoGameState(questions, cur_question, score, last_question_msg_id)
+                self.client,
+                self.state_factory,
+                ProtoGameState(questions, cur_question, score, last_question_msg_id),
             )
         else:
             raise TypeError("Unknown value of 'state_name' key")

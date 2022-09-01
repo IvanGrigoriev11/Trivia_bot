@@ -108,10 +108,13 @@ class GameState(BotState):
     def __eq__(self, other):
         if isinstance(other, GameState):
             return self.game_params == other.game_params
+        return False
 
     @property
     def game_params(self):
-        return ProtoGameState(self._questions, self._cur_question, self._score, self._last_question_msg_id)
+        return ProtoGameState(
+            self._questions, self._cur_question, self._score, self._last_question_msg_id
+        )
 
     def _do_on_enter(self, chat_id: int) -> None:
         self._last_question_msg_id = self._client.send_text(
@@ -209,7 +212,9 @@ class BotStateFactory:
         _question_count = 5
         if self._storage is not None:
             return GameState(
-                self._client, self, ProtoGameState(self._storage.get_questions(_question_count), 0, 0, 0)
+                self._client,
+                self,
+                ProtoGameState(self._storage.get_questions(_question_count), 0, 0, 0),
             )
         raise TypeError("Storage must be chosen for creating game state")
 
