@@ -13,13 +13,13 @@ class Question:
     correct_answer: int
 
 
-class QuestionStorage(ABC):
+class Storage(ABC):
     """An interface for accessing questions."""
 
     @abstractmethod
-    def get_questions(self, question_count: int) -> List[Question]:
-        """Gets `question_count` questions. Questions may be selected at random.
-        Calling the method multiple time will result in a different set of questions."""
+    def get_records(self, record_count: int):
+        """Get records from a database. This method is true for both QuestionStorage and HandlerStorage.
+        The number of records is limited by 'record_count' parameter."""
 
 
 @dataclass
@@ -30,13 +30,16 @@ class PostgresQuestionRecord:
     is_correct: bool
 
 
-class PostgresQuestionStorage(QuestionStorage):
+class PostgresQuestionStorage(Storage):
     """Questions storage over a PostgreSQL database."""
 
     def __init__(self, pool: ConnectionPool):
         self._pool = pool
 
-    def get_questions(self, question_count: int) -> List[Question]:
+    def get_records(self, question_count: int) -> List[Question]:
+        """Get questions from PostgreSQL database.
+        Calling the method multiple time will result in a different set of questions."""
+
         # pylint: disable = not-context-manager
         with self._pool.connection() as conn:
             with conn.cursor() as cur:
@@ -64,11 +67,23 @@ class PostgresQuestionStorage(QuestionStorage):
         return game_questions
 
 
-class InMemoryStorage(QuestionStorage):
+class InMemoryStorage(Storage):
     """Storage that holds data in-memory."""
 
     def __init__(self, questions: List[Question]):
         self._questions = questions
 
-    def get_questions(self, question_count: int) -> List[Question]:
+    def get_records(self, question_count: int) -> List[Question]:
+        """Get questions from inner memory."""
+
         return self._questions[:question_count]
+
+
+class HandlerStorage(Storage):
+    """Handlers storage over a PostgreSQL database."""
+
+    def __init__(self, chat_id: int):
+        self._chat_id = chat_id
+
+    def get_records(self, question_count: int):
+        pass

@@ -20,6 +20,8 @@ QUESTIONS = [
     Question("3.What date is Christmas?", ["Dec 24", "Apr 15", "Jan 1", "Dec 25"], 3),
 ]
 
+OTHER_QUESTION = [Question("22.How much is 3 + 5?", ["4", "10", "7", "8"], 3)]
+
 
 class FakeTelegramClient(TelegramClient):
     def __init__(self):

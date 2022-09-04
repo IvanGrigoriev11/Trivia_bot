@@ -1,13 +1,11 @@
 import json
 
-from tutils import QUESTIONS, FakeTelegramClient
+from tutils import QUESTIONS, OTHER_QUESTION, FakeTelegramClient
 
 from bot_state import BotStateFactory
 from chat_handler import ChatHandler
 from custom_codecs import ChatHandlerDecoder, ChatHandlerEncoder
-from question_storage import InMemoryStorage, Question
-
-OTHER_QUESTION = [Question("22.How much is 3 + 5?", ["4", "10", "7", "8"], 3)]
+from question_storage import InMemoryStorage
 
 
 def chat_handler_codecs(desired_state: str):

@@ -3,7 +3,7 @@ from dataclasses import dataclass
 from typing import List
 
 from format import make_answered_question_message, make_keyboard
-from question_storage import Question, QuestionStorage
+from question_storage import Question, Storage
 from telegram_client import MessageEdit, TelegramClient, Update
 from utils import parse_int
 
@@ -118,7 +118,7 @@ class GameState(BotState):
 
     def _do_on_enter(self, chat_id: int) -> None:
         self._last_question_msg_id = self._client.send_text(
-            chat_id, self._questions[0].text, make_keyboard(self._questions[0])
+            chat_id, self._questions[self._cur_question].text, make_keyboard(self._questions[self._cur_question])
         )
 
     def _do_process(self, update: Update) -> "BotState":
@@ -204,7 +204,7 @@ class GreetingState(BotState):
 class BotStateFactory:
     """A factory responsible for creating a new bot state."""
 
-    def __init__(self, client: TelegramClient, storage: QuestionStorage):
+    def __init__(self, client: TelegramClient, storage: Storage):
         self._client = client
         self._storage = storage
 
@@ -214,7 +214,7 @@ class BotStateFactory:
             return GameState(
                 self._client,
                 self,
-                ProtoGameState(self._storage.get_questions(_question_count), 0, 0, 0),
+                ProtoGameState(self._storage.get_records(_question_count), 0, 0, 0),
             )
         raise TypeError("Storage must be chosen for creating game state")
 
