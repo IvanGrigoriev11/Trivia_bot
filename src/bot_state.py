@@ -118,7 +118,9 @@ class GameState(BotState):
 
     def _do_on_enter(self, chat_id: int) -> None:
         self._last_question_msg_id = self._client.send_text(
-            chat_id, self._questions[self._cur_question].text, make_keyboard(self._questions[self._cur_question])
+            chat_id,
+            self._questions[self._cur_question].text,
+            make_keyboard(self._questions[self._cur_question]),
         )
 
     def _do_process(self, update: Update) -> "BotState":

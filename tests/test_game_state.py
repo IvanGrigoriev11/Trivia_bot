@@ -1,3 +1,4 @@
+from dataclasses import dataclass
 from typing import Optional
 
 from tutils import (
@@ -7,12 +8,11 @@ from tutils import (
     bot_edit,
     bot_msg,
     check_conversation,
-    user
+    user,
 )
 
-from bot_state import BotStateFactory, ProtoGameState, GameState
+from bot_state import BotStateFactory, GameState, ProtoGameState
 from chat_handler import ChatHandler
-from dataclasses import dataclass
 from format import (
     CHECK_MARK,
     CROSS_MARK,
@@ -38,13 +38,16 @@ def make_conv_conf(game_params: Optional[GameStats] = None):
     if game_params is None:
         state = state_factory.make_game_state()
     else:
-        state = GameState(client,
-                          state_factory,
-                          ProtoGameState(
-                              QUESTIONS,
-                              game_params.cur_question, game_params.score,
-                              game_params.last_question_msg_id)
-                          )
+        state = GameState(
+            client,
+            state_factory,
+            ProtoGameState(
+                QUESTIONS,
+                game_params.cur_question,
+                game_params.score,
+                game_params.last_question_msg_id,
+            ),
+        )
     chat_id = 111
     return ConvConfig(ChatHandler.create(state, chat_id), client, chat_id)
 
@@ -70,7 +73,9 @@ def test_game_till_end():
     )
 
 
-def form_custom_game_params(current_question: int, score: int, last_question_msg_id: int) -> GameStats:
+def form_custom_game_params(
+    current_question: int, score: int, last_question_msg_id: int
+) -> GameStats:
     return GameStats(current_question, score, last_question_msg_id)
 
 

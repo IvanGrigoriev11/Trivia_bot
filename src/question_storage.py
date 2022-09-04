@@ -17,8 +17,9 @@ class Storage(ABC):
     """An interface for accessing questions."""
 
     @abstractmethod
-    def get_records(self, record_count: int):
-        """Get records from a database. This method is true for both QuestionStorage and HandlerStorage.
+    def get_records(self, count_records: int) -> List[Question]:
+        """Get records from a database.
+        This method is true for both QuestionStorage and HandlerStorage.
         The number of records is limited by 'record_count' parameter."""
 
 
@@ -36,7 +37,7 @@ class PostgresQuestionStorage(Storage):
     def __init__(self, pool: ConnectionPool):
         self._pool = pool
 
-    def get_records(self, question_count: int) -> List[Question]:
+    def get_records(self, count_records: int) -> List[Question]:
         """Get questions from PostgreSQL database.
         Calling the method multiple time will result in a different set of questions."""
 
@@ -50,7 +51,7 @@ class PostgresQuestionStorage(Storage):
                     WHERE id IN (
                         SELECT id FROM questions
                         ORDER BY random()
-                        LIMIT {question_count}
+                        LIMIT {count_records}
                     )
                     ORDER BY id, text;
                 """
@@ -73,10 +74,10 @@ class InMemoryStorage(Storage):
     def __init__(self, questions: List[Question]):
         self._questions = questions
 
-    def get_records(self, question_count: int) -> List[Question]:
+    def get_records(self, count_records: int) -> List[Question]:
         """Get questions from inner memory."""
 
-        return self._questions[:question_count]
+        return self._questions[:count_records]
 
 
 class HandlerStorage(Storage):
@@ -85,5 +86,5 @@ class HandlerStorage(Storage):
     def __init__(self, chat_id: int):
         self._chat_id = chat_id
 
-    def get_records(self, question_count: int):
+    def get_records(self, count_records: int):
         pass

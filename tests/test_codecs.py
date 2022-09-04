@@ -1,6 +1,6 @@
 import json
 
-from tutils import QUESTIONS, OTHER_QUESTION, FakeTelegramClient
+from tutils import OTHER_QUESTION, QUESTIONS, FakeTelegramClient
 
 from bot_state import BotStateFactory
 from chat_handler import ChatHandler
