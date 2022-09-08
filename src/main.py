@@ -5,7 +5,7 @@ from psycopg_pool import ConnectionPool
 
 from bot_state import BotStateFactory
 from chat_handler import ChatHandler
-from question_storage import PostgresQuestionStorage
+from storage import PostgresQuestionStorage
 from telegram_client import LiveTelegramClient
 
 

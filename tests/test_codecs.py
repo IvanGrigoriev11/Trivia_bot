@@ -5,7 +5,7 @@ from tutils import OTHER_QUESTION, QUESTIONS, FakeTelegramClient
 from bot_state import BotStateFactory
 from chat_handler import ChatHandler
 from custom_codecs import ChatHandlerDecoder, ChatHandlerEncoder
-from question_storage import InMemoryStorage
+from storage import InMemoryStorage
 
 
 def chat_handler_codecs(desired_state: str):

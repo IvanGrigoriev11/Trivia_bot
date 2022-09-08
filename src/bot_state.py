@@ -3,7 +3,7 @@ from dataclasses import dataclass
 from typing import List
 
 from format import make_answered_question_message, make_keyboard
-from question_storage import Question, Storage
+from storage import Question, Storage
 from telegram_client import MessageEdit, TelegramClient, Update
 from utils import parse_int
 

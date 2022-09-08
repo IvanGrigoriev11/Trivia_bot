@@ -9,7 +9,7 @@ from tutils import (
 
 from bot_state import BotStateFactory
 from chat_handler import ChatHandler
-from question_storage import InMemoryStorage
+from storage import InMemoryStorage
 
 
 def make_conv_conf():

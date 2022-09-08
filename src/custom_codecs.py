@@ -9,7 +9,7 @@ from bot_state import (
     ProtoGameState,
 )
 from chat_handler import ChatHandler, ProtoChatHandler
-from question_storage import Question
+from storage import Question
 from telegram_client import TelegramClient
 
 
@@ -24,19 +24,16 @@ class ChatHandlerEncoder(json.JSONEncoder):
                 data.update(
                     {
                         "__chat_handler__": True,
-                        "chat_handler": json.dumps(
-                            o.chat_handler_params, cls=ChatHandlerEncoder
-                        ),
+                        "chat_handler": self.default(o.chat_handler_params),
                     }
                 )
             if isinstance(o, ProtoChatHandler):
                 data.update(
                     {
                         "chat_id": json.dumps(o.chat_id, cls=ChatHandlerEncoder),
-                        "__state__": json.dumps(o.state, cls=ChatHandlerEncoder),
+                        "__state__": self.default(o.state),
                     }
                 )
-
             if isinstance(o, GreetingState):
                 data.update(
                     {
@@ -53,26 +50,30 @@ class ChatHandlerEncoder(json.JSONEncoder):
                 data.update(
                     {
                         "state_name": "GameState",
-                        "game_parameters": json.dumps(
-                            o.game_params, cls=ChatHandlerEncoder
-                        ),
+                        "game_parameters": self.default(o.game_params),
                     }
                 )
             if isinstance(o, ProtoGameState):
                 data.update(
                     {
                         "questions": json.dumps(o.questions, cls=ChatHandlerEncoder),
-                        "current_question": o.current_question,
-                        "score": o.score,
-                        "last_question_message_id": o.last_question_msg_id,
+                        "current_question": json.dumps(
+                            o.current_question, cls=ChatHandlerEncoder
+                        ),
+                        "score": json.dumps(o.score, cls=ChatHandlerEncoder),
+                        "last_question_message_id": json.dumps(
+                            o.last_question_msg_id, cls=ChatHandlerEncoder
+                        ),
                     }
                 )
             if isinstance(o, Question):
                 data.update(
                     {
-                        "text": o.text,
-                        "answers": o.answers,
-                        "correct_answer": o.correct_answer,
+                        "text": json.dumps(o.text, cls=ChatHandlerEncoder),
+                        "answers": json.dumps(o.answers, cls=ChatHandlerEncoder),
+                        "correct_answer": json.dumps(
+                            o.correct_answer, cls=ChatHandlerEncoder
+                        ),
                     }
                 )
         except TypeError:
@@ -81,18 +82,19 @@ class ChatHandlerEncoder(json.JSONEncoder):
 
 
 class ChatHandlerDecoder(json.JSONDecoder):
-    """JSON decoder for ChatHandler class."""
-
-    def __init__(self, client: TelegramClient, state_factory: BotStateFactory):
-        super().__init__()
+    def __init__(
+        self, client: TelegramClient, state_factory: BotStateFactory, *args, **kwargs
+    ):
+        json.JSONDecoder.__init__(
+            self, object_hook=self.form_chat_handler, *args, **kwargs
+        )
         self.client = client
         self.state_factory = state_factory
 
-    def decode_chat_handler(self, obj) -> dict:
-        """Return ChatHandler object from JSON dict."""
+    def helper(self, obj):
         try:
             if isinstance(obj, list):
-                data = [self.decode_chat_handler(el) for el in obj]
+                data = [self.helper(el) for el in obj]
             elif isinstance(obj, dict):
                 data = obj
             else:
@@ -100,38 +102,45 @@ class ChatHandlerDecoder(json.JSONDecoder):
 
             if isinstance(data, dict):
                 for k, v in data.items():
-                    data[k] = self.decode_chat_handler(v)
+                    data[k] = self.helper(v)
+            if isinstance(data, list):
+                for i in data:
+                    self.helper(i)
         except (JSONDecodeError, TypeError, AttributeError):
             return obj
         return data
 
-    def form_chat_handler(self, ch) -> ChatHandler:
-        data = self.decode_chat_handler(ch)
-        chat_id = data["chat_handler"]["chat_id"]
-        state_name = data["chat_handler"]["__state__"]["state_name"]
-        if state_name == "GreetingState":
-            state = GreetingState(self.client, self.state_factory)
-        elif state_name == "IdleState":
-            state = IdleState(self.client, self.state_factory)
-        elif state_name == "GameState":
-            game_params = data["chat_handler"]["__state__"]["game_parameters"]
+    def form_chat_handler(self, dct) -> ChatHandler:
+        if "chat_handler" in dct:
+            if dct["chat_handler"]["__state__"]["state_name"] == "GreetingState":
+                state = GreetingState(self.client, self.state_factory)
+            elif dct["chat_handler"]["__state__"]["state_name"] == "IdleState":
+                state = IdleState(self.client, self.state_factory)
+            elif dct["chat_handler"]["__state__"]["state_name"] == "GameState":
+                game_params = self.helper(
+                    dct["chat_handler"]["__state__"]["game_parameters"]
+                )
+                questions = []
+                for question in game_params["questions"]:
+                    questions.append(
+                        Question(
+                            question["text"],
+                            question["answers"],
+                            question["correct_answer"],
+                        )
+                    )
 
-            questions = []
-            for question in game_params["questions"]:
-                text = question["text"]
-                answers = question["answers"]
-                correct_answer = question["correct_answer"]
-                questions.append(Question(text, answers, correct_answer))
-
-            cur_question = game_params["current_question"]
-            score = game_params["score"]
-            last_question_msg_id = game_params["last_question_message_id"]
-            state = GameState(
-                self.client,
-                self.state_factory,
-                ProtoGameState(questions, cur_question, score, last_question_msg_id),
-            )
-        else:
-            raise TypeError("Unknown value of 'state_name' key")
-
-        return ChatHandler.create(state, chat_id)
+                state = GameState(
+                    self.client,
+                    self.state_factory,
+                    ProtoGameState(
+                        questions,
+                        game_params["current_question"],
+                        game_params["score"],
+                        game_params["last_question_message_id"],
+                    ),
+                )
+            else:
+                raise KeyError("Unknown name for 'state_name' key")
+            return ChatHandler.create(state, json.loads(dct["chat_handler"]["chat_id"]))
+        return dct

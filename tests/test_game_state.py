@@ -20,7 +20,7 @@ from format import (
     make_answered_question_message,
     make_keyboard,
 )
-from question_storage import InMemoryStorage
+from storage import InMemoryStorage
 from telegram_client import CallbackQuery, MessageEdit, SendMessagePayload, Update, User
 
 
