@@ -95,6 +95,8 @@ class ChatHandlerDecoder(json.JSONDecoder):
         self.state_factory = state_factory
 
     def helper(self, obj):
+        """Serialize from JSON string into basic data types."""
+
         try:
             if isinstance(obj, list):
                 data = [self.helper(el) for el in obj]
@@ -114,6 +116,8 @@ class ChatHandlerDecoder(json.JSONDecoder):
         return data
 
     def form_chat_handler(self, dct) -> ChatHandler:
+        """Reassemble ChatHandler object from primitive data types."""
+
         if "chat_handler" in dct:
             if dct["chat_handler"]["__state__"]["state_name"] == "GreetingState":
                 state = GreetingState(self.client, self.state_factory)
