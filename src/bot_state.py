@@ -76,8 +76,7 @@ class IdleState(BotState):
 
 @dataclass
 class ProtoGameState:
-    """Used to display and hold list of questions, the number of the current question, the number of
-    correct answers, and the field responsible for holding the message_id with the question."""
+    """A serializable part of the GameState. Used to store and load the state."""
 
     questions: List[Question]
     current_question: int
@@ -100,10 +99,7 @@ class GameState(BotState):
         super().__init__()
         self._client = client
         self._state_factory = state_factory
-        self._questions = game_params.questions
-        self._cur_question = game_params.current_question
-        self._score = game_params.score
-        self._last_question_msg_id = game_params.last_question_msg_id
+        self._params = game_params
 
     def __eq__(self, other):
         if isinstance(other, GameState):
@@ -112,15 +108,13 @@ class GameState(BotState):
 
     @property
     def game_params(self):
-        return ProtoGameState(
-            self._questions, self._cur_question, self._score, self._last_question_msg_id
-        )
+        return self._params
 
     def _do_on_enter(self, chat_id: int) -> None:
-        self._last_question_msg_id = self._client.send_text(
+        self._params.last_question_msg_id = self._client.send_text(
             chat_id,
-            self._questions[self._cur_question].text,
-            make_keyboard(self._questions[self._cur_question]),
+            self._params.questions[self._params.current_question].text,
+            make_keyboard(self._params.questions[self._params.current_question]),
         )
 
     def _do_process(self, update: Update) -> "BotState":
@@ -142,38 +136,41 @@ class GameState(BotState):
         return self._handle_answer(chat_id, answer)
 
     def _handle_answer(self, chat_id: int, answer: int):
-        cur_question = self._questions[self._cur_question]
+        cur_question = self._params.questions[self._params.current_question]
         if answer < 0 or answer >= len(cur_question.answers):
             self._client.send_text(
                 chat_id, f"Type the number from 1 to {len(cur_question.answers)}"
             )
             return self
 
-        if answer == self._questions[self._cur_question].correct_answer:
-            self._score += 1
+        if (
+            answer
+            == self._params.questions[self._params.current_question].correct_answer
+        ):
+            self._params.score += 1
 
         self._client.edit_message_text(
             MessageEdit(
                 chat_id,
-                self._last_question_msg_id,
+                self._params.last_question_msg_id,
                 make_answered_question_message(
-                    answer, self._questions[self._cur_question]
+                    answer, self._params.questions[self._params.current_question]
                 ),
             ),
         )
-        self._cur_question += 1
+        self._params.current_question += 1
 
-        if self._cur_question != len(self._questions):
-            self._last_question_msg_id = self._client.send_text(
+        if self._params.current_question != len(self._params.questions):
+            self._params.last_question_msg_id = self._client.send_text(
                 chat_id,
-                self._questions[self._cur_question].text,
-                make_keyboard(self._questions[self._cur_question]),
+                self._params.questions[self._params.current_question].text,
+                make_keyboard(self._params.questions[self._params.current_question]),
             )
             return self
 
         self._client.send_text(
             chat_id,
-            f"You got {self._score} points out of {self._cur_question}."
+            f"You got {self._params.score} points out of {self._params.current_question}."
             + "\n"
             + "If you want to try again, type /startGame to start a new game.",
         )

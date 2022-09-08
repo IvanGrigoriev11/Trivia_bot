@@ -82,6 +82,9 @@ class ChatHandlerEncoder(json.JSONEncoder):
 
 
 class ChatHandlerDecoder(json.JSONDecoder):
+    """JSON decoder for ChatHandler class.
+    Return ChatHandler object from JSON dict."""
+
     def __init__(
         self, client: TelegramClient, state_factory: BotStateFactory, *args, **kwargs
     ):
