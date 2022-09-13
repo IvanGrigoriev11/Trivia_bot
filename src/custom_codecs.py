@@ -115,39 +115,41 @@ class ChatHandlerDecoder(json.JSONDecoder):
             return obj
         return data
 
-    def form_chat_handler(self, dct) -> ChatHandler:
+    def form_chat_handler(self, dct):
         """Reassemble ChatHandler object from primitive data types."""
 
-        if "chat_handler" in dct:
-            if dct["chat_handler"]["__state__"]["state_name"] == "GreetingState":
-                state = GreetingState(self.client, self.state_factory)
-            elif dct["chat_handler"]["__state__"]["state_name"] == "IdleState":
-                state = IdleState(self.client, self.state_factory)
-            elif dct["chat_handler"]["__state__"]["state_name"] == "GameState":
-                game_params = self.helper(
-                    dct["chat_handler"]["__state__"]["game_parameters"]
-                )
-                questions = []
-                for question in game_params["questions"]:
-                    questions.append(
-                        Question(
-                            question["text"],
-                            question["answers"],
-                            question["correct_answer"],
-                        )
+        if dct:
+            if "chat_handler" in dct:
+                if dct["chat_handler"]["__state__"]["state_name"] == "GreetingState":
+                    state = GreetingState(self.client, self.state_factory)
+                elif dct["chat_handler"]["__state__"]["state_name"] == "IdleState":
+                    state = IdleState(self.client, self.state_factory)
+                elif dct["chat_handler"]["__state__"]["state_name"] == "GameState":
+                    game_params = self.helper(
+                        dct["chat_handler"]["__state__"]["game_parameters"]
                     )
+                    questions = []
+                    for question in game_params["questions"]:
+                        questions.append(
+                            Question(
+                                question["text"],
+                                question["answers"],
+                                question["correct_answer"],
+                            )
+                        )
 
-                state = GameState(
-                    self.client,
-                    self.state_factory,
-                    ProtoGameState(
-                        questions,
-                        game_params["current_question"],
-                        game_params["score"],
-                        game_params["last_question_message_id"],
-                    ),
-                )
-            else:
-                raise KeyError("Unknown name for 'state_name' key")
-            return ChatHandler.create(state, json.loads(dct["chat_handler"]["chat_id"]))
+                    state = GameState(
+                        self.client,
+                        self.state_factory,
+                        ProtoGameState(
+                            questions,
+                            game_params["current_question"],
+                            game_params["score"],
+                            game_params["last_question_message_id"],
+                        ),
+                    )
+                else:
+                    raise KeyError("Unknown name for 'state_name' key")
+                return ChatHandler.create(state, json.loads(dct["chat_handler"]["chat_id"]))
+            return dct
         return dct

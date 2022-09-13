@@ -1,9 +1,11 @@
 import itertools
+import json
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from typing import List
 
 from psycopg_pool import ConnectionPool
+from psycopg.types.json import Jsonb
 
 
 @dataclass
@@ -17,7 +19,7 @@ class Storage(ABC):
     """An interface for accessing questions."""
 
     @abstractmethod
-    def get_records(self, count_records: int) -> List[Question]:
+    def get_records(self, count_records: int):
         """Get records from a database.
         This method is true for both QuestionStorage and HandlerStorage.
         The number of records is limited by 'record_count' parameter."""
@@ -83,8 +85,34 @@ class InMemoryStorage(Storage):
 class HandlerStorage(Storage):
     """Handlers storage over a PostgreSQL database."""
 
-    def __init__(self, chat_id: int):
+    def __init__(self, pool: ConnectionPool, chat_id: int):
+        self._pool = pool
         self._chat_id = chat_id
 
     def get_records(self, count_records: int):
-        pass
+        """Read the serialized chat_handler from the DB for a particular chat_id."""
+
+        with self._pool.connection() as conn:
+            with conn.cursor() as cur:
+                cur.execute(
+                    f"""
+                    SELECT string FROM handlers
+                    WHERE string->'chat_handler'->>'chat_id' = '{self._chat_id}'
+                    ORDER BY id DESC
+                    LIMIT '{count_records}';
+                    """
+                )
+                json_chat_handler = json.dumps(cur.fetchone()[0])
+                return json_chat_handler
+
+    def store(self, json_chat_handler: str):
+        """Save the serialized chat_handler to DB."""
+
+        with self._pool.connection() as conn:
+            with conn.cursor() as cur:
+                cur.execute(
+                    f"""
+                    INSERT INTO handlers(string)
+                    VALUES ('{json_chat_handler}');
+                    """
+                )
