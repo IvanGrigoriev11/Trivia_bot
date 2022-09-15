@@ -11,7 +11,8 @@ from storage import InMemoryStorage
 def chat_handler_codecs(desired_state: str):
     client = FakeTelegramClient()
     chat_id = 111
-    state_factory = BotStateFactory(client, storage=InMemoryStorage(QUESTIONS))
+    storage = InMemoryStorage(QUESTIONS)
+    state_factory = BotStateFactory(client, storage)
     if desired_state == "GreetingState":
         state = state_factory.make_greeting_state()
     elif desired_state == "IdleState":
@@ -25,9 +26,8 @@ def chat_handler_codecs(desired_state: str):
     )
 
     # to verify the correctness of states' equality
-    wrong_state_factory = BotStateFactory(
-        client, storage=InMemoryStorage(OTHER_QUESTION)
-    )
+    other_storage = InMemoryStorage(OTHER_QUESTION)
+    wrong_state_factory = BotStateFactory(client, other_storage)
     wrong_state = wrong_state_factory.make_game_state()
     wrong_chat_handler = ChatHandler.create(wrong_state, chat_id)
 

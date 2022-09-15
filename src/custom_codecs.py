@@ -38,18 +38,27 @@ class ChatHandlerEncoder(json.JSONEncoder):
                 data.update(
                     {
                         "state_name": "GreetingState",
+                        "on_enter_flag": json.dumps(
+                            o.get_on_enter_flag, cls=ChatHandlerEncoder
+                        ),
                     }
                 )
             if isinstance(o, IdleState):
                 data.update(
                     {
                         "state_name": "IdleState",
+                        "on_enter_flag": json.dumps(
+                            o.get_on_enter_flag, cls=ChatHandlerEncoder
+                        ),
                     }
                 )
             if isinstance(o, GameState):
                 data.update(
                     {
                         "state_name": "GameState",
+                        "on_enter_flag": json.dumps(
+                            o.get_on_enter_flag, cls=ChatHandlerEncoder
+                        ),
                         "game_parameters": self.default(o.game_params),
                     }
                 )
@@ -120,10 +129,15 @@ class ChatHandlerDecoder(json.JSONDecoder):
 
         if dct:
             if "chat_handler" in dct:
+                on_enter_flag = self.helper(
+                    dct["chat_handler"]["__state__"]["on_enter_flag"]
+                )
                 if dct["chat_handler"]["__state__"]["state_name"] == "GreetingState":
-                    state = GreetingState(self.client, self.state_factory)
+                    state = GreetingState(
+                        self.client, self.state_factory, on_enter_flag
+                    )
                 elif dct["chat_handler"]["__state__"]["state_name"] == "IdleState":
-                    state = IdleState(self.client, self.state_factory)
+                    state = IdleState(self.client, self.state_factory, on_enter_flag)
                 elif dct["chat_handler"]["__state__"]["state_name"] == "GameState":
                     game_params = self.helper(
                         dct["chat_handler"]["__state__"]["game_parameters"]
@@ -147,9 +161,10 @@ class ChatHandlerDecoder(json.JSONDecoder):
                             game_params["score"],
                             game_params["last_question_message_id"],
                         ),
+                        on_enter_flag,
                     )
                 else:
                     raise KeyError("Unknown name for 'state_name' key")
-                return ChatHandler.create(state, json.loads(dct["chat_handler"]["chat_id"]))
+                return ChatHandler(state, json.loads(dct["chat_handler"]["chat_id"]))
             return dct
         return dct

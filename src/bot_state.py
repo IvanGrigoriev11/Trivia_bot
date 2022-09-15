@@ -21,8 +21,8 @@ class InvalidCallbackDataException(BotStateException):
 class BotState(ABC):
     """A class responsible for handling a single chat operation."""
 
-    def __init__(self):
-        self._on_enter_called = False
+    def __init__(self, _on_enter_called: bool):
+        self._on_enter_called = _on_enter_called
 
     def on_enter(self, chat_id: int) -> None:
         assert not self._on_enter_called
@@ -46,17 +46,33 @@ class BotState(ABC):
     def __eq__(self, other):
         pass
 
+    @property
+    @abstractmethod
+    def get_on_enter_flag(self):
+        return self._on_enter_called
+
 
 class IdleState(BotState):
     """A state when there is no active game in place."""
 
-    def __init__(self, client: TelegramClient, state_factory: "BotStateFactory"):
-        super().__init__()
+    def __init__(
+        self,
+        client: TelegramClient,
+        state_factory: "BotStateFactory",
+        _on_enter_called: bool = False,
+    ):
+        super().__init__(_on_enter_called)
         self._client = client
         self._state_factory = state_factory
 
     def __eq__(self, other):
-        return isinstance(other, IdleState)
+        if isinstance(other, IdleState):
+            return self.get_on_enter_flag == other.get_on_enter_flag
+        return False
+
+    @property
+    def get_on_enter_flag(self):
+        return self._on_enter_called
 
     def _do_on_enter(self, chat_id: int) -> None:
         pass
@@ -92,19 +108,27 @@ class GameState(BotState):
         client: TelegramClient,
         state_factory: "BotStateFactory",
         game_params: ProtoGameState,
+        _on_enter_called: bool = False,
     ):
         """
         questions -- questions for this particular game.
         """
-        super().__init__()
+        super().__init__(_on_enter_called)
         self._client = client
         self._state_factory = state_factory
         self._params = game_params
 
     def __eq__(self, other):
         if isinstance(other, GameState):
-            return self.game_params == other.game_params
+            return (
+                self.game_params == other.game_params
+                and self.get_on_enter_flag == other.get_on_enter_flag
+            )
         return False
+
+    @property
+    def get_on_enter_flag(self):
+        return self._on_enter_called
 
     @property
     def game_params(self):
@@ -180,13 +204,24 @@ class GameState(BotState):
 class GreetingState(BotState):
     """A state responsible for greeting and introducing new user to the bot."""
 
-    def __init__(self, client: TelegramClient, state_factory: "BotStateFactory"):
-        super().__init__()
+    def __init__(
+        self,
+        client: TelegramClient,
+        state_factory: "BotStateFactory",
+        _on_enter_called: bool = False,
+    ):
+        super().__init__(_on_enter_called)
         self._client = client
         self._state_factory = state_factory
 
     def __eq__(self, other):
-        return isinstance(other, GreetingState)
+        if isinstance(other, GreetingState):
+            return self.get_on_enter_flag == other.get_on_enter_flag
+        return False
+
+    @property
+    def get_on_enter_flag(self):
+        return self._on_enter_called
 
     def _do_on_enter(self, chat_id: int) -> None:
         pass
@@ -213,7 +248,7 @@ class BotStateFactory:
             return GameState(
                 self._client,
                 self,
-                ProtoGameState(self._storage.get_records(_question_count), 0, 0, 0),
+                ProtoGameState(self._storage.get_questions(_question_count), 0, 0, 0),
             )
         raise TypeError("Storage must be chosen for creating game state")
 
