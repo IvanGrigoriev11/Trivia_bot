@@ -8,15 +8,25 @@ RED_CIRCLE_MARK = "⭕"
 
 def make_keyboard(question: Question) -> InlineKeyboardMarkup:
     buttons = [
-        InlineKeyboardButton(answer, f"{i}")
-        for i, answer in enumerate(question.answers)
+        InlineKeyboardButton(chr(97 + i), f"{i}") for i in range(len(question.answers))
     ]
     return InlineKeyboardMarkup([buttons])
 
 
+def make_text_question(question: Question) -> str:
+    """
+    Create a text field in the question message with the answer options marked with ordered letters.
+    """
+
+    new_formatted_answers = []
+    for index, word in enumerate(question.answers):
+        new_formatted_answers.append(f"{chr(index + 97)})" + " " + word)
+    return question.text + "\n" + "\n".join(new_formatted_answers)
+
+
 def make_answered_question_message(user_answer: int, question: Question) -> str:
     """
-    Creates a question message that reflects the user's answer.
+    Create a question message that reflects the user's answer.
     """
 
     edited_answers = []
