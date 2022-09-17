@@ -16,6 +16,7 @@ from format import (
     RED_CIRCLE_MARK,
     make_answered_question_message,
     make_keyboard,
+    make_text_question,
 )
 from question_storage import InMemoryStorage
 from telegram_client import CallbackQuery, MessageEdit, SendMessagePayload, Update, User
@@ -34,13 +35,13 @@ def test_game_till_end():
     check_conversation(
         make_conv_conf(),
         [
-            bot_msg("1.What is the color of sky?", make_keyboard(QUESTIONS[0])),
+            bot_msg(make_text_question(QUESTIONS[0]), make_keyboard(QUESTIONS[0])),
             user("2"),
             bot_edit(make_answered_question_message(1, QUESTIONS[0])),
-            bot_msg("2.How much is 2 + 5?", make_keyboard(QUESTIONS[1])),
+            bot_msg(make_text_question(QUESTIONS[1]), make_keyboard(QUESTIONS[1])),
             user("4"),
             bot_edit(make_answered_question_message(3, QUESTIONS[1])),
-            bot_msg("3.What date is Christmas?", make_keyboard(QUESTIONS[2])),
+            bot_msg(make_text_question(QUESTIONS[2]), make_keyboard(QUESTIONS[2])),
             user("4"),
             bot_edit(make_answered_question_message(3, QUESTIONS[2])),
             bot_msg(
@@ -55,14 +56,14 @@ def test_gibberish_reply():
     check_conversation(
         make_conv_conf(),
         [
-            bot_msg("1.What is the color of sky?", make_keyboard(QUESTIONS[0])),
+            bot_msg(make_text_question(QUESTIONS[0]), make_keyboard(QUESTIONS[0])),
             user("first"),
             bot_msg("Please, type the number of your supposed answer"),
             user("second"),
             bot_msg("Please, type the number of your supposed answer"),
             user("3"),
             bot_edit(make_answered_question_message(2, QUESTIONS[0])),
-            bot_msg("2.How much is 2 + 5?", make_keyboard(QUESTIONS[1])),
+            bot_msg(make_text_question(QUESTIONS[1]), make_keyboard(QUESTIONS[1])),
         ],
     )
 
@@ -71,14 +72,14 @@ def test_enter_inappropriate_number():
     check_conversation(
         make_conv_conf(),
         [
-            bot_msg("1.What is the color of sky?", make_keyboard(QUESTIONS[0])),
+            bot_msg(make_text_question(QUESTIONS[0]), make_keyboard(QUESTIONS[0])),
             user("-1"),
             bot_msg("Type the number from 1 to 3"),
             user("4"),
             bot_msg("Type the number from 1 to 3"),
             user("1"),
             bot_edit(make_answered_question_message(0, QUESTIONS[0])),
-            bot_msg("2.How much is 2 + 5?", make_keyboard(QUESTIONS[1])),
+            bot_msg(make_text_question(QUESTIONS[1]), make_keyboard(QUESTIONS[1])),
         ],
     )
 
@@ -92,7 +93,7 @@ def check_callback_query(button: str):
     state.process(Update(123, None, CallbackQuery(User(111), f"{button}")))
     assert client.sent_messages == [
         SendMessagePayload(
-            111, "1.What is the color of sky?", make_keyboard(QUESTIONS[0])
+            111, make_text_question(QUESTIONS[0]), make_keyboard(QUESTIONS[0])
         ),
         MessageEdit(
             111,
@@ -100,7 +101,9 @@ def check_callback_query(button: str):
             f"1.What is the color of sky?\n"
             f"{RED_CIRCLE_MARK}orange\n{CHECK_MARK}blue\n{CROSS_MARK}green",
         ),
-        SendMessagePayload(111, "2.How much is 2 + 5?", make_keyboard(QUESTIONS[1])),
+        SendMessagePayload(
+            111, make_text_question(QUESTIONS[1]), make_keyboard(QUESTIONS[1])
+        ),
     ]
 
 
