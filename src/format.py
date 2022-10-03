@@ -1,3 +1,5 @@
+import string
+
 from question_storage import Question
 from telegram_client import InlineKeyboardButton, InlineKeyboardMarkup
 
@@ -15,18 +17,19 @@ def make_keyboard(question: Question) -> InlineKeyboardMarkup:
 
 def make_text_question(question: Question) -> str:
     """
-    Create a text field in the question message with the answer options marked with ordered letters.
+    Creates a text field in the question message
+    with the answer options marked with ordered letters.
     """
 
-    new_formatted_answers = []
-    for index, word in enumerate(question.answers):
-        new_formatted_answers.append(f"{chr(index + 97)})" + " " + word)
-    return question.text + "\n" + "\n".join(new_formatted_answers)
+    answers = []
+    for letter, answer in zip(string.ascii_lowercase, question.answers):
+        answers.append(letter + ") " + answer)
+    return question.text + "\n" + "\n".join(answers)
 
 
 def make_answered_question_message(user_answer: int, question: Question) -> str:
     """
-    Create a question message that reflects the user's answer.
+    Creates a question message that reflects the user's answer.
     """
 
     edited_answers = []
