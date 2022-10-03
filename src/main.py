@@ -13,7 +13,6 @@ from telegram_client import LiveTelegramClient
 def main():
     user = os.environ["TRIVIA_POSTGRES_USER"]
     password = os.environ["TRIVIA_POSTGRES_PASSWD"]
-    #  postgresql://[user[:password]@][netloc][:port][/dbname]
     conninfo = f"postgresql://{user}:{password}@localhost:{5432}/postgres"
 
     token = os.environ["TELEGRAM_BOT_TOKEN"]

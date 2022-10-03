@@ -4,6 +4,7 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from typing import Dict, List
 
+from psycopg import Cursor
 from psycopg_pool import ConnectionPool
 
 
@@ -37,6 +38,17 @@ class Storage(ABC):
     @abstractmethod
     def store_chat_handler(self, chat_id: int, chat_handler: str):
         """Save serialized chat_handler to the DB or internal memory."""
+
+
+def _create_chat_handler_table(cur: Cursor):
+    cur.execute(
+        """
+        CREATE TABLE IF NOT EXISTS handlers (
+            chat_id integer,
+            chat_handler json NOT NULL
+            )
+        """
+    )
 
 
 class PostgresStorage(Storage):
@@ -80,6 +92,7 @@ class PostgresStorage(Storage):
 
         with self._pool.connection() as conn:
             with conn.cursor() as cur:
+                _create_chat_handler_table(cur)
                 cur.execute(
                     """
                     SELECT chat_handler FROM handlers
@@ -96,6 +109,7 @@ class PostgresStorage(Storage):
 
         with self._pool.connection() as conn:
             with conn.cursor() as cur:
+                _create_chat_handler_table(cur)
                 cur.execute(
                     """
                     SELECT chat_handler FROM handlers

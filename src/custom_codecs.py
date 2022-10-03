@@ -18,53 +18,41 @@ class ChatHandlerEncoder(json.JSONEncoder):
     Return JSON dict from ChatHandler object."""
 
     def default(self, o):
-        data = {}
         try:
             if isinstance(o, ChatHandler):
-                data.update(
-                    {
+                data = {
                         "__chat_handler__": True,
                         "chat_handler": self.default(o.chat_handler_params),
                     }
-                )
-            if isinstance(o, ProtoChatHandler):
-                data.update(
-                    {
+            elif isinstance(o, ProtoChatHandler):
+                data = {
                         "chat_id": json.dumps(o.chat_id, cls=ChatHandlerEncoder),
                         "__state__": self.default(o.state),
                     }
-                )
-            if isinstance(o, GreetingState):
-                data.update(
-                    {
+            elif isinstance(o, GreetingState):
+                data = {
                         "state_name": "GreetingState",
                         "on_enter_flag": json.dumps(
                             o.get_on_enter_flag, cls=ChatHandlerEncoder
                         ),
                     }
-                )
-            if isinstance(o, IdleState):
-                data.update(
-                    {
+            elif isinstance(o, IdleState):
+                data = {
                         "state_name": "IdleState",
                         "on_enter_flag": json.dumps(
                             o.get_on_enter_flag, cls=ChatHandlerEncoder
                         ),
                     }
-                )
-            if isinstance(o, GameState):
-                data.update(
-                    {
+            elif isinstance(o, GameState):
+                data = {
                         "state_name": "GameState",
                         "on_enter_flag": json.dumps(
                             o.get_on_enter_flag, cls=ChatHandlerEncoder
                         ),
                         "game_parameters": self.default(o.game_params),
                     }
-                )
-            if isinstance(o, ProtoGameState):
-                data.update(
-                    {
+            elif isinstance(o, ProtoGameState):
+                data = {
                         "questions": json.dumps(o.questions, cls=ChatHandlerEncoder),
                         "current_question": json.dumps(
                             o.current_question, cls=ChatHandlerEncoder
@@ -74,17 +62,14 @@ class ChatHandlerEncoder(json.JSONEncoder):
                             o.last_question_msg_id, cls=ChatHandlerEncoder
                         ),
                     }
-                )
-            if isinstance(o, Question):
-                data.update(
-                    {
+            elif isinstance(o, Question):
+                data = {
                         "text": json.dumps(o.text, cls=ChatHandlerEncoder),
                         "answers": json.dumps(o.answers, cls=ChatHandlerEncoder),
                         "correct_answer": json.dumps(
                             o.correct_answer, cls=ChatHandlerEncoder
                         ),
                     }
-                )
         except TypeError:
             print(f"{o} type object is not subscriptable.")
         return data

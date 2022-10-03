@@ -121,7 +121,7 @@ class GameState(BotState):
     def __eq__(self, other):
         if isinstance(other, GameState):
             return (
-                self.game_params == other.game_params
+                self._params == other._params
                 and self.get_on_enter_flag == other.get_on_enter_flag
             )
         return False

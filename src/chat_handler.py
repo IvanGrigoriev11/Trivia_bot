@@ -6,7 +6,7 @@ from telegram_client import Update
 
 @dataclass(frozen=True)
 class ProtoChatHandler:
-    """Used to display the current state and chat_id of ChatHandler object."""
+    """A serializable part of the ChatHandler. Used to store and load ChatHandler."""
 
     state: BotState
     chat_id: int
