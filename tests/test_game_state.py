@@ -13,6 +13,7 @@ from tutils import (
 
 from bot_state import BotStateFactory, GameState, ProtoGameState
 from chat_handler import ChatHandler
+
 from format import (
     CHECK_MARK,
     CROSS_MARK,
@@ -79,7 +80,7 @@ def form_custom_game_params(
     return GameStats(current_question, score, last_question_msg_id)
 
 
-def test_game_calculation():
+def test_game_score():
     check_conversation(
         make_conv_conf(form_custom_game_params(2, 2, 2)),
         [

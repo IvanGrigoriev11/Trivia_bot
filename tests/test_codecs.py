@@ -8,7 +8,7 @@ from custom_codecs import ChatHandlerDecoder, ChatHandlerEncoder
 from storage import InMemoryStorage
 
 
-def chat_handler_codecs(desired_state: str):
+def check_chat_handler_codecs(desired_state: str):
     client = FakeTelegramClient()
     chat_id = 111
     storage = InMemoryStorage(QUESTIONS)
@@ -31,19 +31,17 @@ def chat_handler_codecs(desired_state: str):
     wrong_state = wrong_state_factory.make_game_state()
     wrong_chat_handler = ChatHandler.create(wrong_state, chat_id)
 
-    assert (
-        initial_chat_handler == reassembled_chat_handler
-        and wrong_chat_handler != reassembled_chat_handler
-    )
+    assert initial_chat_handler == reassembled_chat_handler
+    assert wrong_chat_handler != reassembled_chat_handler
 
 
 def test_greeting_state_handler():
-    chat_handler_codecs("GreetingState")
+    check_chat_handler_codecs("GreetingState")
 
 
 def test_idle_state_handler():
-    chat_handler_codecs("IdleState")
+    check_chat_handler_codecs("IdleState")
 
 
 def test_game_state_handler():
-    chat_handler_codecs("GameState")
+    check_chat_handler_codecs("GameState")
