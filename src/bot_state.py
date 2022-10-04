@@ -44,11 +44,11 @@ class BotState(ABC):
 
     def __eq__(self, other):
         if isinstance(other, BotState) and type(self) == type(other):
-            return self.get_on_enter_flag == other.get_on_enter_flag
+            return self.is_on_enter_called == other.is_on_enter_called
         return False
 
     @property
-    def get_on_enter_flag(self):
+    def is_on_enter_called(self):
         return self._on_enter_called
 
 
@@ -115,7 +115,7 @@ class GameState(BotState):
         return False
 
     @property
-    def get_on_enter_flag(self):
+    def is_on_enter_called(self):
         return self._on_enter_called
 
     @property

@@ -13,7 +13,6 @@ from tutils import (
 
 from bot_state import BotStateFactory, GameState, ProtoGameState
 from chat_handler import ChatHandler
-
 from format import (
     CHECK_MARK,
     CROSS_MARK,

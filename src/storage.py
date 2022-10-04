@@ -10,6 +10,18 @@ from psycopg_pool import ConnectionPool
 
 @dataclass
 class Question:
+    """A right question model used for the game.
+
+    Attributes
+    ----------
+    text: str
+        the question text
+    answers: List[str]
+        List of answers for the question
+    correct_answer: int
+        the number of right answer 0-based
+    """
+
     text: str
     answers: List[str]
     correct_answer: int
@@ -17,6 +29,20 @@ class Question:
 
 @dataclass
 class PostgresQuestionRecord:
+    """Question answer model used for storage in PostgreSQL.
+
+    Attributes
+    ----------
+    id: int
+        number of the question to which the answer belongs
+    question: str
+        text of question
+    answer: str
+        text of answer for the question
+    is_correct: bool
+        whether answer is right or not
+    """
+
     id: int
     question: str
     answer: str
@@ -36,7 +62,7 @@ class Storage(ABC):
         """Read the serialized chat_handler from the DB for a specific chat_id."""
 
     @abstractmethod
-    def store_chat_handler(self, chat_id: int, chat_handler: str):
+    def set_chat_handler(self, chat_id: int, chat_handler: str):
         """Save serialized chat_handler to the DB or internal memory."""
 
 
@@ -102,10 +128,10 @@ class PostgresStorage(Storage):
                 )
                 json_chat_handler = cur.fetchone()
                 if json_chat_handler:
-                    return json.dumps(json_chat_handler[0])
+                    return json_chat_handler[0]
                 return None
 
-    def store_chat_handler(self, chat_id: int, chat_handler: str):
+    def set_chat_handler(self, chat_id: int, chat_handler: str):
 
         with self._pool.connection() as conn:
             with conn.cursor() as cur:
@@ -148,5 +174,5 @@ class InMemoryStorage(Storage):
     def get_chat_handler(self, chat_id: int):
         return self._chat_handlers[chat_id]
 
-    def store_chat_handler(self, chat_id: int, chat_handler: str):
+    def set_chat_handler(self, chat_id: int, chat_handler: str):
         self._chat_handlers[chat_id] = chat_handler

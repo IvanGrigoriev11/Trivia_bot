@@ -39,7 +39,7 @@ def main():
                         ).form_chat_handler,
                     )
                 chat_handler.process(update)
-                storage.store_chat_handler(
+                storage.set_chat_handler(
                     chat_id, json.dumps(chat_handler, cls=ChatHandlerEncoder)
                 )
 
