@@ -42,12 +42,12 @@ class BotState(ABC):
     def _do_process(self, update: Update) -> "BotState":
         """A callback for handling an update."""
 
-    @abstractmethod
     def __eq__(self, other):
-        pass
+        if isinstance(other, BotState) and type(self) == type(other):
+            return self.get_on_enter_flag == other.get_on_enter_flag
+        return False
 
     @property
-    @abstractmethod
     def get_on_enter_flag(self):
         return self._on_enter_called
 
@@ -64,15 +64,6 @@ class IdleState(BotState):
         super().__init__(_on_enter_called)
         self._client = client
         self._state_factory = state_factory
-
-    def __eq__(self, other):
-        if isinstance(other, IdleState):
-            return self.get_on_enter_flag == other.get_on_enter_flag
-        return False
-
-    @property
-    def get_on_enter_flag(self):
-        return self._on_enter_called
 
     def _do_on_enter(self, chat_id: int) -> None:
         pass
@@ -120,10 +111,7 @@ class GameState(BotState):
 
     def __eq__(self, other):
         if isinstance(other, GameState):
-            return (
-                self._params == other._params
-                and self.get_on_enter_flag == other.get_on_enter_flag
-            )
+            return self._params == other._params and super().__eq__(other)
         return False
 
     @property
@@ -213,15 +201,6 @@ class GreetingState(BotState):
         super().__init__(_on_enter_called)
         self._client = client
         self._state_factory = state_factory
-
-    def __eq__(self, other):
-        if isinstance(other, GreetingState):
-            return self.get_on_enter_flag == other.get_on_enter_flag
-        return False
-
-    @property
-    def get_on_enter_flag(self):
-        return self._on_enter_called
 
     def _do_on_enter(self, chat_id: int) -> None:
         pass
