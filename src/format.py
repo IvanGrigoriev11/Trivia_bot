@@ -10,7 +10,7 @@ RED_CIRCLE_MARK = "⭕"
 
 def make_keyboard(question: Question) -> InlineKeyboardMarkup:
     buttons = [
-        InlineKeyboardButton(chr(97 + i), f"{i}") for i in range(len(question.answers))
+        InlineKeyboardButton(chr(ord("a") + i), f"{i}") for i in range(len(question.answers))
     ]
     return InlineKeyboardMarkup([buttons])
 
