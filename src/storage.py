@@ -1,5 +1,4 @@
 import itertools
-import json
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from typing import Dict, List
@@ -70,8 +69,8 @@ def _create_chat_handler_table(cur: Cursor):
     cur.execute(
         """
         CREATE TABLE IF NOT EXISTS handlers (
-            chat_id integer,
-            chat_handler json NOT NULL
+            chat_id integer PRIMARY KEY,
+            chat_handler text
             )
         """
     )
@@ -138,27 +137,16 @@ class PostgresStorage(Storage):
                 _create_chat_handler_table(cur)
                 cur.execute(
                     """
-                    SELECT chat_handler FROM handlers
-                    WHERE chat_id = (%s);
+                    INSERT INTO handlers(chat_id, chat_handler)
+                    VALUES(%s, %s)
+                    ON CONFLICT(chat_id) DO UPDATE
+                    SET chat_handler = excluded.chat_handler;
                     """,
-                    (chat_id,),
+                    (
+                        chat_id,
+                        chat_handler,
+                    ),
                 )
-                if cur.fetchone():
-                    cur.execute(
-                        """
-                        UPDATE handlers SET chat_handler = (%s)
-                        WHERE chat_id = (%s);
-                        """,
-                        (chat_handler, chat_id),
-                    )
-                else:
-                    cur.execute(
-                        """
-                        INSERT INTO handlers(chat_id, chat_handler)
-                        VALUES (%s, %s);
-                        """,
-                        (chat_id, chat_handler),
-                    )
 
 
 class InMemoryStorage(Storage):

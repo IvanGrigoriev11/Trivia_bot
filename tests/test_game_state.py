@@ -25,13 +25,13 @@ from telegram_client import CallbackQuery, MessageEdit, SendMessagePayload, Upda
 
 
 @dataclass
-class GameStats:
+class GameParams:
     cur_question: int
     score: int
     last_question_msg_id: int
 
 
-def make_conv_conf(game_params: Optional[GameStats] = None):
+def make_conv_conf(game_params: Optional[GameParams] = None):
     client = FakeTelegramClient()
     storage = InMemoryStorage(QUESTIONS)
     state_factory = BotStateFactory(client, storage)
@@ -73,15 +73,9 @@ def test_game_till_end():
     )
 
 
-def form_custom_game_params(
-    current_question: int, score: int, last_question_msg_id: int
-) -> GameStats:
-    return GameStats(current_question, score, last_question_msg_id)
-
-
 def test_game_score():
     check_conversation(
-        make_conv_conf(form_custom_game_params(2, 2, 2)),
+        make_conv_conf(GameParams(2, 2, 2)),
         [
             bot_msg("3.What date is Christmas?", make_keyboard(QUESTIONS[2])),
             user("4"),
@@ -149,12 +143,3 @@ def check_callback_query(button: str):
 
 def test_callback_query():
     check_callback_query("2")
-
-
-def make_custom_game_state():
-    client = FakeTelegramClient()
-    storage = InMemoryStorage(QUESTIONS)
-    state_factory = BotStateFactory(client, storage)
-    state = GameState(client, state_factory, ProtoGameState(QUESTIONS, 2, 2, 2))
-    chat_id = 111
-    return ConvConfig(ChatHandler.create(state, chat_id), client, chat_id)

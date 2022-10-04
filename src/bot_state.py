@@ -43,6 +43,7 @@ class BotState(ABC):
         """A callback for handling an update."""
 
     def __eq__(self, other):
+        # pylint: disable = unidiomatic-typecheck
         if isinstance(other, BotState) and type(self) == type(other):
             return self.is_on_enter_called == other.is_on_enter_called
         return False
