@@ -1,15 +1,13 @@
-from typing import Optional
-
 import string
+from typing import Optional
 
 
 def parse_int(s: str) -> Optional[int]:
     try:
         for char in string.ascii_letters:
-            if char == s:
-                return ord(char) - ord('a') + 1
-        else:
-            return int(s)
+            if char == s.lower():
+                return ord(char) - ord("a") + 1
+        return int(s)
     except ValueError:
         return None
 
