@@ -99,7 +99,7 @@ class GameState(BotState):
             answer = parse_int(update.message.text)
             if answer is None:
                 self._client.send_text(
-                    chat_id, "Please, type the number of your supposed answer"
+                    chat_id, "Please, type the number or letter of your supposed answer"
                 )
                 return self
             answer -= 1
@@ -115,7 +115,7 @@ class GameState(BotState):
         cur_question = self._questions[self._cur_question]
         if answer < 0 or answer >= len(cur_question.answers):
             self._client.send_text(
-                chat_id, f"Type the number from 1 to {len(cur_question.answers)}"
+                chat_id, "Please, type the number or letter of your supposed answer"
             )
             return self
 

@@ -58,9 +58,9 @@ def test_gibberish_reply():
         [
             bot_msg(make_text_question(QUESTIONS[0]), make_keyboard(QUESTIONS[0])),
             user("first"),
-            bot_msg("Please, type the number of your supposed answer"),
+            bot_msg("Please, type the number or letter of your supposed answer"),
             user("second"),
-            bot_msg("Please, type the number of your supposed answer"),
+            bot_msg("Please, type the number or letter of your supposed answer"),
             user("3"),
             bot_edit(make_answered_question_message(2, QUESTIONS[0])),
             bot_msg(make_text_question(QUESTIONS[1]), make_keyboard(QUESTIONS[1])),
@@ -74,9 +74,9 @@ def test_enter_inappropriate_number():
         [
             bot_msg(make_text_question(QUESTIONS[0]), make_keyboard(QUESTIONS[0])),
             user("-1"),
-            bot_msg("Type the number from 1 to 3"),
+            bot_msg("Please, type the number or letter of your supposed answer"),
             user("4"),
-            bot_msg("Type the number from 1 to 3"),
+            bot_msg("Please, type the number or letter of your supposed answer"),
             user("1"),
             bot_edit(make_answered_question_message(0, QUESTIONS[0])),
             bot_msg(make_text_question(QUESTIONS[1]), make_keyboard(QUESTIONS[1])),
