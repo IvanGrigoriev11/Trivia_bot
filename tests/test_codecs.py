@@ -16,10 +16,9 @@ def check_chat_handler_codecs(make_state: Callable[[BotStateFactory], BotState])
     state_factory = BotStateFactory(client, storage)
     initial_chat_handler = ChatHandler.create(make_state(state_factory), chat_id)
     ch = json.dumps(initial_chat_handler, cls=ChatHandlerEncoder)
-    reassembled_chat_handler = json.loads(
-        ch, object_hook=ChatHandlerDecoder(client, state_factory).form_chat_handler
+    reassembled_chat_handler = ChatHandlerDecoder(client, state_factory).decode(
+        json.loads(ch)
     )
-
     assert initial_chat_handler == reassembled_chat_handler
 
 

@@ -32,11 +32,8 @@ def main():
                         state_factory.make_greeting_state(), chat_id
                     )
                 else:
-                    chat_handler = json.loads(
-                        chat_handler_snapshot,
-                        object_hook=ChatHandlerDecoder(
-                            client, state_factory
-                        ).form_chat_handler,
+                    chat_handler = ChatHandlerDecoder(client, state_factory).decode(
+                        json.loads(chat_handler_snapshot)
                     )
                 chat_handler.process(update)
                 storage.set_chat_handler(

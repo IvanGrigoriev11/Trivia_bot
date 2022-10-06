@@ -116,7 +116,7 @@ class GameState(BotState):
         return False
 
     @property
-    def game_params(self):
+    def game_params(self) -> ProtoGameState:
         return self._params
 
     def _do_on_enter(self, chat_id: int) -> None:
