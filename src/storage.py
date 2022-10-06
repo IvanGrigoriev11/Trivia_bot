@@ -1,7 +1,7 @@
 import itertools
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from typing import Dict, List
+from typing import Dict, List, Optional
 
 from psycopg import Cursor
 from psycopg_pool import ConnectionPool
@@ -9,16 +9,11 @@ from psycopg_pool import ConnectionPool
 
 @dataclass
 class Question:
-    """A right question model used for the game.
+    """Question model.
 
-    Attributes
-    ----------
-    text: str
-        the question text
-    answers: List[str]
-        List of answers for the question
-    correct_answer: int
-        the number of right answer 0-based
+    text: the question text
+    answers: List of answers for the question
+    correct_answer: the number of right answer 0-based
     """
 
     text: str
@@ -28,18 +23,26 @@ class Question:
 
 @dataclass
 class PostgresQuestionRecord:
-    """Question answer model used for storage in PostgreSQL.
+    """Intermediate question piece representation. Questions are stored in Postgres in 2
+    table: questions and answers. Each record in questions will have one or more corresponding
+    entries in the answers table. Example:
 
-    Attributes
-    ----------
-    id: int
-        number of the question to which the answer belongs
-    question: str
-        text of question
-    answer: str
-        text of answer for the question
-    is_correct: bool
-        whether answer is right or not
+    questions:
+    | id | text                          |
+    | 25 | what is the color of the sky? |
+
+    answers:
+    | id | question id | text |
+    | 2  | 25          | red  |
+    | 3  | 25          | blue |
+
+    This class is an augmented `answers` table record. Question id and text is added to it from the
+    `questions` table.
+
+    id: question id
+    question: text of the question
+    answer: text of an answer
+    is_correct: whether the answer is correct
     """
 
     id: int
@@ -49,16 +52,18 @@ class PostgresQuestionRecord:
 
 
 class Storage(ABC):
-    """An interface for accessing data."""
+    """An interface for accessing and updating the game data (questions, chat states etc.)."""
 
     @abstractmethod
     def get_questions(self, question_count: int) -> List[Question]:
         """Gets `question_count` questions. Questions may be selected at random.
-        Calling the method multiple time will result in a different set of questions."""
+        Calling the method multiple time may result in a different set of questions."""
 
     @abstractmethod
-    def get_chat_handler(self, chat_id: int):
-        """Read the serialized chat_handler from the DB for a specific chat_id."""
+    def get_chat_handler(self, chat_id: int) -> Optional[str]:
+        """Read the serialized chat_handler from the DB for a specific chat_id.
+        Returns None if chat handler for `chat_id` is not found.
+        """
 
     @abstractmethod
     def set_chat_handler(self, chat_id: int, chat_handler: str):
@@ -112,7 +117,7 @@ class PostgresStorage(Storage):
 
         return game_questions
 
-    def get_chat_handler(self, chat_id: int):
+    def get_chat_handler(self, chat_id: int) -> Optional[str]:
         """Read the serialized chat_handler from the DB for a particular chat_id."""
 
         with self._pool.connection() as conn:
@@ -128,6 +133,7 @@ class PostgresStorage(Storage):
                 json_chat_handler = cur.fetchone()
                 if json_chat_handler:
                     return json_chat_handler[0]
+
                 return None
 
     def set_chat_handler(self, chat_id: int, chat_handler: str):
