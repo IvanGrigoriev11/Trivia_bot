@@ -2,7 +2,7 @@ import string
 from typing import Optional
 
 
-def parse_int(s: str) -> Optional[int]:
+def parse_answer(s: str) -> Optional[int]:
     try:
         for char in string.ascii_letters:
             if char == s.lower():

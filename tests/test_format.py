@@ -47,7 +47,7 @@ def test_edit_text_message():
     assert expected_answer == formed_answer
 
 
-def test_form_text_field():
+def test_question_formatting():
     formed_text = make_text_question(
         Question("1.What is the color of sky?", ["orange", "blue", "green"], 1),
     )

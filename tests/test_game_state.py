@@ -84,6 +84,43 @@ def test_enter_inappropriate_number():
     )
 
 
+def test_typing_suitable_letter_as_answer():
+    check_conversation(
+        make_conv_conf(),
+        [
+            bot_msg(make_text_question(QUESTIONS[0]), make_keyboard(QUESTIONS[0])),
+            user("b"),
+            bot_edit(make_answered_question_message(1, QUESTIONS[0])),
+            bot_msg(make_text_question(QUESTIONS[1]), make_keyboard(QUESTIONS[1])),
+            user("D"),
+            bot_edit(make_answered_question_message(3, QUESTIONS[1])),
+            bot_msg(make_text_question(QUESTIONS[2]), make_keyboard(QUESTIONS[2])),
+            user("d"),
+            bot_edit(make_answered_question_message(3, QUESTIONS[2])),
+            bot_msg(
+                "You got 2 points out of 3.\n"
+                "If you want to try again, type /startGame to start a new game."
+            ),
+        ],
+    )
+
+
+def test_typing_unsuitable_letter_as_answer():
+    check_conversation(
+        make_conv_conf(),
+        [
+            bot_msg(make_text_question(QUESTIONS[0]), make_keyboard(QUESTIONS[0])),
+            user("D"),
+            bot_msg("Please, type the number or letter of your supposed answer"),
+            user("fff"),
+            bot_msg("Please, type the number or letter of your supposed answer"),
+            user("a"),
+            bot_edit(make_answered_question_message(0, QUESTIONS[0])),
+            bot_msg(make_text_question(QUESTIONS[1]), make_keyboard(QUESTIONS[1])),
+        ],
+    )
+
+
 def check_callback_query(button: str):
     client = FakeTelegramClient()
 

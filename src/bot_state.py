@@ -4,7 +4,7 @@ from typing import List
 from format import make_answered_question_message, make_keyboard, make_text_question
 from question_storage import Question, QuestionStorage
 from telegram_client import MessageEdit, TelegramClient, Update
-from utils import parse_int
+from utils import parse_answer
 
 
 class BotStateException(Exception):
@@ -85,6 +85,7 @@ class GameState(BotState):
         self._cur_question = 0
         self._score = 0
         self._last_question_msg_id = 0
+        self._msg_txt = "Please, type the number or letter of your supposed answer"
 
     def _do_on_enter(self, chat_id: int) -> None:
         self._last_question_msg_id = self._client.send_text(
@@ -96,15 +97,13 @@ class GameState(BotState):
     def _do_process(self, update: Update) -> "BotState":
         chat_id = update.chat_id
         if update.message is not None:
-            answer = parse_int(update.message.text)
+            answer = parse_answer(update.message.text)
             if answer is None:
-                self._client.send_text(
-                    chat_id, "Please, type the number or letter of your supposed answer"
-                )
+                self._client.send_text(chat_id, self._msg_txt)
                 return self
             answer -= 1
         elif update.callback_query is not None:
-            answer = parse_int(update.callback_query.data)
+            answer = parse_answer(update.callback_query.data)
             if answer is None:
                 raise InvalidCallbackDataException(update.callback_query.data)
         else:
@@ -114,9 +113,7 @@ class GameState(BotState):
     def _handle_answer(self, chat_id: int, answer: int):
         cur_question = self._questions[self._cur_question]
         if answer < 0 or answer >= len(cur_question.answers):
-            self._client.send_text(
-                chat_id, "Please, type the number or letter of your supposed answer"
-            )
+            self._client.send_text(chat_id, self._msg_txt)
             return self
 
         if answer == self._questions[self._cur_question].correct_answer:
