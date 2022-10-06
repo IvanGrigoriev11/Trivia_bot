@@ -58,7 +58,7 @@ class ChatHandlerDecoder:
         self.client = client
         self.state_factory = state_factory
 
-    def decode(self, dct):
+    def decode(self, dct) -> ChatHandler:
         """Reassemble ChatHandler object from primitive data types."""
 
         chat_id = dct["chat_id"]
