@@ -70,17 +70,6 @@ class Storage(ABC):
         """Save serialized chat_handler to the DB or internal memory."""
 
 
-def _create_chat_handler_table(cur: Cursor):
-    cur.execute(
-        """
-        CREATE TABLE IF NOT EXISTS handlers (
-            chat_id integer PRIMARY KEY,
-            chat_handler text
-            )
-        """
-    )
-
-
 class PostgresStorage(Storage):
     """Data storage over a PostgreSQL database."""
 
@@ -88,8 +77,6 @@ class PostgresStorage(Storage):
         self._pool = pool
 
     def get_questions(self, question_count: int) -> List[Question]:
-        """Get questions from PostgreSQL database."""
-
         # pylint: disable = not-context-manager
         with self._pool.connection() as conn:
             with conn.cursor() as cur:
@@ -122,7 +109,7 @@ class PostgresStorage(Storage):
 
         with self._pool.connection() as conn:
             with conn.cursor() as cur:
-                _create_chat_handler_table(cur)
+                self._create_chat_handler_table(cur)
                 cur.execute(
                     """
                     SELECT chat_handler FROM handlers
@@ -140,7 +127,7 @@ class PostgresStorage(Storage):
 
         with self._pool.connection() as conn:
             with conn.cursor() as cur:
-                _create_chat_handler_table(cur)
+                self._create_chat_handler_table(cur)
                 cur.execute(
                     """
                     INSERT INTO handlers(chat_id, chat_handler)
@@ -153,6 +140,17 @@ class PostgresStorage(Storage):
                         chat_handler,
                     ),
                 )
+
+    @staticmethod
+    def _create_chat_handler_table(cur: Cursor):
+        cur.execute(
+            """
+            CREATE TABLE IF NOT EXISTS handlers (
+                chat_id integer PRIMARY KEY,
+                chat_handler text
+                )
+            """
+        )
 
 
 class InMemoryStorage(Storage):
