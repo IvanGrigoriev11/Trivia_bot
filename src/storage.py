@@ -4,7 +4,6 @@ from dataclasses import dataclass
 from functools import cache
 from typing import Dict, List, Optional
 
-from psycopg import Cursor
 from psycopg_pool import ConnectionPool
 
 
@@ -110,7 +109,7 @@ class PostgresStorage(Storage):
 
         with self._pool.connection() as conn:
             with conn.cursor() as cur:
-                self._ensure_chat_handler_table(cur)
+                self._ensure_chat_handler_table()
                 cur.execute(
                     """
                     SELECT chat_handler FROM handlers
@@ -128,7 +127,7 @@ class PostgresStorage(Storage):
 
         with self._pool.connection() as conn:
             with conn.cursor() as cur:
-                self._ensure_chat_handler_table(cur)
+                self._ensure_chat_handler_table()
                 cur.execute(
                     """
                     INSERT INTO handlers(chat_id, chat_handler)

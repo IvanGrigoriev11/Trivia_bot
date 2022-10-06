@@ -1,4 +1,3 @@
-from dataclasses import dataclass
 from typing import Optional
 
 from tutils import (
@@ -24,30 +23,14 @@ from storage import InMemoryStorage
 from telegram_client import CallbackQuery, MessageEdit, SendMessagePayload, Update, User
 
 
-@dataclass
-class GameParams:
-    cur_question: int
-    score: int
-    last_question_msg_id: int
-
-
-def make_conv_conf(game_params: Optional[GameParams] = None):
+def make_conv_conf(game_params: Optional[ProtoGameState] = None):
     client = FakeTelegramClient()
     storage = InMemoryStorage(QUESTIONS)
     state_factory = BotStateFactory(client, storage)
     if game_params is None:
         state = state_factory.make_game_state()
     else:
-        state = GameState(
-            client,
-            state_factory,
-            ProtoGameState(
-                QUESTIONS,
-                game_params.cur_question,
-                game_params.score,
-                game_params.last_question_msg_id,
-            ),
-        )
+        state = GameState(client, state_factory, game_params)
     chat_id = 111
     return ConvConfig(ChatHandler.create(state, chat_id), client, chat_id)
 
@@ -75,7 +58,7 @@ def test_game_till_end():
 
 def test_game_score():
     check_conversation(
-        make_conv_conf(GameParams(2, 2, 2)),
+        make_conv_conf(ProtoGameState(QUESTIONS, 2, 2, 2)),
         [
             bot_msg("3.What date is Christmas?", make_keyboard(QUESTIONS[2])),
             user("4"),
