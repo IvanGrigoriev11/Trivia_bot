@@ -5,6 +5,7 @@ from typing import Dict, List, Optional
 
 from psycopg import Cursor
 from psycopg_pool import ConnectionPool
+from functools import cache
 
 
 @dataclass
@@ -109,7 +110,7 @@ class PostgresStorage(Storage):
 
         with self._pool.connection() as conn:
             with conn.cursor() as cur:
-                self._create_chat_handler_table(cur)
+                self._ensure_chat_handler_table(cur)
                 cur.execute(
                     """
                     SELECT chat_handler FROM handlers
@@ -127,7 +128,7 @@ class PostgresStorage(Storage):
 
         with self._pool.connection() as conn:
             with conn.cursor() as cur:
-                self._create_chat_handler_table(cur)
+                self._ensure_chat_handler_table(cur)
                 cur.execute(
                     """
                     INSERT INTO handlers(chat_id, chat_handler)
@@ -141,16 +142,18 @@ class PostgresStorage(Storage):
                     ),
                 )
 
-    @staticmethod
-    def _create_chat_handler_table(cur: Cursor):
-        cur.execute(
-            """
-            CREATE TABLE IF NOT EXISTS handlers (
-                chat_id integer PRIMARY KEY,
-                chat_handler text
+    @cache
+    def _ensure_chat_handler_table(self):
+        with self._pool.connection() as conn:
+            with conn.cursor() as cur:
+                cur.execute(
+                    """
+                    CREATE TABLE IF NOT EXISTS handlers (
+                        chat_id integer PRIMARY KEY,
+                        chat_handler text
+                        )
+                    """
                 )
-            """
-        )
 
 
 class InMemoryStorage(Storage):
