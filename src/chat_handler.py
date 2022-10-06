@@ -43,7 +43,7 @@ class ChatHandler:
         return ChatHandler(state, chat_id)
 
     @property
-    def chat_handler_params(self):
+    def proto(self):
         return ProtoChatHandler(self._state, self._chat_id)
 
     def __eq__(self, other):

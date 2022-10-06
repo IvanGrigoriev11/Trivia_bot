@@ -20,7 +20,7 @@ class ChatHandlerEncoder(json.JSONEncoder):
     def default(self, o):
         if isinstance(o, ChatHandler):
             data = {
-                "chat_handler": self.default(o.chat_handler_params),
+                "chat_handler": self.default(o.proto),
             }
         elif isinstance(o, ProtoChatHandler):
             data = {

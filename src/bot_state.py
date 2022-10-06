@@ -116,10 +116,6 @@ class GameState(BotState):
         return False
 
     @property
-    def is_on_enter_called(self):
-        return self._on_enter_called
-
-    @property
     def game_params(self):
         return self._params
 
