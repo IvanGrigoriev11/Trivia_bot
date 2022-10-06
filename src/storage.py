@@ -1,11 +1,11 @@
 import itertools
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
+from functools import cache
 from typing import Dict, List, Optional
 
 from psycopg import Cursor
 from psycopg_pool import ConnectionPool
-from functools import cache
 
 
 @dataclass
