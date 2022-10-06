@@ -166,7 +166,7 @@ class InMemoryStorage(Storage):
     def get_questions(self, question_count: int) -> List[Question]:
         return self._questions[:question_count]
 
-    def get_chat_handler(self, chat_id: int):
+    def get_chat_handler(self, chat_id: int) -> Optional[str]:
         return self._chat_handlers[chat_id]
 
     def set_chat_handler(self, chat_id: int, chat_handler: str):
