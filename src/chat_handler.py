@@ -1,15 +1,5 @@
-from dataclasses import dataclass
-
 from bot_state import BotState
 from telegram_client import Update
-
-
-@dataclass(frozen=True)
-class ProtoChatHandler:
-    """A serializable part of the ChatHandler. Used to store and load ChatHandler."""
-
-    state: BotState
-    chat_id: int
 
 
 class ChatHandler:
@@ -43,8 +33,12 @@ class ChatHandler:
         return ChatHandler(state, chat_id)
 
     @property
-    def proto(self):
-        return ProtoChatHandler(self._state, self._chat_id)
+    def chat_id(self) -> int:
+        return self._chat_id
+
+    @property
+    def state(self) -> BotState:
+        return self._state
 
     def __eq__(self, other):
         if isinstance(other, ChatHandler):

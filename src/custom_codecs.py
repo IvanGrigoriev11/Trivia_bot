@@ -25,26 +25,29 @@ class ChatHandlerEncoder(json.JSONEncoder):
                     "state_name": "GreetingState",
                     "is_on_enter_called": state.is_on_enter_called,
                 }
-            elif isinstance(state, IdleState):
+
+            if isinstance(state, IdleState):
                 return {
                     "state_name": "IdleState",
                     "is_on_enter_called": state.is_on_enter_called,
                 }
-            elif isinstance(state, GameState):
+
+            if isinstance(state, GameState):
                 return {
                     "state_name": "GameState",
                     "is_on_enter_called": state.is_on_enter_called,
                     "game_params": jsons.dump(state.game_params),
                 }
 
+            raise TypeError(f"Unsupported state: {type(state)}")
+
         if isinstance(o, ChatHandler):
-            proto = o.proto
             return {
-                "chat_id": proto.chat_id,
-                "state": encode_state(proto.state),
+                "chat_id": o.chat_id,
+                "state": encode_state(o.state),
             }
-        else:
-            raise TypeError(f"Can only encode ChatHandler. But got {type(o)}")
+
+        raise TypeError(f"Can only encode ChatHandler. But got {type(o)}")
 
 
 class ChatHandlerDecoder:
