@@ -1,7 +1,12 @@
 from abc import ABC, abstractmethod
 from typing import List
 
-from format import make_answered_question_message, make_keyboard, make_text_question
+from format import (
+    make_answered_question_message,
+    make_keyboard,
+    make_text_question,
+    make_warning_notification,
+)
 from question_storage import Question, QuestionStorage
 from telegram_client import MessageEdit, TelegramClient, Update
 from utils import parse_answer
@@ -85,7 +90,6 @@ class GameState(BotState):
         self._cur_question = 0
         self._score = 0
         self._last_question_msg_id = 0
-        self._msg_txt = "Please, type the number or letter of your supposed answer"
 
     def _do_on_enter(self, chat_id: int) -> None:
         self._last_question_msg_id = self._client.send_text(
@@ -99,9 +103,13 @@ class GameState(BotState):
         if update.message is not None:
             answer = parse_answer(update.message.text)
             if answer is None:
-                self._client.send_text(chat_id, self._msg_txt)
+                self._client.send_text(
+                    chat_id,
+                    make_warning_notification(
+                        self._questions[self._cur_question].answers
+                    ),
+                )
                 return self
-            answer -= 1
         elif update.callback_query is not None:
             answer = parse_answer(update.callback_query.data)
             if answer is None:
@@ -113,7 +121,10 @@ class GameState(BotState):
     def _handle_answer(self, chat_id: int, answer: int):
         cur_question = self._questions[self._cur_question]
         if answer < 0 or answer >= len(cur_question.answers):
-            self._client.send_text(chat_id, self._msg_txt)
+            self._client.send_text(
+                chat_id,
+                make_warning_notification(cur_question.answers),
+            )
             return self
 
         if answer == self._questions[self._cur_question].correct_answer:

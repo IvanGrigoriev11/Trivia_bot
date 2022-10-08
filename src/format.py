@@ -1,4 +1,5 @@
 import string
+from typing import List
 
 from question_storage import Question
 from telegram_client import InlineKeyboardButton, InlineKeyboardMarkup
@@ -10,7 +11,7 @@ RED_CIRCLE_MARK = "⭕"
 
 def make_keyboard(question: Question) -> InlineKeyboardMarkup:
     buttons = [
-        InlineKeyboardButton(chr(ord("a") + i), f"{i}")
+        InlineKeyboardButton(chr(ord("a") + i), f"{chr(ord('a') + i)}")
         for i in range(len(question.answers))
     ]
     return InlineKeyboardMarkup([buttons])
@@ -46,3 +47,12 @@ def make_answered_question_message(user_answer: int, question: Question) -> str:
 
     message = f"{question.text}" + "\n" + "\n".join(edited_answers)
     return message
+
+
+def make_warning_notification(answers: List[str]) -> str:
+    """Reports the wrong form of the answer."""
+
+    return (
+        f"Please type a letter indicating your answer. "
+        f"Valid options are {', '.join(string.ascii_lowercase[:len(answers)])}."
+    )

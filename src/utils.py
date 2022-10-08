@@ -3,11 +3,15 @@ from typing import Optional
 
 
 def parse_answer(s: str) -> Optional[int]:
+    """A helper function for handling user's answer on question.
+    When given more than one letter or the letter is out of range of acceptable answers,
+    the function returns None. If uppercase is given, the function returns lowercase."""
+
+    if len(s) != 1:
+        return None
+
     try:
-        for char in string.ascii_letters:
-            if char == s.lower():
-                return ord(char) - ord("a") + 1
-        return int(s)
+        return string.ascii_lowercase.index(s.lower())
     except ValueError:
         return None
 

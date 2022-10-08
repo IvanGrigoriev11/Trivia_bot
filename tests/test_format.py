@@ -14,9 +14,9 @@ def test_keyboard():
     expected_keyboard = InlineKeyboardMarkup(
         inline_keyboard=[
             [
-                InlineKeyboardButton(text="a", callback_data="0"),
-                InlineKeyboardButton(text="b", callback_data="1"),
-                InlineKeyboardButton(text="c", callback_data="2"),
+                InlineKeyboardButton(text="a", callback_data="a"),
+                InlineKeyboardButton(text="b", callback_data="b"),
+                InlineKeyboardButton(text="c", callback_data="c"),
             ]
         ]
     )

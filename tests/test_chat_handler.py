@@ -16,13 +16,13 @@ def test_entire_game():
             user("/startGame"),
             bot_msg("Starting game!"),
             bot_msg(make_text_question(QUESTIONS[0]), make_keyboard(QUESTIONS[0])),
-            user("2"),
+            user("b"),
             bot_edit(make_answered_question_message(1, QUESTIONS[0])),
             bot_msg(make_text_question(QUESTIONS[1]), make_keyboard(QUESTIONS[1])),
-            user("2"),
+            user("b"),
             bot_edit(make_answered_question_message(1, QUESTIONS[1])),
             bot_msg(make_text_question(QUESTIONS[2]), make_keyboard(QUESTIONS[2])),
-            user("2"),
+            user("b"),
             bot_edit(make_answered_question_message(1, QUESTIONS[2])),
             bot_msg(
                 "You got 1 points out of 3.\n"
