@@ -1,3 +1,5 @@
+from typing import Optional
+
 from tutils import (
     QUESTIONS,
     ConvConfig,
@@ -8,7 +10,7 @@ from tutils import (
     user,
 )
 
-from bot_state import BotStateFactory
+from bot_state import BotStateFactory, GameState, ProtoGameState
 from chat_handler import ChatHandler
 from format import (
     CHECK_MARK,
@@ -17,15 +19,18 @@ from format import (
     make_answered_question_message,
     make_keyboard,
 )
-from question_storage import InMemoryStorage
+from storage import InMemoryStorage
 from telegram_client import CallbackQuery, MessageEdit, SendMessagePayload, Update, User
 
 
-def make_conv_conf():
+def make_conv_conf(game_params: Optional[ProtoGameState] = None):
     client = FakeTelegramClient()
     storage = InMemoryStorage(QUESTIONS)
     state_factory = BotStateFactory(client, storage)
-    state = state_factory.make_game_state()
+    if game_params is None:
+        state = state_factory.make_game_state()
+    else:
+        state = GameState(client, state_factory, game_params)
     chat_id = 111
     return ConvConfig(ChatHandler.create(state, chat_id), client, chat_id)
 
@@ -45,6 +50,21 @@ def test_game_till_end():
             bot_edit(make_answered_question_message(3, QUESTIONS[2])),
             bot_msg(
                 "You got 2 points out of 3.\n"
+                "If you want to try again, type /startGame to start a new game."
+            ),
+        ],
+    )
+
+
+def test_game_score():
+    check_conversation(
+        make_conv_conf(ProtoGameState(QUESTIONS, 2, 2, 2)),
+        [
+            bot_msg("3.What date is Christmas?", make_keyboard(QUESTIONS[2])),
+            user("4"),
+            bot_edit(make_answered_question_message(3, QUESTIONS[2])),
+            bot_msg(
+                "You got 3 points out of 3.\n"
                 "If you want to try again, type /startGame to start a new game."
             ),
         ],
