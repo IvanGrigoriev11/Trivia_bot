@@ -3,7 +3,10 @@
 
 
 NOTE: The instruction below is shown for MacOS.
-1. Install Homebrew [Official page - Homebrew](https://brew.sh/).
+1. Install PyCharm from [Official page](https://www.jetbrains.com/pycharm/).
+1. Open project
+1. Mark directories: `src` - sources root, `tests` - tests root
+2. Install Homebrew [Official page - Homebrew](https://brew.sh/).
    1. `/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"`.
 1. Install `pyenv`. [PyEnv - Documentation on GitHub](https://github.com/pyenv/pyenv).
    1. `brew install pyenv`.
