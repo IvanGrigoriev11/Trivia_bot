@@ -25,10 +25,11 @@ NOTE: The instruction below is shown for MacOS.
 
 
 1. Run the docker container with PostgreSQL database by the command `docker run -p 5432:5432 --name postgres -e POSTGRES_PASSWORD=<the password is the same as used by the bot> -d postgres`. The database container must be running so that the bot can work with the database during the game or before you are going to create the question table. You can stop it by `docker stop postgres` and rerun by `docker start postgres` command.
+1. Save your username and password for connecting to docker container in `zshrc` file with name `TRIVIA_POSTGRES_USER=<username>` `TRIVIA_POSTGRES_PASSWD=<password>` so the bot and script files can use it in their purposes later.
 1. Run `scrap_opentrivia.py` in `scripts` directory to get a file with questions from OpenTriviaDB.
 1. Run `populate_db.py` in Terminal to populate the file with questions to DB.
    1. switch to the repo root and follow to `src/scripts` directory.
-   1. `python populate_db.py postgres`.
+   1. `python populate_db.py postgres`. The script gets username and password for connecting to the database from `~./zshrc` file.
    1. type `python populate_db.py --help` for additional hints.
 
 
@@ -36,5 +37,5 @@ NOTE: The instruction below is shown for MacOS.
 
 
 1. Run docker container with PostgreSQL by `docker start postgres` if it is stopped. 
-1. Switched to the repo root and follow to `src` directory. 
-1. Run `python main.py` in Terminal to launch the bot. 
+1. Switched to the repo root and follow to `src` directory by `cd <repo root>/src`. 
+1. Run `python main.py` in Terminal to launch the bot. To connect to the database bot needs to get `TRIVIA_POSTGRES_USER=<username>` `TRIVIA_POSTGRES_PASSWD=<password>` from `~/.zshrc` file.  For more details see `Populating the database` section.
