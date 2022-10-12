@@ -1,3 +1,5 @@
+from typing import Optional
+
 from tutils import (
     QUESTIONS,
     ConvConfig,
@@ -9,19 +11,25 @@ from tutils import (
 )
 
 import format as fmt
-from bot_state import BotStateFactory
+from bot_state import BotStateFactory, GameState, ProtoGameState
 from chat_handler import ChatHandler
-from question_storage import InMemoryStorage
+from storage import InMemoryStorage
 from telegram_client import CallbackQuery, MessageEdit, SendMessagePayload, Update, User
 
 
-def make_conv_conf():
+def make_conv_conf(game_params: Optional[ProtoGameState] = None):
     client = FakeTelegramClient()
     storage = InMemoryStorage(QUESTIONS)
     state_factory = BotStateFactory(client, storage)
-    state = state_factory.make_game_state()
     chat_id = 111
-    return ConvConfig(ChatHandler.create(state, chat_id), client, chat_id)
+
+    if game_params is None:
+        handler = ChatHandler.create(state_factory.make_game_state(), chat_id)
+    else:
+        handler = ChatHandler(
+            GameState(client, state_factory, game_params, True), chat_id
+        )
+    return ConvConfig(handler, client, chat_id)
 
 
 def test_game_till_end():
@@ -100,7 +108,7 @@ def check_callback_query(button: str):
     chat_id = 111
     state.on_enter(chat_id)
     state.process(Update(123, None, CallbackQuery(User(111), f"{button}")))
-    assert client.sent_messages == [
+    expected = [
         SendMessagePayload(
             111, fmt.make_question(QUESTIONS[0]), fmt.make_keyboard(QUESTIONS[0])
         ),
@@ -114,7 +122,24 @@ def check_callback_query(button: str):
             111, fmt.make_question(QUESTIONS[1]), fmt.make_keyboard(QUESTIONS[1])
         ),
     ]
+    assert client.sent_messages == expected
 
 
 def test_callback_query():
     check_callback_query("c")
+
+
+def test_game_score_for_deserialized_state():
+    cur_score = 1
+    prev_message_id = 0
+    check_conversation(
+        make_conv_conf(ProtoGameState(QUESTIONS, 2, cur_score, prev_message_id)),
+        [
+            user("d"),  # correct answer for question 2 (0-based)
+            bot_edit(fmt.make_answered_question(3, QUESTIONS[2])),
+            bot_msg(
+                "You got 2 points out of 3.\n"
+                "If you want to try again, type /startGame to start a new game."
+            ),
+        ],
+    )

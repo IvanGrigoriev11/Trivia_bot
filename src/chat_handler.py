@@ -11,6 +11,7 @@ class ChatHandler:
         initial_state -- initial state responsible for handling chat updates.
         chat_id -- id of the chat this handler is responsible for.
         """
+
         self._state = initial_state
         self._chat_id = chat_id
 
@@ -30,3 +31,17 @@ class ChatHandler:
 
         state.on_enter(chat_id)
         return ChatHandler(state, chat_id)
+
+    @property
+    def chat_id(self) -> int:
+        return self._chat_id
+
+    @property
+    def state(self) -> BotState:
+        return self._state
+
+    def __eq__(self, other):
+        if isinstance(other, ChatHandler):
+            return self._chat_id == other._chat_id and self._state == other._state
+
+        return False

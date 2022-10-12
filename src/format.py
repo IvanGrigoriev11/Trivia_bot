@@ -1,7 +1,7 @@
 import string
 from typing import List
 
-from question_storage import Question
+from storage import Question
 from telegram_client import InlineKeyboardButton, InlineKeyboardMarkup
 
 CHECK_MARK = "✅"

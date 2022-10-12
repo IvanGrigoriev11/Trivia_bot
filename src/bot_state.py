@@ -1,8 +1,9 @@
 from abc import ABC, abstractmethod
+from dataclasses import dataclass
 from typing import List
 
 import format as fmt
-from question_storage import Question, QuestionStorage
+from storage import Question, Storage
 from telegram_client import MessageEdit, TelegramClient, Update
 from utils import parse_answer
 
@@ -20,8 +21,8 @@ class InvalidCallbackDataException(BotStateException):
 class BotState(ABC):
     """A class responsible for handling a single chat operation."""
 
-    def __init__(self):
-        self._on_enter_called = False
+    def __init__(self, _on_enter_called: bool):
+        self._on_enter_called = _on_enter_called
 
     def on_enter(self, chat_id: int) -> None:
         assert not self._on_enter_called
@@ -41,12 +42,27 @@ class BotState(ABC):
     def _do_process(self, update: Update) -> "BotState":
         """A callback for handling an update."""
 
+    def __eq__(self, other):
+        # pylint: disable = unidiomatic-typecheck
+        if isinstance(other, BotState) and type(self) == type(other):
+            return self.is_on_enter_called == other.is_on_enter_called
+        return False
+
+    @property
+    def is_on_enter_called(self):
+        return self._on_enter_called
+
 
 class IdleState(BotState):
     """A state when there is no active game in place."""
 
-    def __init__(self, client: TelegramClient, state_factory: "BotStateFactory"):
-        super().__init__()
+    def __init__(
+        self,
+        client: TelegramClient,
+        state_factory: "BotStateFactory",
+        _on_enter_called: bool = False,
+    ):
+        super().__init__(_on_enter_called)
         self._client = client
         self._state_factory = state_factory
 
@@ -66,31 +82,49 @@ class IdleState(BotState):
         return self
 
 
+@dataclass
+class ProtoGameState:
+    """A serializable part of the GameState. Used to store and load the state."""
+
+    questions: List[Question]
+    current_question: int
+    score: int
+    last_question_msg_id: int
+
+
 class GameState(BotState):
     """A state responsible for handling the game itself. Assumes the game has already started."""
 
     def __init__(
         self,
         client: TelegramClient,
-        questions: List[Question],
         state_factory: "BotStateFactory",
+        game_params: ProtoGameState,
+        _on_enter_called: bool = False,
     ):
         """
         questions -- questions for this particular game.
         """
-        super().__init__()
+        super().__init__(_on_enter_called)
         self._client = client
-        self._questions = questions
         self._state_factory = state_factory
-        self._cur_question = 0
-        self._score = 0
-        self._last_question_msg_id = 0
+        self._params = game_params
+
+    def __eq__(self, other):
+        if isinstance(other, GameState):
+            return self._params == other._params and super().__eq__(other)
+        return False
+
+    @property
+    def game_params(self) -> ProtoGameState:
+        return self._params
 
     def _do_on_enter(self, chat_id: int) -> None:
-        self._last_question_msg_id = self._client.send_text(
+        assert self._params.current_question == 0
+        self._params.last_question_msg_id = self._client.send_text(
             chat_id,
-            fmt.make_question(self._questions[0]),
-            fmt.make_keyboard(self._questions[0]),
+            fmt.make_question(self._params.questions[0]),
+            fmt.make_keyboard(self._params.questions[0]),
         )
 
     def _do_process(self, update: Update) -> "BotState":
@@ -101,7 +135,7 @@ class GameState(BotState):
                 self._client.send_text(
                     chat_id,
                     fmt.make_answers_help_message(
-                        self._questions[self._cur_question].answers
+                        self._params.questions[self._params.current_question].answers
                     ),
                 )
                 return self
@@ -114,7 +148,7 @@ class GameState(BotState):
         return self._handle_answer(chat_id, answer)
 
     def _handle_answer(self, chat_id: int, answer: int):
-        cur_question = self._questions[self._cur_question]
+        cur_question = self._params.questions[self._params.current_question]
         if answer < 0 or answer >= len(cur_question.answers):
             self._client.send_text(
                 chat_id,
@@ -122,29 +156,38 @@ class GameState(BotState):
             )
             return self
 
-        if answer == self._questions[self._cur_question].correct_answer:
-            self._score += 1
+        if (
+            answer
+            == self._params.questions[self._params.current_question].correct_answer
+        ):
+            self._params.score += 1
 
         self._client.edit_message_text(
             MessageEdit(
                 chat_id,
-                self._last_question_msg_id,
-                fmt.make_answered_question(answer, self._questions[self._cur_question]),
+                self._params.last_question_msg_id,
+                fmt.make_answered_question(
+                    answer, self._params.questions[self._params.current_question]
+                ),
             ),
         )
-        self._cur_question += 1
+        self._params.current_question += 1
 
-        if self._cur_question != len(self._questions):
-            self._last_question_msg_id = self._client.send_text(
+        if self._params.current_question != len(self._params.questions):
+            self._params.last_question_msg_id = self._client.send_text(
                 chat_id,
-                fmt.make_question(self._questions[self._cur_question]),
-                fmt.make_keyboard(self._questions[self._cur_question]),
+                fmt.make_question(
+                    self._params.questions[self._params.current_question]
+                ),
+                fmt.make_keyboard(
+                    self._params.questions[self._params.current_question]
+                ),
             )
             return self
 
         self._client.send_text(
             chat_id,
-            f"You got {self._score} points out of {self._cur_question}."
+            f"You got {self._params.score} points out of {self._params.current_question}."
             + "\n"
             + "If you want to try again, type /startGame to start a new game.",
         )
@@ -154,8 +197,13 @@ class GameState(BotState):
 class GreetingState(BotState):
     """A state responsible for greeting and introducing new user to the bot."""
 
-    def __init__(self, client: TelegramClient, state_factory: "BotStateFactory"):
-        super().__init__()
+    def __init__(
+        self,
+        client: TelegramClient,
+        state_factory: "BotStateFactory",
+        _on_enter_called: bool = False,
+    ):
+        super().__init__(_on_enter_called)
         self._client = client
         self._state_factory = state_factory
 
@@ -174,7 +222,7 @@ class GreetingState(BotState):
 class BotStateFactory:
     """A factory responsible for creating a new bot state."""
 
-    def __init__(self, client: TelegramClient, storage: QuestionStorage):
+    def __init__(self, client: TelegramClient, storage: Storage):
         self._client = client
         self._storage = storage
 
@@ -182,7 +230,9 @@ class BotStateFactory:
         _question_count = 5
         if self._storage is not None:
             return GameState(
-                self._client, self._storage.get_questions(_question_count), self
+                self._client,
+                self,
+                ProtoGameState(self._storage.get_questions(_question_count), 0, 0, 0),
             )
         raise TypeError("Storage must be chosen for creating game state")
 

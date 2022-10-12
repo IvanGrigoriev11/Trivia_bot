@@ -3,7 +3,7 @@ from enum import Enum
 from typing import List, Optional
 
 from chat_handler import ChatHandler
-from question_storage import Question
+from storage import Question
 from telegram_client import (
     Chat,
     InlineKeyboardMarkup,
