@@ -11,9 +11,11 @@ from telegram_client import LiveTelegramClient
 
 
 def main():
-    user = os.environ["TRIVIA_POSTGRES_USER"]
-    password = os.environ["TRIVIA_POSTGRES_PASSWD"]
-    conninfo = f"postgresql://{user}:{password}@localhost:{5432}/postgres"
+    user = os.environ["POSTGRES_AWSDB_USER"]
+    password = os.environ["POSTGRES_AWSDB_PASSWD"]
+    host = os.environ["POSTGRES_AWSDB_HOST"]
+    dbname = os.environ["POSTGRES_AWSDB_NAME"]
+    conninfo = f"postgresql://{user}:{password}@{host}:{5432}/{dbname}"
 
     token = os.environ["TELEGRAM_BOT_TOKEN"]
     client = LiveTelegramClient(token)
