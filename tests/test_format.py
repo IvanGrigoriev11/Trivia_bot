@@ -2,8 +2,9 @@ from format import (
     CHECK_MARK,
     CROSS_MARK,
     RED_CIRCLE_MARK,
-    make_answered_question_message,
+    make_answered_question,
     make_keyboard,
+    make_question,
 )
 from storage import Question
 from telegram_client import InlineKeyboardButton, InlineKeyboardMarkup
@@ -13,9 +14,9 @@ def test_keyboard():
     expected_keyboard = InlineKeyboardMarkup(
         inline_keyboard=[
             [
-                InlineKeyboardButton(text="orange", callback_data="0"),
-                InlineKeyboardButton(text="blue", callback_data="1"),
-                InlineKeyboardButton(text="green", callback_data="2"),
+                InlineKeyboardButton(text="a", callback_data="a"),
+                InlineKeyboardButton(text="b", callback_data="b"),
+                InlineKeyboardButton(text="c", callback_data="c"),
             ]
         ]
     )
@@ -38,9 +39,17 @@ def test_edit_text_message():
     )
 
     user_answer = 2
-    formed_answer = make_answered_question_message(
+    formed_answer = make_answered_question(
         user_answer,
         Question("1.What is the color of sky?", ["orange", "blue", "green"], 1),
     )
 
     assert expected_answer == formed_answer
+
+
+def test_question_formatting():
+    formed_text = make_question(
+        Question("1.What is the color of sky?", ["orange", "blue", "green"], 1),
+    )
+    expected_text = "1.What is the color of sky?\na) orange\nb) blue\nc) green"
+    assert formed_text == expected_text

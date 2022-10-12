@@ -2,10 +2,10 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from typing import List
 
-from format import make_answered_question_message, make_keyboard
+import format as fmt
 from storage import Question, Storage
 from telegram_client import MessageEdit, TelegramClient, Update
-from utils import parse_int
+from utils import parse_answer
 
 
 class BotStateException(Exception):
@@ -120,24 +120,27 @@ class GameState(BotState):
         return self._params
 
     def _do_on_enter(self, chat_id: int) -> None:
+        assert self._params.current_question == 0
         self._params.last_question_msg_id = self._client.send_text(
             chat_id,
-            self._params.questions[self._params.current_question].text,
-            make_keyboard(self._params.questions[self._params.current_question]),
+            fmt.make_question(self._params.questions[0]),
+            fmt.make_keyboard(self._params.questions[0]),
         )
 
     def _do_process(self, update: Update) -> "BotState":
         chat_id = update.chat_id
         if update.message is not None:
-            answer = parse_int(update.message.text)
+            answer = parse_answer(update.message.text)
             if answer is None:
                 self._client.send_text(
-                    chat_id, "Please, type the number of your supposed answer"
+                    chat_id,
+                    fmt.make_answers_help_message(
+                        self._params.questions[self._params.current_question].answers
+                    ),
                 )
                 return self
-            answer -= 1
         elif update.callback_query is not None:
-            answer = parse_int(update.callback_query.data)
+            answer = parse_answer(update.callback_query.data)
             if answer is None:
                 raise InvalidCallbackDataException(update.callback_query.data)
         else:
@@ -148,7 +151,8 @@ class GameState(BotState):
         cur_question = self._params.questions[self._params.current_question]
         if answer < 0 or answer >= len(cur_question.answers):
             self._client.send_text(
-                chat_id, f"Type the number from 1 to {len(cur_question.answers)}"
+                chat_id,
+                fmt.make_answers_help_message(cur_question.answers),
             )
             return self
 
@@ -162,7 +166,7 @@ class GameState(BotState):
             MessageEdit(
                 chat_id,
                 self._params.last_question_msg_id,
-                make_answered_question_message(
+                fmt.make_answered_question(
                     answer, self._params.questions[self._params.current_question]
                 ),
             ),
@@ -172,8 +176,12 @@ class GameState(BotState):
         if self._params.current_question != len(self._params.questions):
             self._params.last_question_msg_id = self._client.send_text(
                 chat_id,
-                self._params.questions[self._params.current_question].text,
-                make_keyboard(self._params.questions[self._params.current_question]),
+                fmt.make_question(
+                    self._params.questions[self._params.current_question]
+                ),
+                fmt.make_keyboard(
+                    self._params.questions[self._params.current_question]
+                ),
             )
             return self
 

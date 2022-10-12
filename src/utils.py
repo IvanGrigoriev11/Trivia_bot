@@ -1,9 +1,17 @@
+import string
 from typing import Optional
 
 
-def parse_int(s: str) -> Optional[int]:
+def parse_answer(s: str) -> Optional[int]:
+    """A helper function for handling user's answer on question.
+    When given more than one letter or the letter is out of range of acceptable answers,
+    the function returns None. If uppercase is given, the function returns lowercase."""
+
+    if len(s) != 1:
+        return None
+
     try:
-        return int(s)
+        return string.ascii_lowercase.index(s.lower())
     except ValueError:
         return None
 
