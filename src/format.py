@@ -17,7 +17,7 @@ def make_keyboard(question: Question) -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup([buttons])
 
 
-def make_text_question(question: Question) -> str:
+def make_question(question: Question) -> str:
     """
     Creates a text field in the question message
     with the answer options marked with ordered letters.
@@ -29,7 +29,7 @@ def make_text_question(question: Question) -> str:
     return question.text + "\n" + "\n".join(answers)
 
 
-def make_answered_question_message(user_answer: int, question: Question) -> str:
+def make_answered_question(user_answer: int, question: Question) -> str:
     """
     Creates a question message that reflects the user's answer.
     """
@@ -49,7 +49,7 @@ def make_answered_question_message(user_answer: int, question: Question) -> str:
     return message
 
 
-def make_warning_notification(answers: List[str]) -> str:
+def make_answers_help_message(answers: List[str]) -> str:
     """Reports the wrong form of the answer."""
 
     return (

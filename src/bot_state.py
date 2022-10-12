@@ -1,12 +1,7 @@
 from abc import ABC, abstractmethod
 from typing import List
 
-from format import (
-    make_answered_question_message,
-    make_keyboard,
-    make_text_question,
-    make_warning_notification,
-)
+import format as fmt
 from question_storage import Question, QuestionStorage
 from telegram_client import MessageEdit, TelegramClient, Update
 from utils import parse_answer
@@ -94,8 +89,8 @@ class GameState(BotState):
     def _do_on_enter(self, chat_id: int) -> None:
         self._last_question_msg_id = self._client.send_text(
             chat_id,
-            make_text_question(self._questions[0]),
-            make_keyboard(self._questions[0]),
+            fmt.make_question(self._questions[0]),
+            fmt.make_keyboard(self._questions[0]),
         )
 
     def _do_process(self, update: Update) -> "BotState":
@@ -105,7 +100,7 @@ class GameState(BotState):
             if answer is None:
                 self._client.send_text(
                     chat_id,
-                    make_warning_notification(
+                    fmt.make_answers_help_message(
                         self._questions[self._cur_question].answers
                     ),
                 )
@@ -123,7 +118,7 @@ class GameState(BotState):
         if answer < 0 or answer >= len(cur_question.answers):
             self._client.send_text(
                 chat_id,
-                make_warning_notification(cur_question.answers),
+                fmt.make_answers_help_message(cur_question.answers),
             )
             return self
 
@@ -134,9 +129,7 @@ class GameState(BotState):
             MessageEdit(
                 chat_id,
                 self._last_question_msg_id,
-                make_answered_question_message(
-                    answer, self._questions[self._cur_question]
-                ),
+                fmt.make_answered_question(answer, self._questions[self._cur_question]),
             ),
         )
         self._cur_question += 1
@@ -144,8 +137,8 @@ class GameState(BotState):
         if self._cur_question != len(self._questions):
             self._last_question_msg_id = self._client.send_text(
                 chat_id,
-                make_text_question(self._questions[self._cur_question]),
-                make_keyboard(self._questions[self._cur_question]),
+                fmt.make_question(self._questions[self._cur_question]),
+                fmt.make_keyboard(self._questions[self._cur_question]),
             )
             return self
 

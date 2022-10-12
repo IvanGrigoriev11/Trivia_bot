@@ -2,9 +2,9 @@ from format import (
     CHECK_MARK,
     CROSS_MARK,
     RED_CIRCLE_MARK,
-    make_answered_question_message,
+    make_answered_question,
     make_keyboard,
-    make_text_question,
+    make_question,
 )
 from question_storage import Question
 from telegram_client import InlineKeyboardButton, InlineKeyboardMarkup
@@ -39,7 +39,7 @@ def test_edit_text_message():
     )
 
     user_answer = 2
-    formed_answer = make_answered_question_message(
+    formed_answer = make_answered_question(
         user_answer,
         Question("1.What is the color of sky?", ["orange", "blue", "green"], 1),
     )
@@ -48,7 +48,7 @@ def test_edit_text_message():
 
 
 def test_question_formatting():
-    formed_text = make_text_question(
+    formed_text = make_question(
         Question("1.What is the color of sky?", ["orange", "blue", "green"], 1),
     )
     expected_text = "1.What is the color of sky?\na) orange\nb) blue\nc) green"
