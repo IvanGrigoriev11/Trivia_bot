@@ -16,9 +16,11 @@ def populated_db(
         "questions.json", help="Questions file used to populate the database."
     ),
     command: str = typer.Option(
-        None, help="""Type `reset` command to clear database.
-                   The script creates all tables in the selected database and populates data to it by default."""
-    )
+        None,
+        help="""Type `reset` command to clear database.
+                The script creates all tables in the selected database 
+                and populates data to it by default.""",
+    ),
 ):
     """Establishes the connection with the selected database."""
 
