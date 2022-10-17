@@ -10,7 +10,7 @@ from psycopg import Cursor
 
 def populated_db(
     dbname: str = typer.Option("initial_db", help="Database name"),
-    host: str = typer.Option(os.environ["POSTGRES_AWSDB_HOST"], help="Database host"),
+    host: str = typer.Option(os.environ["POSTGRES_DB_HOST"], help="Database host"),
     port: int = typer.Option(5432, help="Database port"),
     questions_file: Path = typer.Option(
         "questions.json", help="Questions file used to populate the database."
@@ -22,8 +22,8 @@ def populated_db(
 ):
     """Establishes the connection with the selected database."""
 
-    user = os.environ["POSTGRES_AWSDB_USER"]
-    password = os.environ["POSTGRES_AWSDB_PASSWD"]
+    user = os.environ["POSTGRES_DB_USER"]
+    password = os.environ["POSTGRES_DB_PASSWD"]
 
     # pylint: disable = not-context-manager
     with psycopg.connect(
