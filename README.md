@@ -30,11 +30,11 @@
 1. Set `pyenv bot` as the project interpreter.
 
 
-## Configure environment variables
+## Configure environment variables for running bot locally
 
 The bot relies on environment to get DB credentials. Launching the database and the bot assumes the below variables are set.
 
-1. Set `POSTGRES_DB_USER` and `POSTGRES_DB_PASSWD` environemnt variables. Put them in your profile (e.g. `.zshrc`)
+1. Set `POSTGRES_DB_USER` and `POSTGRES_DB_PASSWD` environment variables. Put them in your profile (e.g. `.zshrc`)
    1. `export POSTGRES_DB_USER=<user>`
    1. `export POSTGRES_DB_PASSWD=<password>`
 
@@ -62,15 +62,27 @@ The bot relies on being able to connect to database for storing it's state and a
 ## Creating a docker image 
 
 
-1. Build the docker file by the command `docker build --platform linux/arm64 --tag <NAME OF IMAGE>` to create the image based ARM architecture, `docker build --platform linux/amd64 --tag <NAME OF IMAGE>` for the image based AMD architecture. 
+1. Build the docker file by the command `docker build --platform=linux/arm64 --platform=linux/amd64 --tag triviabot .` to create a multiplatforming image based ARM and x64 architecture. 
 1. To run the container locally you should create user-defined bridge networks with `postgres` container. 
-   1. `docker network create --driver bridge <NAME OF NETWORK>`.
-   1. `docker run -p 5432:5432 -dit -e POSTGRES_PASSWORD=$POSTGRES_DB_USER -e POSTGRES_USER=$POSTGRES_DB_PASSWD --name postgres --network <NAME OF NETWORK>` to connect `postgres` container to the network.
-   1. `docker run -p 8000:5000 -dit -e POSTGRES_DB_USER=$POSTGRES_DB_USER -e POSTGRES_DB_PASSWD=$POSTGRES_DB_PASSWD -e POSTGRES_DB_HOST="localhost" -e POSTGRES_DB_NAME=<database name> --name <NAME OF CONTAINER> --network <NAME OF NETWORK> <NAME OF IMAGE>` to connect your docker image to the network and run bot locally.
-   1. `docker network inspect <NAME OF NETWORK>` to check if the containers are connected properly. 
+   1. `docker network create --driver bridge bot-net`. It should be done once. After the network creation you can see it in the list by `docker network ls` command. 
+   1. `docker run -p 5432:5432 -dit -e POSTGRES_PASSWORD=$POSTGRES_DB_USER -e POSTGRES_USER=$POSTGRES_DB_PASSWD --name postgres --network bot-net` to connect `postgres` container to the network.
+   1. `docker run -dit -e POSTGRES_DB_USER=$POSTGRES_DB_USER -e POSTGRES_DB_PASSWD=$POSTGRES_DB_PASSWD -e POSTGRES_DB_HOST="localhost" -e POSTGRES_DB_NAME=postgres --name bot --network bot-net triviabot` to connect your docker image to the network and run bot locally.
+   1. `docker network inspect bot-net` to check if the containers are connected properly. 
    1. Follow [this tutorial](https://docs.docker.com/network/network-tutorial-standalone/#use-user-defined-bridge-networks) for additional connection check.
 
-   
+
+## Configure environment variables for running the bot on AWS
+
+
+The bot relies on environment to get DB credentials. Launching the database and the bot assumes the below variables are set.
+
+   1. `export POSTGRES_DB_USER=<user>`
+   1. `export POSTGRES_DB_PASSWD=<password>`
+   1. `export POSTGRES_DB_HOST=<host name>`
+   1. `export POSTGRES_DB_NAME=<database name>`
+   1. `export TELEGRAM_BOT_TOKEN=<bot token>`
+  
+ 
 ## Launching the bot on AWS
 
 ### Prerequisites
@@ -83,10 +95,11 @@ The bot relies on being able to connect to database for storing it's state and a
 ###
 1. Populate your json file with questions to AWS database by `python populate_db.py` from <repo_root>/src/scripts.
 1. Push your docker `bot` image to AWS repository following [this tutorial](https://docs.aws.amazon.com/AmazonECR/latest/userguide/docker-push-ecr-image.html).
-1. Run your VM.
+1. Run your VM. Connect to your VM using SSH and:
    1. [Install Docker engine](https://docs.docker.com/engine/install/).
    1. [Install AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html).
    1. [Configure AWS Credentials](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-quickstart.html#cli-configure-quickstart-config).
-   1. Authenticate with AWS ECR by `aws ecr get-login-password --region <region name> | docker login --username AWS --password-stdin <aws account_id>.dkr.ecr.<region name>.amazonaws.com`.
-   1. Pull your docker image using `docker pull <aws account_id>.dkr.ecr.<region name>.amazonaws.com/<repo name>:<tag>`.
-1. `docker run -p 5432:5432 -e POSTGRES_DB_USER=<database user> -e POSTGRES_DB_PASSWD=<database password> -e POSTGRES_DB_HOST=<database host> -e POSTGRES_DB_NAME=<database name> --name triviabot <aws account_id>.dkr.ecr.<region name>.amazonaws.com/<repo name>:<tag>`.
+   1. Authenticate with AWS ECR by `aws ecr get-login-password --region eu-central-1 | docker login --username AWS --password-stdin <your aws account_id>.dkr.ecr.eu-central-1.amazonaws.com`.
+   1. Pull your docker image using `docker pull <your aws account_id>.dkr.ecr.eu-central-1.amazonaws.com/trivia_bot:lately`.
+1. Configure environment variables in your VM. 
+1. `docker run -p 5432:5432 -e POSTGRES_DB_USER=$POSTGRES_DB_USER -e POSTGRES_DB_PASSWD=$POSTGRES_DB_PASSWD -e POSTGRES_DB_HOST=$POSTGRES_DB_HOST -e POSTGRES_DB_NAME=$POSTGRES_DB_NAME -e TELEGRAM_BOT_TOKEN=$TELEGRAM_BOT_TOKEN --name triviabot <your aws account_id>.dkr.ecr.eu-central-1.amazonaws.com/trivia_bot:lately`.
