@@ -24,6 +24,7 @@
 
 
 ## Configure the IDE
+
 1. Install PyCharm from [Official page](https://www.jetbrains.com/pycharm/).
 1. Open the repo root as a new project.
 1. Mark directories: `src` - sources root, `tests` - tests root. Right click to do so.
@@ -35,7 +36,7 @@
 The bot relies on environment to get DB credentials. Launching the database and the bot assumes the below variables are set.
 
 1. Set `POSTGRES_DB_USER` and `POSTGRES_DB_PASSWD` environment variables. Put them in your profile (e.g. `.zshrc`)
-   1. `export POSTGRES_DB_USER=<user>`
+   1. `export POSTGRES_DB_USER='postgres'`
    1. `export POSTGRES_DB_PASSWD=<password>`
 
 
@@ -43,16 +44,14 @@ The bot relies on environment to get DB credentials. Launching the database and 
 
 The bot relies on being able to connect to database for storing it's state and accessing questions.
 
-
 1. Run postgres docker container: `docker run -p 5432:5432 --name postgres -e POSTGRES_PASSWORD=$POSTGRES_DB_USER -e POSTGRES_USER=$POSTGRES_DB_PASSWD -d postgres`.
    1. You can stop it by `docker stop postgres` and rerun by `docker start postgres` command.
 1. `cd src/scripts`
 1. Scrap the questions from OpenTriviaDB `python scrap_opentrivia.py`.
-1. Move the scrapped questions to the DB `python populate_db.py postgres`
+1. Move the scrapped questions to the DB `python populate_db.py --host="localhost"`
 
 
 ## Launching the bot
-
 
 1. Ensure postgres docker container is running.
 1. `cd <repo_root>/src`
@@ -61,25 +60,27 @@ The bot relies on being able to connect to database for storing it's state and a
 
 ## Creating a docker image 
 
+1. Build the docker image with `docker build --platform=linux/amd64 --tag triviabot .` to create an image based x64 architecture. 
 
-1. Build the docker file by the command `docker build --platform=linux/arm64 --platform=linux/amd64 --tag triviabot .` to create a multiplatforming image based ARM and x64 architecture. 
+
+## Running the dockerized bot locally
+
 1. To run the container locally you should create user-defined bridge networks with `postgres` container. 
    1. `docker network create --driver bridge bot-net`. It should be done once. After the network creation you can see it in the list by `docker network ls` command. 
-   1. `docker run -p 5432:5432 -dit -e POSTGRES_PASSWORD=$POSTGRES_DB_USER -e POSTGRES_USER=$POSTGRES_DB_PASSWD --name postgres --network bot-net` to connect `postgres` container to the network.
-   1. `docker run -dit -e POSTGRES_DB_USER=$POSTGRES_DB_USER -e POSTGRES_DB_PASSWD=$POSTGRES_DB_PASSWD -e POSTGRES_DB_HOST="localhost" -e POSTGRES_DB_NAME=postgres --name bot --network bot-net triviabot` to connect your docker image to the network and run bot locally.
+   1. `docker run --name postgres -e POSTGRES_PASSWORD=$POSTGRES_DB_PASSWD --network bot-net -p 5432:5432 -d postgres` to connect `postgres` container to the network.
+   1. `docker run -dit -e POSTGRES_DB_USER=$POSTGRES_DB_USER -e POSTGRES_DB_PASSWD=$POSTGRES_DB_PASSWD -e POSTGRES_DB_HOST=$POSTGRES_DB_HOST -e POSTGRES_DB_NAME=$POSTGRES_DB_NAME -e TELEGRAM_BOT_TOKEN=$TELEGRAM_BOT_TOKEN --name bot --network bot-net triviabot` to connect your docker image to the network and run bot locally.
    1. `docker network inspect bot-net` to check if the containers are connected properly. 
    1. Follow [this tutorial](https://docs.docker.com/network/network-tutorial-standalone/#use-user-defined-bridge-networks) for additional connection check.
 
 
 ## Configure environment variables for running the bot on AWS
 
-
 The bot relies on environment to get DB credentials. Launching the database and the bot assumes the below variables are set.
 
-   1. `export POSTGRES_DB_USER=<user>`
+   1. `export POSTGRES_DB_USER="postgres"`
    1. `export POSTGRES_DB_PASSWD=<password>`
-   1. `export POSTGRES_DB_HOST=<host name>`
-   1. `export POSTGRES_DB_NAME=<database name>`
+   1. `export POSTGRES_DB_HOST="<DB identifier>.cuiy2vsvegcs.eu-central-1.rds.amazonaws.com"`
+   1. `export POSTGRES_DB_NAME="initial_db"`
    1. `export TELEGRAM_BOT_TOKEN=<bot token>`
   
  

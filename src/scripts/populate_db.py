@@ -9,7 +9,7 @@ from psycopg import Cursor
 
 
 def populated_db(
-    dbname: str = typer.Option("initial_db", help="Database name"),
+    dbname: str = typer.Option("postgres", help="Database name"),
     host: str = typer.Option(os.environ["POSTGRES_DB_HOST"], help="Database host"),
     port: int = typer.Option(5432, help="Database port"),
     questions_file: Path = typer.Option(
