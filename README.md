@@ -65,7 +65,7 @@ The bot relies on being able to connect to database for storing it's state and a
 
 ## Running the dockerized bot locally
 
-1. To run the container locally you should create user-defined bridge networks with `postgres` container. 
+1. To run the container locally you should create a bridge network for `bot` container to be able to talk to `postgres`
    1. `docker network create --driver bridge bot-net`. It should be done once. After the network creation you can see it in the list by `docker network ls` command. 
    1. `docker run --name postgres -e POSTGRES_PASSWORD=$POSTGRES_DB_PASSWD --network bot-net -p 5432:5432 -d postgres` to connect `postgres` container to the network.
    1. `docker run -dit -e POSTGRES_DB_USER=$POSTGRES_DB_USER -e POSTGRES_DB_PASSWD=$POSTGRES_DB_PASSWD -e POSTGRES_DB_HOST=$POSTGRES_DB_HOST -e POSTGRES_DB_NAME=$POSTGRES_DB_NAME -e TELEGRAM_BOT_TOKEN=$TELEGRAM_BOT_TOKEN --name bot --network bot-net triviabot` to connect your docker image to the network and run bot locally.
