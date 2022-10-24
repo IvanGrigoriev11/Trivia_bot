@@ -80,7 +80,7 @@ def _create(cur: Cursor, questions_fpath: Path):
                 f"{cleaned_question}",
             ),
         )
-        print("insertion in 'questions' table ")
+        print("inserting in 'questions' table ")
         question_row = cur.fetchone()
         if question_row is not None:
             question_id = question_row[0]
