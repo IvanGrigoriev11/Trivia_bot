@@ -97,7 +97,7 @@ def _create(cur: Cursor, questions_fpath: Path):
                         f"{is_correct}",
                     ),
                 )
-                print("insertion in 'answers' table")
+                print("inserting in 'answers' table")
     print("'questions' and 'answers' tables were created")
     _print_rows_in_table(cur, "questions")
     _print_rows_in_table(cur, "answers")
