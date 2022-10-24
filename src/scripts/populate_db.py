@@ -8,34 +8,41 @@ import typer
 from psycopg import Cursor
 
 
+class Commands:
+    RESET = "reset"
+    POPULATE = "populate"
+
+
 def populated_db(
+    command: str = typer.Argument(
+        ...,
+        help="""Type `reset` command to clear database.
+        Type `populate` to create all tables in the selected database 
+        and populates data to it.""",
+    ),
     dbname: str = typer.Option("postgres", help="Database name"),
-    host: str = typer.Option(os.environ["POSTGRES_DB_HOST"], help="Database host"),
     port: int = typer.Option(5432, help="Database port"),
     questions_file: Path = typer.Option(
         "questions.json", help="Questions file used to populate the database."
-    ),
-    command: str = typer.Option(
-        None,
-        help="""Type `reset` command to clear database.
-                The script creates all tables in the selected database 
-                and populates data to it by default.""",
     ),
 ):
     """Establishes the connection with the selected database."""
 
     user = os.environ["POSTGRES_DB_USER"]
     password = os.environ["POSTGRES_DB_PASSWD"]
+    host = os.environ["POSTGRES_DB_HOST"]
 
     # pylint: disable = not-context-manager
     with psycopg.connect(
         host=host, dbname=dbname, user=user, password=password, port=port
     ) as conn:
         print("Connection is set up")
-        if command == "reset":
+        if command == Commands.RESET:
             _reset(conn.cursor())
-        else:
+        elif command == Commands.POPULATE:
             _create(conn.cursor(), questions_file)
+        else:
+            print("There is no such command. Type `populate` or `reset`")
     print("Connection was closed")
 
 
