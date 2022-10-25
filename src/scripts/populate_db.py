@@ -16,8 +16,8 @@ class Commands:
 def populated_db(
     command: str = typer.Argument(
         ...,
-        help="""Type `populate` to create all tables in the selected database and populates data to it. 
-        Type `reset` command to clear the database.""",
+        help="""Type `populate` to create all tables in the selected database 
+        and populates data to it. Type `reset` command to clear the database.""",
     ),
     dbname: str = typer.Option("postgres", help="Database name"),
     port: int = typer.Option(5432, help="Database port"),
