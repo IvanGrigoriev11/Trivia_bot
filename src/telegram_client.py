@@ -7,6 +7,10 @@ import requests
 
 from utils import transform_keywords
 
+from fastapi import APIRouter
+
+router = APIRouter()
+
 
 @dataclass
 class Chat:
@@ -186,6 +190,19 @@ class LiveTelegramClient(TelegramClient):
             data, cls=GetUpdatesResponse, key_transformer=transform_keywords
         )
         return response.result
+
+    @router.get("/")
+    def set_webhook(self, url: str) -> List[Update]:
+        data = requests.get(
+            f"https://api.telegram.org/bot{self._token}/setWebhook?url={url}"
+        ).text
+        response = jsons.loads(
+            data, cls=GetUpdatesResponse, key_transformer=transform_keywords
+        )
+        return response.result
+
+    def delete_webhook(self, url: str):
+        requests.get(f"https://api.telegram.org/bot{self._token}/setWebhook?url={url}")
 
     def send_message(self, payload: SendMessagePayload) -> int:
         data = jsons.dump(payload, strip_nulls=True)
