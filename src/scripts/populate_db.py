@@ -1,5 +1,6 @@
 import json
 import os
+from enum import Enum
 from pathlib import Path
 
 import html2text
@@ -8,30 +9,46 @@ import typer
 from psycopg import Cursor
 
 
+class Command(Enum, str):
+    reset = "reset"
+    populate = "populate"
+
+
 def populated_db(
-    dbname: str = typer.Argument(..., help="Database name"),
-    host: str = typer.Option("localhost", help="Database host"),
+    command: Command = typer.Argument(
+        ...,
+        help="""command to execute""",
+    ),
+    dbname: str = typer.Option("postgres", help="Database name"),
     port: int = typer.Option(5432, help="Database port"),
     questions_file: Path = typer.Option(
         "questions.json", help="Questions file used to populate the database."
     ),
 ):
-    """Populates data from question_file to the selected database."""
+    """Establishes the connection with the selected database."""
 
-    user = os.environ["TRIVIA_POSTGRES_USER"]
-    password = os.environ["TRIVIA_POSTGRES_PASSWD"]
+    user = os.environ["POSTGRES_DB_USER"]
+    password = os.environ["POSTGRES_DB_PASSWD"]
+    host = os.environ["POSTGRES_DB_HOST"]
 
     # pylint: disable = not-context-manager
     with psycopg.connect(
         host=host, dbname=dbname, user=user, password=password, port=port
     ) as conn:
         print("Connection is set up")
-        _create(conn.cursor(), questions_file)
+        if command == Command.reset:
+            _reset(conn.cursor())
+        elif command == Command.populate:
+            _create(conn.cursor(), questions_file)
+        else:
+            raise RuntimeError(f"Unsupported command: {command}")
+
     print("Connection was closed")
 
 
 def _create(cur: Cursor, questions_fpath: Path):
-    """Creates 'questions' and 'answers' tables in the selected database."""
+    """Creates 'questions' and 'answers' tables in the selected database
+    and populates data from question_file to the selected database."""
 
     cur.execute(
         """
@@ -70,6 +87,7 @@ def _create(cur: Cursor, questions_fpath: Path):
                 f"{cleaned_question}",
             ),
         )
+        print("inserting in 'questions' table ")
         question_row = cur.fetchone()
         if question_row is not None:
             question_id = question_row[0]
@@ -86,6 +104,7 @@ def _create(cur: Cursor, questions_fpath: Path):
                         f"{is_correct}",
                     ),
                 )
+                print("inserting in 'answers' table")
     print("'questions' and 'answers' tables were created")
     _print_rows_in_table(cur, "questions")
     _print_rows_in_table(cur, "answers")
@@ -102,6 +121,17 @@ def _print_rows_in_table(cur: Cursor, table_name: str):
     row = cur.fetchone()
     if row is not None:
         print(f"Number of entries in {table_name} table: {row[0]}")
+
+
+def _reset(cur: Cursor):
+    """Resets the database."""
+
+    cur.execute(
+        """
+        DROP TABLE IF EXISTS handlers, questions, answers;
+        """
+    )
+    print("The database is clear")
 
 
 if __name__ == "__main__":
