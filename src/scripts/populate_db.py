@@ -1,5 +1,6 @@
 import json
 import os
+from enum import Enum
 from pathlib import Path
 
 import html2text
@@ -8,16 +9,15 @@ import typer
 from psycopg import Cursor
 
 
-class Commands:
-    RESET = "reset"
-    POPULATE = "populate"
+class Command(Enum, str):
+    reset = "reset"
+    populate = "populate"
 
 
 def populated_db(
-    command: str = typer.Argument(
+    command: Command = typer.Argument(
         ...,
-        help="""Type `populate` to create all tables in the selected database
-        and populates data to it. Type `reset` command to clear the database.""",
+        help="""command to execute""",
     ),
     dbname: str = typer.Option("postgres", help="Database name"),
     port: int = typer.Option(5432, help="Database port"),
@@ -36,12 +36,13 @@ def populated_db(
         host=host, dbname=dbname, user=user, password=password, port=port
     ) as conn:
         print("Connection is set up")
-        if command == Commands.RESET:
+        if command == Command.reset:
             _reset(conn.cursor())
-        elif command == Commands.POPULATE:
+        elif command == Command.populate:
             _create(conn.cursor(), questions_file)
         else:
-            print("There is no such command. Type `populate` or `reset`")
+            raise RuntimeError(f"Unsupported command: {command}")
+
     print("Connection was closed")
 
 
