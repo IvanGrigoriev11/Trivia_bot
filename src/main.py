@@ -80,7 +80,7 @@ def main(
     ),
     url: str = typer.Option(" ", help="the URL param of the server"),
     host: str = typer.Option("localhost", help="server host"),
-    port: int = typer.Option(8000, help="server port")
+    port: int = typer.Option(8000, help="server port"),
 ):
     user = os.environ["POSTGRES_DB_USER"]
     password = os.environ["POSTGRES_DB_PASSWD"]
