@@ -4,7 +4,7 @@ import os
 
 import jsons
 import typer
-from fastapi import FastAPI, Request
+from fastapi.applications import FastAPI, Request
 from psycopg_pool import ConnectionPool
 from uvicorn import Config, Server
 
