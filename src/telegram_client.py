@@ -187,6 +187,18 @@ class LiveTelegramClient(TelegramClient):
         )
         return response.result
 
+    def set_webhook(self, url: str) -> None:
+        response = requests.post(
+            f"https://api.telegram.org/bot{self._token}/setWebhook?url={url}"
+        )
+        assert response.status_code == 200
+
+    def delete_webhook(self):
+        response = requests.post(
+            f"https://api.telegram.org/bot{self._token}/deleteWebhook"
+        )
+        assert response.status_code == 200
+
     def send_message(self, payload: SendMessagePayload) -> int:
         data = jsons.dump(payload, strip_nulls=True)
         r = requests.post(
