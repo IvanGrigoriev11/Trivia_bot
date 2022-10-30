@@ -1,10 +1,11 @@
 import asyncio
 import json
 import os
+from dataclasses import dataclass
 
 import jsons
 import typer
-from fastapi.applications import FastAPI, Request
+from fastapi import FastAPI, Request
 from psycopg_pool import ConnectionPool
 from uvicorn import Config, Server
 
@@ -16,18 +17,13 @@ from telegram_client import LiveTelegramClient, TelegramClient, Update
 from utils import transform_keywords
 
 
+@dataclass
 class Bot:
     """The bot itself. It handles updates and manages TriviaGame."""
 
-    def __init__(
-        self,
-        client: TelegramClient,
-        state_factory: BotStateFactory,
-        storage: PostgresStorage,
-    ):
-        self.client = client
-        self.state_factory = state_factory
-        self.storage = storage
+    client: TelegramClient
+    state_factory: BotStateFactory
+    storage: PostgresStorage
 
     def handle_update(self, update: Update):
         chat_id = update.chat_id
