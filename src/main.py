@@ -8,6 +8,7 @@ import typer
 from fastapi import FastAPI, Request
 from psycopg_pool import ConnectionPool
 from uvicorn import Config, Server
+from pathlib import Path
 
 from bot_state import BotStateFactory
 from chat_handler import ChatHandler
