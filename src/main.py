@@ -54,10 +54,8 @@ def run_server_mode(bot: Bot, host: str, port: int, cert_path: str, key_path: st
         update = jsons.load(payload, cls=Update, key_transformer=transform_keywords)
         bot.handle_update(update)
 
-    conf = Config(app=app, host=host, port=port, debug=True)
+    conf = Config(app=app, host=host, port=port, debug=True, ssl_keyfile=key_path, ssl_certfile=cert_path)
 
-    conf.ssl_keyfile = Path(key_path)
-    conf.ssl_certfile = Path(cert_path)
     server = Server(conf)
     server.run()
 
