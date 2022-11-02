@@ -8,7 +8,6 @@ import typer
 from fastapi import FastAPI, Request
 from psycopg_pool import ConnectionPool
 from uvicorn import Config, Server
-from pathlib import Path
 
 from bot_state import BotStateFactory
 from chat_handler import ChatHandler
@@ -93,7 +92,7 @@ def main(
         state_factory = BotStateFactory(client, storage)
         bot = Bot(client, state_factory, storage)
         if server:
-            client.set_webhook(f"{url}/handleUpdate", Path(cert_path))
+            client.set_webhook(f"{url}/handleUpdate", cert_path)
             run_server_mode(bot, host, port, cert_path, key_path)
         else:
             client.delete_webhook()

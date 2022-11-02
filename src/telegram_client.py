@@ -188,12 +188,14 @@ class LiveTelegramClient(TelegramClient):
         )
         return response.result
 
-    def set_webhook(self, url: str, cert: Path) -> None:
-        response = requests.post(
-            f"https://api.telegram.org/bot{self._token}/setWebhook?url={url}",
-            files={'certificate': cert}
-        )
-        assert response.status_code == 200
+    def set_webhook(self, url: str, cert_path: str) -> None:
+        cert = Path(cert_path)
+        with open(cert) as cert:
+            files = {'certificate': cert}
+            resp = requests.post(f"https://api.telegram.org/bot{self._token}/setWebhook?url={url}", files=files)
+            print(f"setWebhook: {resp.status_code}")
+
+        assert resp.status_code == 200
 
     def delete_webhook(self):
         response = requests.post(
