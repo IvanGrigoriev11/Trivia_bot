@@ -92,7 +92,7 @@ def main(
         state_factory = BotStateFactory(client, storage)
         bot = Bot(client, state_factory, storage)
         if server:
-            client.set_webhook(f"{url}/handleUpdate", cert_path)
+            client.set_webhook(url, cert_path)
             run_server_mode(bot, host, port, cert_path, key_path)
         else:
             client.delete_webhook()
