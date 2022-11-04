@@ -8,7 +8,6 @@ import typer
 from fastapi import FastAPI, Request
 from psycopg_pool import ConnectionPool
 from uvicorn import Config, Server
-from pathlib import Path
 
 from bot_state import BotStateFactory
 from chat_handler import ChatHandler
@@ -54,7 +53,14 @@ def run_server_mode(bot: Bot, host: str, port: int, cert_path: str, key_path: st
         update = jsons.load(payload, cls=Update, key_transformer=transform_keywords)
         bot.handle_update(update)
 
-    conf = Config(app=app, host=host, port=port, debug=True, ssl_keyfile=key_path, ssl_certfile=cert_path)
+    conf = Config(
+        app=app,
+        host=host,
+        port=port,
+        debug=True,
+        ssl_keyfile=key_path,
+        ssl_certfile=cert_path,
+    )
 
     server = Server(conf)
     server.run()
@@ -79,7 +85,7 @@ def main(
     host: str = typer.Option("localhost", help="server host"),
     port: int = typer.Option(8000, help="server port"),
     cert_path: str = typer.Option(" ", help="the certificate path"),
-    key_path: str = typer.Option(" ", help="the key path")
+    key_path: str = typer.Option(" ", help="the key path"),
 ):
     user = os.environ["POSTGRES_DB_USER"]
     password = os.environ["POSTGRES_DB_PASSWD"]

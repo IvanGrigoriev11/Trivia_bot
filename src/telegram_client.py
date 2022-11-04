@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from typing import List, Optional
 from pathlib import Path
+from typing import List, Optional
 
 import jsons
 import requests
@@ -191,14 +191,11 @@ class LiveTelegramClient(TelegramClient):
     def set_webhook(self, url: str, cert_path: str) -> None:
         cert = Path(cert_path)
         with open(cert) as cert:
-            files = {'certificate': cert}
-            resp = requests.post(f"https://api.telegram.org/bot{self._token}/setWebhook?url={url}", files=files)
-            print(f"setWebhook: {resp.status_code}")
-
-        infoResp = requests.get(f"https://api.telegram.org/bot{self._token}/getwebhookinfo")
-        print(f"getwebhookinfo: {infoResp.status_code}")
-        info = infoResp.json()
-        print(info)
+            files = {"certificate": cert}
+            resp = requests.post(
+                f"https://api.telegram.org/bot{self._token}/setWebhook?url={url}",
+                files=files,
+            )
         assert resp.status_code == 200
 
     def delete_webhook(self):
