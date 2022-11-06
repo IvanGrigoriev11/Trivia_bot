@@ -9,7 +9,6 @@ def parse_answer(s: str) -> Optional[int]:
 
     if len(s) != 1:
         return None
-
     try:
         return string.ascii_lowercase.index(s.lower())
     except ValueError:

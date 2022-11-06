@@ -190,7 +190,7 @@ class LiveTelegramClient(TelegramClient):
 
     def set_webhook(self, url: str, cert_path: str) -> None:
         cert = Path(cert_path)
-        with open(cert) as cert:
+        with open(cert, encoding="utf-8") as cert:
             files = {"certificate": cert}
             resp = requests.post(
                 f"https://api.telegram.org/bot{self._token}/setWebhook?url={url}",
