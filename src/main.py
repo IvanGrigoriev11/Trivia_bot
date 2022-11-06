@@ -136,9 +136,9 @@ def run_bot(bot: Bot):
     """Сontrols in which mode the bot is launched."""
 
     if bot.server_config.server:
-        if (bot.server_config.cert_path is None) or (
-            bot.server_config.key_path is None
-        ):
+        if (
+            bot.server_config.cert_path is None or bot.server_config.key_path is None
+        ) and (bot.server_config.port == 443):
             raise Exception(
                 "Blank information about certificate or key location."
                 "Please, enter the required information."

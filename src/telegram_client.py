@@ -190,17 +190,12 @@ class LiveTelegramClient(TelegramClient):
 
     def set_webhook(self, url: str, cert_path: str) -> None:
         cert = Path(cert_path)
-        with open(cert) as cert:
+        with open(cert, encoding="utf-8") as cert:
             files = {"certificate": cert}
             resp = requests.post(
                 f"https://api.telegram.org/bot{self._token}/setWebhook?url={url}",
                 files=files,
             )
-
-        infoResp = requests.get(f"https://api.telegram.org/bot{self._token}/getwebhookinfo")
-        print(f"getwebhookinfo: {infoResp.status_code}")
-        info = infoResp.json()
-        print(info)
         assert resp.status_code == 200
 
     def delete_webhook(self):
