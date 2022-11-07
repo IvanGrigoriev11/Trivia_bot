@@ -25,8 +25,8 @@ class ServerConfig:
     url: str
     host: str
     port: int
-    cert_path: Optional[str] = None
-    key_path: Optional[str] = None
+    cert_path: Optional[str]
+    key_path: Optional[str]
 
 
 @dataclass
@@ -36,7 +36,7 @@ class Bot:
     client: LiveTelegramClient
     state_factory: BotStateFactory
     storage: Storage
-    server_config: Optional[ServerConfig] = None
+    server_config: Optional[ServerConfig]
 
     def handle_update(self, update: Update):
         chat_id = update.chat_id
@@ -165,7 +165,7 @@ def conf_client(
 @run.command()
 def conf_server(
     url: str = typer.Argument(..., help="the URL param of the server"),
-    host: str = typer.Argument("localhost", help="server host"),
+    host: str = typer.Argument(..., help="server host"),
     port: int = typer.Argument(..., help="server port"),
     cert_path: Optional[str] = typer.Option(None, help="the certificate path"),
     key_path: Optional[str] = typer.Option(None, help="the key path"),
