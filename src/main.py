@@ -17,12 +17,11 @@ from storage import InMemoryStorage, PostgresStorage, Question, Storage
 from telegram_client import LiveTelegramClient, Update
 from utils import transform_keywords
 
+run = typer.Typer()
+
 
 @dataclass
 class ServerConfig:
-    """All the necessary settings to start the server."""
-
-    server: bool
     url: str
     host: str
     port: int
@@ -37,7 +36,7 @@ class Bot:
     client: LiveTelegramClient
     state_factory: BotStateFactory
     storage: Storage
-    server_config: ServerConfig
+    server_config: Optional[ServerConfig] = None
 
     def handle_update(self, update: Update):
         chat_id = update.chat_id
@@ -92,10 +91,29 @@ def run_client_mode(bot: Bot):
             bot.handle_update(update)
 
 
-def config_storage(
-    client: LiveTelegramClient, inmemory: bool, server_conf: ServerConfig
-):
+def run_bot(bot: Bot):
+    """Сontrols in which mode the bot is launched."""
+
+    if bot.server_config:
+        if (
+            bot.server_config.cert_path is None or bot.server_config.key_path is None
+        ) and (bot.server_config.port == 443):
+            raise Exception(
+                "Blank information about certificate or key location."
+                "Please, enter the required information."
+            )
+        bot.client.set_webhook(bot.server_config.url, bot.server_config.cert_path)
+        run_server_mode(bot)
+    else:
+        bot.client.delete_webhook()
+        run_client_mode(bot)
+
+
+def config_storage(inmemory: bool, server_conf: Optional[ServerConfig] = None):
     """Assembles the necessary parameters for storage configuration."""
+
+    token = os.environ["TELEGRAM_BOT_TOKEN"]
+    client = LiveTelegramClient(token)
 
     if inmemory:
         game_storage = InMemoryStorage(
@@ -132,44 +150,34 @@ def config_storage(
             )
 
 
-def run_bot(bot: Bot):
-    """Сontrols in which mode the bot is launched."""
+@run.command()
+def conf_client(
+    inmemory: bool = typer.Option(
+        False,
+        help="Turn on `InMemory` mode to debug without connection to the database.",
+    )
+):
+    """Configures parameters for client mode."""
 
-    if bot.server_config.server:
-        if (
-            bot.server_config.cert_path is None or bot.server_config.key_path is None
-        ) and (bot.server_config.port == 443):
-            raise Exception(
-                "Blank information about certificate or key location."
-                "Please, enter the required information."
-            )
-        bot.client.set_webhook(bot.server_config.url, bot.server_config.cert_path)
-        run_server_mode(bot)
-    else:
-        bot.client.delete_webhook()
-        run_client_mode(bot)
+    config_storage(inmemory)
 
 
-def main(
-    server: bool = typer.Option(
-        False, help="Turn on the bot's `server mode`. Otherwise `client mode` is used."
-    ),
-    url: str = typer.Option(" ", help="the URL param of the server"),
+@run.command()
+def conf_server(
+    url: str = typer.Argument(..., help="the URL param of the server"),
+    host: str = typer.Argument("localhost", help="server host"),
+    port: int = typer.Argument(..., help="server port"),
+    cert_path: Optional[str] = typer.Option(None, help="the certificate path"),
+    key_path: Optional[str] = typer.Option(None, help="the key path"),
     inmemory: bool = typer.Option(
         False,
         help="Turn on `InMemory` mode to debug without connection to the database.",
     ),
-    host: str = typer.Option("localhost", help="server host"),
-    port: int = typer.Option(8000, help="server port"),
-    cert_path: str = typer.Option(None, help="the certificate path"),
-    key_path: str = typer.Option(None, help="the key path"),
 ):  # pylint: disable=too-many-arguments
-    token = os.environ["TELEGRAM_BOT_TOKEN"]
-    client = LiveTelegramClient(token)
-    config_storage(
-        client, inmemory, ServerConfig(server, url, host, port, cert_path, key_path)
-    )
+    """Configures parameters for server mode."""
+
+    config_storage(inmemory, ServerConfig(url, host, port, cert_path, key_path))
 
 
 if __name__ == "__main__":
-    typer.run(main)
+    run()
