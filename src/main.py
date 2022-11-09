@@ -55,12 +55,6 @@ class Bot:
         )
 
 
-def check_config(sc: ServerConfig) -> bool:
-    if sc.port is None or sc.url is None or sc.host is None:
-        return False
-    return True
-
-
 def run_server_mode(bot: Bot):
     """Launch bot in a server mode."""
 
@@ -72,20 +66,17 @@ def run_server_mode(bot: Bot):
         update = jsons.load(payload, cls=Update, key_transformer=transform_keywords)
         bot.handle_update(update)
 
-    if check_config(bot.server_config):
-        cf = bot.server_config
-        conf = Config(
-            app=app,
-            host=cf.host,
-            port=cf.port,
-            debug=True,
-            ssl_keyfile=cf.key_path,
-            ssl_certfile=cf.cert_path,
-        )
-        server = Server(conf)
-        server.run()
-    else:
-        raise AttributeError("Invalid values for server params")
+    cf = bot.server_config
+    conf = Config(
+        app=app,
+        host=cf.host,
+        port=cf.port,
+        debug=True,
+        ssl_keyfile=cf.key_path,
+        ssl_certfile=cf.cert_path,
+    )
+    server = Server(conf)
+    server.run()
 
 
 def run_client_mode(bot: Bot):
