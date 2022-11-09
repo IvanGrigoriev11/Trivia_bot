@@ -67,18 +67,14 @@ def run_server_mode(bot: Bot):
         bot.handle_update(update)
 
     cf = bot.server_config
-    if cf.port is not None:
-        conf = Config(
-            app=app,
-            host=cf.host,
-            port=cf.port,
-            debug=True,
-            ssl_keyfile=cf.key_path,
-            ssl_certfile=cf.cert_path,
-        )
-    else:
-        raise Exception
-
+    conf = Config(
+        app=app,
+        host=cf.host,
+        port=cf.port,
+        debug=True,
+        ssl_keyfile=cf.key_path,
+        ssl_certfile=cf.cert_path,
+    )
     server = Server(conf)
     server.run()
 
