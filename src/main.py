@@ -55,6 +55,13 @@ class Bot:
         )
 
 
+def check_config(sc: ServerConfig) -> bool:
+    if sc.port is None or sc.url is None or sc.host is None:
+        return False
+    else:
+        return True
+
+
 def run_server_mode(bot: Bot):
     """Launch bot in a server mode."""
 
@@ -66,21 +73,20 @@ def run_server_mode(bot: Bot):
         update = jsons.load(payload, cls=Update, key_transformer=transform_keywords)
         bot.handle_update(update)
 
-    cf = bot.server_config
-    conf = Config(
-        app=app,
-        host=cf.host,
-        port=cf.port,
-        debug=True,
-        ssl_keyfile=cf.key_path,
-        ssl_certfile=cf.cert_path,
-    )
-
-    server = Server(conf)
-    server.run()
-
-    assert cf.host is not None
-    assert cf.port is not None
+    if check_config(bot.server_config):
+        cf = bot.server_config
+        conf = Config(
+            app=app,
+            host=cf.host,
+            port=cf.port,
+            debug=True,
+            ssl_keyfile=cf.key_path,
+            ssl_certfile=cf.cert_path,
+        )
+        server = Server(conf)
+        server.run()
+    else:
+        raise AttributeError("Invalid values for server params")
 
 
 def run_client_mode(bot: Bot):
@@ -99,7 +105,7 @@ def run_bot(bot: Bot):
 
     if bot.server_config:
         if (
-            bot.server_config.cert_path is None or bot.server_config.key_path is None
+                bot.server_config.cert_path is None or bot.server_config.key_path is None
         ) and (bot.server_config.port == 443):
             raise Exception(
                 "Blank information about certificate or key location."
@@ -155,10 +161,10 @@ def config_storage(inmemory: bool, server_conf: Optional[ServerConfig] = None):
 
 @run.command()
 def conf_client(
-    inmemory: bool = typer.Option(
-        False,
-        help="Turn on `InMemory` mode to debug without connection to the database.",
-    )
+        inmemory: bool = typer.Option(
+            False,
+            help="Turn on `InMemory` mode to debug without connection to the database.",
+        )
 ):
     """Configures parameters for client mode."""
 
@@ -167,15 +173,15 @@ def conf_client(
 
 @run.command()
 def conf_server(
-    url: str = typer.Argument(..., help="the URL param of the server"),
-    host: str = typer.Argument(..., help="server host"),
-    port: int = typer.Argument(..., help="server port"),
-    cert_path: Optional[str] = typer.Option(None, help="the certificate path"),
-    key_path: Optional[str] = typer.Option(None, help="the key path"),
-    inmemory: bool = typer.Option(
-        False,
-        help="Turn on `InMemory` mode to debug without connection to the database.",
-    ),
+        url: str = typer.Argument(..., help="the URL param of the server"),
+        host: str = typer.Argument(..., help="server host"),
+        port: int = typer.Argument(..., help="server port"),
+        cert_path: Optional[str] = typer.Option(None, help="the certificate path"),
+        key_path: Optional[str] = typer.Option(None, help="the key path"),
+        inmemory: bool = typer.Option(
+            False,
+            help="Turn on `InMemory` mode to debug without connection to the database.",
+        ),
 ):  # pylint: disable=too-many-arguments
     """Configures parameters for server mode."""
 
