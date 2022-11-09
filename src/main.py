@@ -79,6 +79,9 @@ def run_server_mode(bot: Bot):
     server = Server(conf)
     server.run()
 
+    assert cf.host is not None
+    assert cf.port is not None
+
 
 def run_client_mode(bot: Bot):
     """Launch bot in a client mode."""
