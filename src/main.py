@@ -36,7 +36,6 @@ class Bot:
     client: LiveTelegramClient
     state_factory: BotStateFactory
     storage: Storage
-    server_config: Optional[ServerConfig]
 
     def handle_update(self, update: Update):
         chat_id = update.chat_id
@@ -54,47 +53,35 @@ class Bot:
             chat_id, json.dumps(chat_handler, cls=ChatHandlerEncoder)
         )
 
-    def run(self):
-        if self.server_config is None:
-            self.client.delete_webhook()
-            run_client_mode(self)
+    def run_client_mode(self):
+        self.client.delete_webhook()
+        offset = 0
+        while True:
+            for update in self.client.get_updates(offset):
+                offset = update.update_id + 1
+                self.handle_update(update)
+
+    def run_server_mode(self, conf: ServerConfig):
         self.client.set_webhook(self.server_config.url, self.server_config.cert_path)
-        run_server_mode(self)
 
+        app = FastAPI()
 
-def run_server_mode(bot: Bot):
-    """Launch bot in a server mode."""
+        @app.post("/handleUpdate")
+        def handle_update(request: Request):
+            payload = asyncio.run(request.json())
+            update = jsons.load(payload, cls=Update, key_transformer=transform_keywords)
+            self.handle_update(update)
 
-    app = FastAPI()
-
-    @app.post("/handleUpdate")
-    def handle_update(request: Request):
-        payload = asyncio.run(request.json())
-        update = jsons.load(payload, cls=Update, key_transformer=transform_keywords)
-        bot.handle_update(update)
-
-    cf = bot.server_config
-    conf = Config(
-        app=app,
-        host=cf.host,
-        port=cf.port,
-        debug=True,
-        ssl_keyfile=cf.key_path,
-        ssl_certfile=cf.cert_path,
-    )
-    server = Server(conf)
-    server.run()
-
-
-def run_client_mode(bot: Bot):
-    """Launch bot in a client mode."""
-
-    offset = 0
-    # chat_id -> handler
-    while True:
-        for update in bot.client.get_updates(offset):
-            offset = update.update_id + 1
-            bot.handle_update(update)
+        uvicorn_conf = Config(
+            app=app,
+            host=conf.host,
+            port=conf.port,
+            debug=True,
+            ssl_keyfile=conf.key_path,
+            ssl_certfile=conf.cert_path,
+        )
+        server = Server(uvicorn_conf)
+        server.run()
 
 
 def config_storage(inmemory: bool, server_conf: Optional[ServerConfig] = None):
@@ -102,6 +89,13 @@ def config_storage(inmemory: bool, server_conf: Optional[ServerConfig] = None):
 
     token = os.environ["TELEGRAM_BOT_TOKEN"]
     client = LiveTelegramClient(token)
+
+    def run_bot(storage: Storage):
+        bot = Bot(client, BotStateFactory(client, storage), storage)
+        if server_conf:
+            bot.run_server_mode(server_conf)
+        else:
+            bot.run_client_mode(server_conf)
 
     if inmemory:
         game_storage = InMemoryStorage(
@@ -115,9 +109,7 @@ def config_storage(inmemory: bool, server_conf: Optional[ServerConfig] = None):
                 ),
             ]
         )
-        Bot(
-            client, BotStateFactory(client, game_storage), game_storage, server_conf
-        ).run()
+        run_bot(game_storage)
     else:
         user = os.environ["POSTGRES_DB_USER"]
         password = os.environ["POSTGRES_DB_PASSWD"]
@@ -126,12 +118,7 @@ def config_storage(inmemory: bool, server_conf: Optional[ServerConfig] = None):
         conninfo = f"postgresql://{user}:{password}@{db_host}:{5432}/{db_name}"
         with ConnectionPool(conninfo) as pool:
             game_storage = PostgresStorage(pool)
-            Bot(
-                client,
-                BotStateFactory(client, game_storage),
-                PostgresStorage(pool),
-                server_conf,
-            ).run()
+            run_bot(game_storage)
 
 
 @run.command()
