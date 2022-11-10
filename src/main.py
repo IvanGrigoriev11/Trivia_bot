@@ -62,7 +62,7 @@ class Bot:
                 self.handle_update(update)
 
     def run_server_mode(self, conf: ServerConfig):
-        self.client.set_webhook(self.server_config.url, self.server_config.cert_path)
+        self.client.set_webhook(conf.url, conf.cert_path)
 
         app = FastAPI()
 
@@ -95,7 +95,7 @@ def config_storage(inmemory: bool, server_conf: Optional[ServerConfig] = None):
         if server_conf:
             bot.run_server_mode(server_conf)
         else:
-            bot.run_client_mode(server_conf)
+            bot.run_client_mode()
 
     if inmemory:
         game_storage = InMemoryStorage(
