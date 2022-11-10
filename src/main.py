@@ -54,13 +54,6 @@ class Bot:
             chat_id, json.dumps(chat_handler, cls=ChatHandlerEncoder)
         )
 
-    def run(self):
-        if self.server_config is None:
-            self.client.delete_webhook()
-            run_client_mode(self)
-        self.client.set_webhook(self.server_config.url, self.server_config.cert_path)
-        run_server_mode(self)
-
 
 def run_server_mode(bot: Bot):
     """Launch bot in a server mode."""
@@ -97,6 +90,24 @@ def run_client_mode(bot: Bot):
             bot.handle_update(update)
 
 
+def run_bot(bot: Bot):
+    """Сontrols in which mode the bot is launched."""
+
+    if bot.server_config:
+        if (
+            bot.server_config.cert_path is None or bot.server_config.key_path is None
+        ) and (bot.server_config.port == 443):
+            raise Exception(
+                "Blank information about certificate or key location."
+                "Please, enter the required information."
+            )
+        bot.client.set_webhook(bot.server_config.url, bot.server_config.cert_path)
+        run_server_mode(bot)
+    else:
+        bot.client.delete_webhook()
+        run_client_mode(bot)
+
+
 def config_storage(inmemory: bool, server_conf: Optional[ServerConfig] = None):
     """Assembles the necessary parameters for storage configuration."""
 
@@ -115,9 +126,11 @@ def config_storage(inmemory: bool, server_conf: Optional[ServerConfig] = None):
                 ),
             ]
         )
-        Bot(
-            client, BotStateFactory(client, game_storage), game_storage, server_conf
-        ).run()
+        run_bot(
+            Bot(
+                client, BotStateFactory(client, game_storage), game_storage, server_conf
+            )
+        )
     else:
         user = os.environ["POSTGRES_DB_USER"]
         password = os.environ["POSTGRES_DB_PASSWD"]
@@ -126,12 +139,14 @@ def config_storage(inmemory: bool, server_conf: Optional[ServerConfig] = None):
         conninfo = f"postgresql://{user}:{password}@{db_host}:{5432}/{db_name}"
         with ConnectionPool(conninfo) as pool:
             game_storage = PostgresStorage(pool)
-            Bot(
-                client,
-                BotStateFactory(client, game_storage),
-                PostgresStorage(pool),
-                server_conf,
-            ).run()
+            run_bot(
+                Bot(
+                    client,
+                    BotStateFactory(client, game_storage),
+                    PostgresStorage(pool),
+                    server_conf,
+                )
+            )
 
 
 @run.command()
