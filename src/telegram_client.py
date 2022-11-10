@@ -189,6 +189,8 @@ class LiveTelegramClient(TelegramClient):
         return response.result
 
     def set_webhook(self, url: str, cert_path: Optional[str] = None) -> None:
+        if cert_path is None:
+            raise TypeError("Cert path does not exist.")
         cert = Path(cert_path)
         with open(cert, encoding="utf-8") as cert:
             files = {"certificate": cert}
