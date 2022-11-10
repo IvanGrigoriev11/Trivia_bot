@@ -36,6 +36,7 @@ class Bot:
     client: LiveTelegramClient
     state_factory: BotStateFactory
     storage: Storage
+    server_config: ServerConfig
 
     def handle_update(self, update: Update):
         chat_id = update.chat_id
@@ -62,7 +63,7 @@ class Bot:
                 self.handle_update(update)
 
     def run_server_mode(self, conf: ServerConfig):
-        self.client.set_webhook(conf.url, conf.cert_path)
+        self.client.set_webhook(self.server_config.url, self.server_config.cert_path)
 
         app = FastAPI()
 
@@ -91,7 +92,7 @@ def config_storage(inmemory: bool, server_conf: Optional[ServerConfig] = None):
     client = LiveTelegramClient(token)
 
     def run_bot(storage: Storage):
-        bot = Bot(client, BotStateFactory(client, storage), storage)
+        bot = Bot(client, BotStateFactory(client, storage), storage, server_conf)
         if server_conf:
             bot.run_server_mode(server_conf)
         else:
