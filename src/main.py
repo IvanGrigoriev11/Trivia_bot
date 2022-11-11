@@ -17,11 +17,11 @@ from storage import InMemoryStorage, PostgresStorage, Question, Storage
 from telegram_client import LiveTelegramClient, Update
 from utils import transform_keywords
 
-run = typer.Typer()
-
 
 @dataclass
 class ServerConfig:
+    """Necessary parameters to configure the server."""
+
     url: str
     host: str
     port: int
@@ -33,7 +33,7 @@ class ServerConfig:
 class Bot:
     """The bot itself. It handles updates and manages TriviaGame."""
 
-    client: LiveTelegramClient
+    telegram_client: LiveTelegramClient
     state_factory: BotStateFactory
     storage: Storage
 
@@ -45,24 +45,24 @@ class Bot:
                 self.state_factory.make_greeting_state(), chat_id
             )
         else:
-            chat_handler = ChatHandlerDecoder(self.client, self.state_factory).decode(
-                json.loads(chat_handler_snapshot)
-            )
+            chat_handler = ChatHandlerDecoder(
+                self.telegram_client, self.state_factory
+            ).decode(json.loads(chat_handler_snapshot))
         chat_handler.process(update)
         self.storage.set_chat_handler(
             chat_id, json.dumps(chat_handler, cls=ChatHandlerEncoder)
         )
 
     def run_client_mode(self):
-        self.client.delete_webhook()
+        self.telegram_client.delete_webhook()
         offset = 0
         while True:
-            for update in self.client.get_updates(offset):
+            for update in self.telegram_client.get_updates(offset):
                 offset = update.update_id + 1
                 self.handle_update(update)
 
     def run_server_mode(self, conf: ServerConfig):
-        self.client.set_webhook(conf.url, conf.cert_path)
+        self.telegram_client.set_webhook(conf.url, conf.cert_path)
 
         app = FastAPI()
 
@@ -80,18 +80,19 @@ class Bot:
             ssl_keyfile=conf.key_path,
             ssl_certfile=conf.cert_path,
         )
-        server = Server(uvicorn_conf)
-        server.run()
+        Server(uvicorn_conf).run()
 
 
 def config_storage(inmemory: bool, server_conf: Optional[ServerConfig] = None):
-    """Assembles the necessary parameters for storage configuration."""
+    """Launches of a specific mode depends on the assembled storage configuration.
+    The storage configuration build process, in turn,
+    depends on the presence of a server configuration parameter."""
 
     token = os.environ["TELEGRAM_BOT_TOKEN"]
-    client = LiveTelegramClient(token)
+    telegram_client = LiveTelegramClient(token)
 
     def run_bot(storage: Storage):
-        bot = Bot(client, BotStateFactory(client, storage), storage)
+        bot = Bot(telegram_client, BotStateFactory(telegram_client, storage), storage)
         if server_conf:
             bot.run_server_mode(server_conf)
         else:
@@ -121,8 +122,11 @@ def config_storage(inmemory: bool, server_conf: Optional[ServerConfig] = None):
             run_bot(game_storage)
 
 
+run = typer.Typer()
+
+
 @run.command()
-def conf_client(
+def client(
     inmemory: bool = typer.Option(
         False,
         help="Turn on `InMemory` mode to debug without connection to the database.",
@@ -134,7 +138,7 @@ def conf_client(
 
 
 @run.command()
-def conf_server(
+def server(
     url: str = typer.Argument(..., help="the URL param of the server"),
     host: str = typer.Argument(..., help="server host"),
     port: int = typer.Argument(..., help="server port"),
