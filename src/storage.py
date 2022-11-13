@@ -166,7 +166,10 @@ class InMemoryStorage(Storage):
         return self._questions[:question_count]
 
     def get_chat_handler(self, chat_id: int) -> Optional[str]:
-        return self._chat_handlers[chat_id]
+        try:
+            return self._chat_handlers[chat_id]
+        except KeyError:
+            return None
 
     def set_chat_handler(self, chat_id: int, chat_handler: str):
         self._chat_handlers[chat_id] = chat_handler
