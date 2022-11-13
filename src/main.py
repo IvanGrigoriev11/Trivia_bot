@@ -25,8 +25,8 @@ class ServerConfig:
     url: str
     host: str
     port: int
-    cert_path: Optional[str]
-    key_path: Optional[str]
+    cert_path: Optional[str] = None
+    key_path: Optional[str] = None
 
 
 @dataclass
@@ -83,7 +83,7 @@ class Bot:
         Server(uvicorn_conf).run()
 
 
-def config_storage(inmemory: bool, server_conf: Optional[ServerConfig] = None):
+def launch_bot(inmemory: bool, server_conf: Optional[ServerConfig] = None):
     """Launches of a specific mode depends on the assembled storage configuration.
     The storage configuration build process, in turn,
     depends on the presence of a server configuration parameter."""
@@ -134,7 +134,7 @@ def client(
 ):
     """Configures parameters for client mode."""
 
-    config_storage(inmemory)
+    launch_bot(inmemory)
 
 
 @run.command()
@@ -151,7 +151,7 @@ def server(
 ):  # pylint: disable=too-many-arguments
     """Configures parameters for server mode."""
 
-    config_storage(inmemory, ServerConfig(url, host, port, cert_path, key_path))
+    launch_bot(inmemory, ServerConfig(url, host, port, cert_path, key_path))
 
 
 if __name__ == "__main__":
