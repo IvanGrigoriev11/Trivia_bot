@@ -6,7 +6,7 @@ from typing import Optional
 
 import jsons
 import typer
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, HTTPException, Request
 from psycopg_pool import ConnectionPool
 from uvicorn import Config, Server
 
@@ -68,9 +68,14 @@ class Bot:
 
         @app.post("/handleUpdate")
         def handle_update(request: Request):
-            payload = asyncio.run(request.json())
-            update = jsons.load(payload, cls=Update, key_transformer=transform_keywords)
-            self.handle_update(update)
+            if request:
+                payload = asyncio.run(request.json())
+                update = jsons.load(
+                    payload, cls=Update, key_transformer=transform_keywords
+                )
+                self.handle_update(update)
+            else:
+                raise HTTPException(status_code=404, detail="Request does not exist")
 
         uvicorn_conf = Config(
             app=app,

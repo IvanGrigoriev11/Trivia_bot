@@ -10,6 +10,22 @@ from utils import transform_keywords
 
 
 @dataclass
+class TelegramException(BaseException):
+    status_code: int
+
+    def code(self):
+        if 100 <= self.status_code < 199:
+            return f"{self.status_code}. Informational response."
+        if 300 <= self.status_code < 399:
+            return f"{self.status_code}. Redirection."
+        if 400 <= self.status_code < 500:
+            return f"{self.status_code}. Client error."
+        if self.status_code > 500:
+            return f"{self.status_code}. Server error. The telegram is not available to the chat"
+        return f"Code {self.status_code}."
+
+
+@dataclass
 class Chat:
     """A class used to represent a Telegram Chat.
 
@@ -89,7 +105,9 @@ class Update:
 class GetUpdatesResponse:
     """Http response from Telegram for receiving updates."""
 
+    ok: bool
     result: List[Update]
+    error_code: Optional[int] = None
 
 
 @dataclass
@@ -186,7 +204,9 @@ class LiveTelegramClient(TelegramClient):
         response = jsons.loads(
             data, cls=GetUpdatesResponse, key_transformer=transform_keywords
         )
-        return response.result
+        if response.ok:
+            return response.result
+        raise TelegramException(response.error_code)
 
     def set_webhook(self, url: str, cert_path: Optional[str] = None) -> None:
         if cert_path is None:
@@ -201,20 +221,23 @@ class LiveTelegramClient(TelegramClient):
                     f"https://api.telegram.org/bot{self._token}/setWebhook?url={url}",
                     files=files,
                 )
-        assert resp.status_code == 200
+        if resp.status_code != 200:
+            raise TelegramException(resp.status_code).code()
 
     def delete_webhook(self):
         response = requests.post(
             f"https://api.telegram.org/bot{self._token}/deleteWebhook"
         )
-        assert response.status_code == 200
+        if response.status_code != 200:
+            raise TelegramException(response.status_code)
 
     def send_message(self, payload: SendMessagePayload) -> int:
         data = jsons.dump(payload, strip_nulls=True)
         r = requests.post(
             f"https://api.telegram.org/bot{self._token}/sendMessage", json=data
         )
-        assert r.status_code == 200, f"Expected status code 200 but got {r.status_code}"
+        if r.status_code != 200:
+            raise TelegramException(r.status_code)
         message_id = jsons.loads(r.text, cls=SendMessageResponse).result.message_id
         return message_id
 
@@ -223,4 +246,5 @@ class LiveTelegramClient(TelegramClient):
         r = requests.post(
             f"https://api.telegram.org/bot{self._token}/editMessageText", json=data
         )
-        assert r.status_code == 200, f"Expected status code 200 but got {r.status_code}"
+        if r.status_code != 200:
+            raise TelegramException(r.status_code)
