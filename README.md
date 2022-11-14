@@ -97,14 +97,14 @@ The bot relies on environment to get DB credentials. Launching the database and 
 ### Prerequisites
 1. Before you launch `bot` on AWS, see the section `Creating a docker image` above.
 1. Use the existing resources below by following the links:
-   1. [Ubuntu VM](https://eu-central-1.console.aws.amazon.com/ec2/home?region=eu-central-1#InstanceDetails:instanceId=i-0e19f4912725d17f4)
+   1. [Ubuntu VM](https://us-east-2.console.aws.amazon.com/ec2/home?region=us-east-2#InstanceDetails:instanceId=i-0b7afdd7009dad6bc)
    1. [RDS instance](https://eu-central-1.console.aws.amazon.com/rds/home?region=eu-central-1#database:id=triviabotdb;is-cluster=false)
    1. [ECR](https://eu-central-1.console.aws.amazon.com/ecr/repositories?region=eu-central-1)
 1. If the database is empty, populate your json file with questions to AWS database by `python populate_db.py populate` from <repo_root>/src/scripts.
 1. If you build the docker `bot` image with the latest updates, push it to AWS repository following [this tutorial](https://docs.aws.amazon.com/AmazonECR/latest/userguide/docker-push-ecr-image.html).
    1. `aws ecr get-login-password --region eu-central-1 | docker login --username AWS --password-stdin 158048943261.dkr.ecr.eu-central-1.amazonaws.com`.
    1. `docker images`
-   1. `docker tag c6acad0a810d 158048943261.dkr.ecr.eu-central-1.amazonaws.com/trivia_bot:latest`
+   1. `docker tag <image_id> 158048943261.dkr.ecr.eu-central-1.amazonaws.com/trivia_bot:latest`
    1. `docker push 158048943261.dkr.ecr.eu-central-1.amazonaws.com/trivia_bot:latest`
 1. Run your VM. Connect to your VM using SSH and:
    1. If any of the resources below do not exist, follow the links and install it once: 
@@ -114,4 +114,5 @@ The bot relies on environment to get DB credentials. Launching the database and 
    1. Authenticate with AWS ECR by `aws ecr get-login-password --region eu-central-1 | docker login --username AWS --password-stdin 158048943261.dkr.ecr.eu-central-1.amazonaws.com`.
    1. Pull your docker image using `docker pull 158048943261.dkr.ecr.eu-central-1.amazonaws.com/trivia_bot:latest`.
 1. Configure environment variables in your VM. 
-1. `docker run -p 5432:5432 -e POSTGRES_DB_USER=$POSTGRES_DB_USER -e POSTGRES_DB_PASSWD=$POSTGRES_DB_PASSWD -e POSTGRES_DB_HOST=$POSTGRES_DB_HOST -e POSTGRES_DB_NAME=$POSTGRES_DB_NAME -e TELEGRAM_BOT_TOKEN=$TELEGRAM_BOT_TOKEN --name triviabot 158048943261.dkr.ecr.eu-central-1.amazonaws.com/trivia_bot:latest`.
+1. To run `bot` in `server mode`: `docker run -p 443:443 -e TELEGRAM_BOT_TOKEN=$TELEGRAM_BOT_TOKEN -e POSTGRES_DB_USER=$POSTGRES_DB_USER -e POSTGRES_DB_PASSWD=$POSTGRES_DB_PASSWD -e POSTGRES_DB_HOST=$POSTGRES_DB_HOST -e POSTGRES_DB_NAME=$POSTGRES_DB_NAME -v /home/ubuntu/keys/:/home/ubuntu/keys --name triviabot 158048943261.dkr.ecr.eu-central-1.amazonaws.com/trivia_bot:latest "python" "main.py" "server" "https://ec2-3-19-61-96.us-east-2.compute.amazonaws.com/handleUpdate" "0.0.0.0" "443" "--cert-path" "/home/ubuntu/keys/cert.pem" "--key-path" "/home/ubuntu/keys/key.key"`
+1. To run `bot` in `client mode`: `docker run -p 5432:5432 -e TELEGRAM_BOT_TOKEN=$TELEGRAM_BOT_TOKEN -e POSTGRES_DB_USER=$POSTGRES_DB_USER -e POSTGRES_DB_PASSWD=$POSTGRES_DB_PASSWD -e POSTGRES_DB_HOST=$POSTGRES_DB_HOST -e POSTGRES_DB_NAME=$POSTGRES_DB_NAME -v /home/ubuntu/keys/:/home/ubuntu/keys --name triviabot 158048943261.dkr.ecr.eu-central-1.amazonaws.com/trivia_bot:latest "python" "main.py" "client"`
