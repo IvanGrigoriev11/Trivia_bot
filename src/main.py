@@ -6,7 +6,7 @@ from typing import Optional
 
 import jsons
 import typer
-from fastapi import FastAPI, HTTPException, Request
+from fastapi import FastAPI, HTTPException, Request, status
 from psycopg_pool import ConnectionPool
 from uvicorn import Config, Server
 
@@ -75,7 +75,10 @@ class Bot:
                 )
                 self.handle_update(update)
             else:
-                raise HTTPException(status_code=404, detail="Request does not exist")
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail="Request does not exist",
+                )
 
         uvicorn_conf = Config(
             app=app,

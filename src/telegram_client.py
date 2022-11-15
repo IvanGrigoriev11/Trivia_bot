@@ -10,19 +10,10 @@ from utils import transform_keywords
 
 
 @dataclass
-class TelegramException(BaseException):
-    status_code: int
+class TelegramException(Exception):
+    """Request Exceptions"""
 
-    def code(self):
-        if 100 <= self.status_code < 199:
-            return f"{self.status_code}. Informational response."
-        if 300 <= self.status_code < 399:
-            return f"{self.status_code}. Redirection."
-        if 400 <= self.status_code < 500:
-            return f"{self.status_code}. Client error."
-        if self.status_code > 500:
-            return f"{self.status_code}. Server error. The telegram is not available to the chat"
-        return f"Code {self.status_code}."
+    msg: str
 
 
 @dataclass
@@ -105,9 +96,7 @@ class Update:
 class GetUpdatesResponse:
     """Http response from Telegram for receiving updates."""
 
-    ok: bool
     result: List[Update]
-    error_code: Optional[int] = None
 
 
 @dataclass
@@ -198,53 +187,89 @@ class LiveTelegramClient(TelegramClient):
         self._token = token
 
     def get_updates(self, offset: int = 0) -> List[Update]:
-        data = requests.get(
-            f"https://api.telegram.org/bot{self._token}/getUpdates?offset={offset}"
-        ).text
-        response = jsons.loads(
-            data, cls=GetUpdatesResponse, key_transformer=transform_keywords
-        )
-        if response.ok:
+        try:
+            data = requests.get(
+                f"https://api.telegram.org/bot{self._token}/getUpdates?offset={offset}"
+            )
+            self.raise_telegram_exception(
+                data.status_code, jsons.loads(data.text), data.url
+            )
+            response = jsons.loads(
+                data.text, cls=GetUpdatesResponse, key_transformer=transform_keywords
+            )
             return response.result
-        raise TelegramException(response.error_code)
+        except TelegramException:
+            raise
 
     def set_webhook(self, url: str, cert_path: Optional[str] = None) -> None:
-        if cert_path is None:
-            resp = requests.post(
-                f"https://api.telegram.org/bot{self._token}/setWebhook?url={url}",
-            )
-        else:
-            cert = Path(cert_path)
-            with open(cert, encoding="utf-8") as cert:
-                files = {"certificate": cert}
+        try:
+            if cert_path is None:
                 resp = requests.post(
                     f"https://api.telegram.org/bot{self._token}/setWebhook?url={url}",
-                    files=files,
                 )
-        if resp.status_code != 200:
-            raise TelegramException(resp.status_code).code()
+            else:
+                cert = Path(cert_path)
+                with open(cert, encoding="utf-8") as cert:
+                    files = {"certificate": cert}
+                    resp = requests.post(
+                        f"https://api.telegram.org/bot{self._token}/setWebhook?url={url}",
+                        files=files,
+                    )
+            self.raise_telegram_exception(
+                resp.status_code, jsons.loads(resp.text), resp.url
+            )
+        except TelegramException:
+            raise
 
     def delete_webhook(self):
-        response = requests.post(
-            f"https://api.telegram.org/bot{self._token}/deleteWebhook"
-        )
-        if response.status_code != 200:
-            raise TelegramException(response.status_code)
+        try:
+            response = requests.post(
+                f"https://api.telegram.org/bot{self._token}/deleteWebhook"
+            )
+            self.raise_telegram_exception(
+                response.status_code, jsons.loads(response.text), response.url
+            )
+        except TelegramException:
+            raise
 
     def send_message(self, payload: SendMessagePayload) -> int:
-        data = jsons.dump(payload, strip_nulls=True)
-        r = requests.post(
-            f"https://api.telegram.org/bot{self._token}/sendMessage", json=data
-        )
-        if r.status_code != 200:
-            raise TelegramException(r.status_code)
-        message_id = jsons.loads(r.text, cls=SendMessageResponse).result.message_id
-        return message_id
+        try:
+            data = jsons.dump(payload, strip_nulls=True)
+            r = requests.post(
+                f"https://api.telegram.org/bot{self._token}/sendMessage", json=data
+            )
+            self.raise_telegram_exception(r.status_code, jsons.loads(r.text), r.url)
+            message_id = jsons.loads(r.text, cls=SendMessageResponse).result.message_id
+            return message_id
+        except TelegramException:
+            raise
 
     def edit_message_text(self, payload: MessageEdit) -> None:
-        data = jsons.dump(payload, strip_nulls=True)
-        r = requests.post(
-            f"https://api.telegram.org/bot{self._token}/editMessageText", json=data
-        )
-        if r.status_code != 200:
-            raise TelegramException(r.status_code)
+        try:
+            data = jsons.dump(payload, strip_nulls=True)
+            r = requests.post(
+                f"https://api.telegram.org/bot{self._token}/editMessageText", json=data
+            )
+            self.raise_telegram_exception(r.status_code, jsons.loads(r.text), r.url)
+        except TelegramException:
+            raise
+
+    @staticmethod
+    def raise_telegram_exception(status_code: int, desc, url: str):
+        http_error_msg = ""
+        if 400 <= status_code < 500:
+            http_error_msg = "%s Client Error: %s for url: %s" % (
+                status_code,
+                desc["description"],
+                url,
+            )
+        elif 500 <= status_code < 600:
+
+            http_error_msg = "%s Server Error: %s for url: %s" % (
+                status_code,
+                desc["description"],
+                url,
+            )
+
+        if http_error_msg:
+            raise TelegramException(http_error_msg)
