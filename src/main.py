@@ -6,16 +6,24 @@ from typing import Optional
 
 import jsons
 import typer
-from fastapi import FastAPI, HTTPException, Request, status
+import logging
+from fastapi import FastAPI, Request, HTTPException
+from fastapi.responses import JSONResponse
 from psycopg_pool import ConnectionPool
 from uvicorn import Config, Server
+from json.decoder import JSONDecodeError
 
 from bot_state import BotStateFactory
 from chat_handler import ChatHandler
 from custom_codecs import ChatHandlerDecoder, ChatHandlerEncoder
 from storage import InMemoryStorage, PostgresStorage, Question, Storage
-from telegram_client import LiveTelegramClient, Update
+from telegram_client import LiveTelegramClient, Update, TelegramException
 from utils import transform_keywords
+
+
+class UnicornException(Exception):
+    def __init__(self, name: str):
+        self.name = name
 
 
 @dataclass
@@ -57,28 +65,36 @@ class Bot:
         self.telegram_client.delete_webhook()
         offset = 0
         while True:
-            for update in self.telegram_client.get_updates(offset):
-                offset = update.update_id + 1
-                self.handle_update(update)
+            try:
+                for update in self.telegram_client.get_updates(offset):
+                    offset = update.update_id + 1
+                    self.handle_update(update)
+            except TelegramException as e:
+                logging.error(e)
 
     def run_server_mode(self, conf: ServerConfig):
         self.telegram_client.set_webhook(conf.url, conf.cert_path)
-
         app = FastAPI()
 
         @app.post("/handleUpdate")
         def handle_update(request: Request):
-            if request:
+            try:
                 payload = asyncio.run(request.json())
                 update = jsons.load(
                     payload, cls=Update, key_transformer=transform_keywords
                 )
+                print(update)
                 self.handle_update(update)
-            else:
-                raise HTTPException(
-                    status_code=status.HTTP_404_NOT_FOUND,
-                    detail="Request does not exist",
-                )
+            except JSONDecodeError:
+                raise TelegramException(500, "Internal server error")
+
+        @app.exception_handler(TelegramException)
+        async def unicorn_exception_handler(request: Request, exc: TelegramException):
+            logging.error(exc)
+            return JSONResponse(
+                status_code=exc.status_code,
+                content={"message": f"{exc.msg}"},
+            )
 
         uvicorn_conf = Config(
             app=app,
