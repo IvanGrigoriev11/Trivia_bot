@@ -83,7 +83,6 @@ class Bot:
                 update = jsons.load(
                     payload, cls=Update, key_transformer=transform_keywords
                 )
-                print(update)
                 self.handle_update(update)
             except JSONDecodeError:
                 raise TelegramException(500, "Internal server error")
