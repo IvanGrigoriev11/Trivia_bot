@@ -192,7 +192,7 @@ class LiveTelegramClient(TelegramClient):
             f"https://api.telegram.org/bot{self._token}/getUpdates?offset={offset}"
         )
         self.raise_telegram_exception(
-            400, jsons.loads(data.text), data.url
+            data.status_code, jsons.loads(data.text), data.url
         )
         response = jsons.loads(
             data.text, cls=GetUpdatesResponse, key_transformer=transform_keywords
@@ -212,17 +212,22 @@ class LiveTelegramClient(TelegramClient):
                     f"https://api.telegram.org/bot{self._token}/setWebhook?url={url}",
                     files=files,
                 )
+        if resp.status_code != 200:
+            raise TelegramException(resp.status_code, resp.reason)
 
     def delete_webhook(self):
         response = requests.post(
             f"https://api.telegram.org/bot{self._token}/deleteWebhook"
         )
+        if response.status_code != 200:
+            raise TelegramException(response.status_code, response.reason)
 
     def send_message(self, payload: SendMessagePayload) -> int:
         data = jsons.dump(payload, strip_nulls=True)
         r = requests.post(
             f"https://api.telegram.org/bot{self._token}/sendMessage", json=data
         )
+        self.raise_telegram_exception(r.status_code, jsons.loads(r.text), r.url)
         message_id = jsons.loads(r.text, cls=SendMessageResponse).result.message_id
         return message_id
 
@@ -231,22 +236,14 @@ class LiveTelegramClient(TelegramClient):
         r = requests.post(
             f"https://api.telegram.org/bot{self._token}/editMessageText", json=data
         )
+        self.raise_telegram_exception(r.status_code, jsons.loads(r.text), r.url)
 
     @staticmethod
     def raise_telegram_exception(status_code: int, desc, url: str):
         http_error_msg = ""
-        if 400 <= status_code < 500:
-            http_error_msg = "%s Client Error: %s for url: %s" % (
-                status_code,
-                "Error",
-                url,
-            )
-        elif 500 <= status_code < 600:
-
-            http_error_msg = "%s Server Error: %s for url: %s" % (
-                status_code,
-                desc["description"],
-                url,
+        if 400 <= status_code < 600:
+            http_error_msg = (
+                f"{status_code} Client Error: {desc['description']} for url: {url}"
             )
 
         if http_error_msg:

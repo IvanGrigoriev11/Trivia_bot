@@ -1,29 +1,24 @@
 import asyncio
 import json
+import logging
 import os
 from dataclasses import dataclass
+from json.decoder import JSONDecodeError
 from typing import Optional
 
 import jsons
 import typer
-import logging
-from fastapi import FastAPI, Request, HTTPException
+from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 from psycopg_pool import ConnectionPool
 from uvicorn import Config, Server
-from json.decoder import JSONDecodeError
 
 from bot_state import BotStateFactory
 from chat_handler import ChatHandler
 from custom_codecs import ChatHandlerDecoder, ChatHandlerEncoder
 from storage import InMemoryStorage, PostgresStorage, Question, Storage
-from telegram_client import LiveTelegramClient, Update, TelegramException
+from telegram_client import LiveTelegramClient, TelegramException, Update
 from utils import transform_keywords
-
-
-class UnicornException(Exception):
-    def __init__(self, name: str):
-        self.name = name
 
 
 @dataclass
@@ -85,14 +80,14 @@ class Bot:
                 )
                 self.handle_update(update)
             except JSONDecodeError:
-                raise TelegramException(500, "Internal server error")
+                raise TelegramException(500, "Internal server error") from None
 
         @app.exception_handler(TelegramException)
-        async def unicorn_exception_handler(request: Request, exc: TelegramException):
+        def telegram_exception_handler(request: Request, exc: TelegramException):
             logging.error(exc)
             return JSONResponse(
                 status_code=exc.status_code,
-                content={"message": f"{exc.msg}"},
+                content={"message": f"{exc.msg}", "url": f"{request.url}"},
             )
 
         uvicorn_conf = Config(
