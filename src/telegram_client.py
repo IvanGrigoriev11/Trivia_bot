@@ -5,15 +5,31 @@ from typing import List, Optional
 
 import jsons
 import requests
-
+from requests.exceptions import ConnectionError
 from utils import transform_keywords
 
 
 @dataclass
 class TelegramException(Exception):
-    """Request Exceptions"""
+    pass
+
+
+@dataclass
+class UnexpectedStatusCodeException(TelegramException):
 
     status_code: int
+    msg: str
+
+
+@dataclass
+class NetworkException(TelegramException):
+
+    msg: str
+
+
+@dataclass
+class UnknownErrorException(TelegramException):
+
     msg: str
 
 
@@ -188,63 +204,83 @@ class LiveTelegramClient(TelegramClient):
         self._token = token
 
     def get_updates(self, offset: int = 0) -> List[Update]:
-        data = requests.get(
-            f"https://api.telegram.org/bot{self._token}/getUpdates?offset={offset}"
-        )
-        self.raise_telegram_exception(
-            data.status_code, jsons.loads(data.text), data.url
-        )
-        response = jsons.loads(
-            data.text, cls=GetUpdatesResponse, key_transformer=transform_keywords
-        )
+        try:
+            data = requests.get(
+                f"https://api.telegram.org/bot{self._token}/getUpdates?offset={offset}"
+            )
+            response = jsons.loads(
+                data.text, cls=GetUpdatesResponse, key_transformer=transform_keywords
+            )
+        except ConnectionError:
+            raise NetworkException("Failed to establish a new connection.")
+        except Exception as exc:
+            raise UnknownErrorException(f"{exc}") from exc
+
+        if data.status_code != 200:
+            raise UnexpectedStatusCodeException(data.status_code, data.reason)
         return response.result
 
     def set_webhook(self, url: str, cert_path: Optional[str] = None) -> None:
-        if cert_path is None:
-            resp = requests.post(
-                f"https://api.telegram.org/bot{self._token}/setWebhook?url={url}",
-            )
-        else:
-            cert = Path(cert_path)
-            with open(cert, encoding="utf-8") as cert:
-                files = {"certificate": cert}
+        try:
+            if cert_path is None:
                 resp = requests.post(
                     f"https://api.telegram.org/bot{self._token}/setWebhook?url={url}",
-                    files=files,
                 )
+            else:
+                cert = Path(cert_path)
+                with open(cert, encoding="utf-8") as cert:
+                    files = {"certificate": cert}
+                    resp = requests.post(
+                        f"https://api.telegram.org/bot{self._token}/setWebhook?url={url}",
+                        files=files,
+                    )
+        except ConnectionError:
+            raise NetworkException("Failed to establish a new connection.")
+        except Exception as exc:
+            raise UnknownErrorException(f"{exc}") from exc
+
         if resp.status_code != 200:
-            raise TelegramException(resp.status_code, resp.reason)
+            raise UnexpectedStatusCodeException(resp.status_code, resp.reason)
 
     def delete_webhook(self):
-        response = requests.post(
-            f"https://api.telegram.org/bot{self._token}/deleteWebhook"
-        )
-        if response.status_code != 200:
-            raise TelegramException(response.status_code, response.reason)
+        try:
+            resp = requests.post(
+                f"https://api.telegram.org/bot{self._token}/deleteWebhook"
+            )
+        except ConnectionError:
+            raise NetworkException("Failed to establish a new connection.")
+        except Exception as exc:
+            raise UnknownErrorException(f"{exc}") from exc
+
+        if resp.status_code != 200:
+            raise UnexpectedStatusCodeException(resp.status_code, resp.reason)
 
     def send_message(self, payload: SendMessagePayload) -> int:
-        data = jsons.dump(payload, strip_nulls=True)
-        r = requests.post(
-            f"https://api.telegram.org/bot{self._token}/sendMessage", json=data
-        )
-        self.raise_telegram_exception(r.status_code, jsons.loads(r.text), r.url)
-        message_id = jsons.loads(r.text, cls=SendMessageResponse).result.message_id
+        try:
+            data = jsons.dump(payload, strip_nulls=True)
+            r = requests.post(
+                f"https://api.telegram.org/bot{self._token}/sendMessage", json=data
+            )
+            message_id = jsons.loads(r.text, cls=SendMessageResponse).result.message_id
+        except ConnectionError:
+            raise NetworkException("Failed to establish a new connection.")
+        except Exception as exc:
+            raise UnknownErrorException(f"{exc}") from exc
+
+        if r.status_code != 200:
+            raise UnexpectedStatusCodeException(r.status_code, r.reason)
         return message_id
 
     def edit_message_text(self, payload: MessageEdit) -> None:
-        data = jsons.dump(payload, strip_nulls=True)
-        r = requests.post(
-            f"https://api.telegram.org/bot{self._token}/editMessageText", json=data
-        )
-        self.raise_telegram_exception(r.status_code, jsons.loads(r.text), r.url)
-
-    @staticmethod
-    def raise_telegram_exception(status_code: int, desc, url: str):
-        http_error_msg = ""
-        if 400 <= status_code < 600:
-            http_error_msg = (
-                f"{status_code} Client Error: {desc['description']} for url: {url}"
+        try:
+            data = jsons.dump(payload, strip_nulls=True)
+            r = requests.post(
+                f"https://api.telegram.org/bot{self._token}/editMessageText", json=data
             )
+        except ConnectionError:
+            raise NetworkException("Failed to establish a new connection.")
+        except Exception as exc:
+            raise UnknownErrorException(f"{exc}") from exc
 
-        if http_error_msg:
-            raise TelegramException(status_code, http_error_msg)
+        if r.status_code != 200:
+            raise UnexpectedStatusCodeException(r.status_code, r.reason)

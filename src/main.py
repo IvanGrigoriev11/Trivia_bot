@@ -3,7 +3,6 @@ import json
 import logging
 import os
 from dataclasses import dataclass
-from json.decoder import JSONDecodeError
 from typing import Optional
 
 import jsons
@@ -59,13 +58,18 @@ class Bot:
     def run_client_mode(self):
         self.telegram_client.delete_webhook()
         offset = 0
+        result = []
         while True:
             try:
-                for update in self.telegram_client.get_updates(offset):
-                    offset = update.update_id + 1
-                    self.handle_update(update)
+                result = self.telegram_client.get_updates(offset)
             except TelegramException as e:
                 logging.error(e)
+                offset += 1
+            finally:
+                if len(result) != 0:
+                    for update in result:
+                        self.handle_update(update)
+                        offset = update.update_id + 1
 
     def run_server_mode(self, conf: ServerConfig):
         self.telegram_client.set_webhook(conf.url, conf.cert_path)
@@ -73,22 +77,24 @@ class Bot:
 
         @app.post("/handleUpdate")
         def handle_update(request: Request):
-            try:
-                payload = asyncio.run(request.json())
-                update = jsons.load(
-                    payload, cls=Update, key_transformer=transform_keywords
-                )
-                self.handle_update(update)
-            except JSONDecodeError:
-                raise TelegramException(500, "Internal server error") from None
+            payload = asyncio.run(request.json())
+            update = jsons.load(
+                payload, cls=Update, key_transformer=transform_keywords
+            )
+            self.handle_update(update)
 
         @app.exception_handler(TelegramException)
         def telegram_exception_handler(request: Request, exc: TelegramException):
             logging.error(exc)
-            return JSONResponse(
-                status_code=exc.status_code,
-                content={"message": f"{exc.msg}", "url": f"{request.url}"},
-            )
+            if 400 <= exc.status_code <= 500:
+                return JSONResponse(
+                    content="500: Internal server error"
+                )
+
+            if 500 < exc.status_code < 600:
+                return JSONResponse(
+                    content="502: Bad gateway"
+                )
 
         uvicorn_conf = Config(
             app=app,

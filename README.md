@@ -1,5 +1,5 @@
 ## Trivia bot 
-   The bot plays Trivia game with a user. During the game the bot gives a sequence of questions which the user must answer. The main goal is to get the maximum score for correct answers by the end of the game.
+   The bot plays Trivia game with a user. During the game the bot gives a sequence of questions which the user must answer. The main goal is to get the maximum score for correct answers by the end of the game. This repository contains a Python implementation of a Trivia Telegram bot.
 
 ## Setting up
 
