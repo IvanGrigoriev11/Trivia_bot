@@ -16,7 +16,8 @@ from bot_state import BotStateFactory
 from chat_handler import ChatHandler
 from custom_codecs import ChatHandlerDecoder, ChatHandlerEncoder
 from storage import InMemoryStorage, PostgresStorage, Question, Storage
-from telegram_client import LiveTelegramClient, TelegramException, Update
+from telegram_client import LiveTelegramClient, TelegramException, Update, UnexpectedStatusCodeException, \
+    NetworkException
 from utils import transform_keywords
 
 
@@ -58,18 +59,20 @@ class Bot:
     def run_client_mode(self):
         self.telegram_client.delete_webhook()
         offset = 0
-        result = []
         while True:
             try:
                 result = self.telegram_client.get_updates(offset)
+                if len(result) != 0:
+                    for update in result:
+                        try:
+                            self.handle_update(update)
+                        except Exception as e:
+                            logging.error(e)
+                        finally:
+                            offset = update.update_id + 1
             except TelegramException as e:
                 logging.error(e)
                 offset += 1
-            finally:
-                if len(result) != 0:
-                    for update in result:
-                        self.handle_update(update)
-                        offset = update.update_id + 1
 
     def run_server_mode(self, conf: ServerConfig):
         self.telegram_client.set_webhook(conf.url, conf.cert_path)
@@ -83,18 +86,34 @@ class Bot:
             )
             self.handle_update(update)
 
-        @app.exception_handler(TelegramException)
-        def telegram_exception_handler(request: Request, exc: TelegramException):
+        @app.exception_handler(UnexpectedStatusCodeException)
+        def telegram_exception_handler(request: Request, exc: UnexpectedStatusCodeException):
             logging.error(exc)
             if 400 <= exc.status_code <= 500:
                 return JSONResponse(
+                    status_code=500,
                     content="500: Internal server error"
                 )
 
             if 500 < exc.status_code < 600:
                 return JSONResponse(
+                    status_code=502,
                     content="502: Bad gateway"
                 )
+
+        @app.exception_handler(NetworkException)
+        def network_exception_handler(request: Request, exc: NetworkException):
+            logging.error(exc)
+            return JSONResponse(
+                content="Connection was failed"
+            )
+
+        @app.exception_handler(UnexpectedStatusCodeException)
+        def unknown_exception_handler(request: Request, exc: Exception):
+            logging.error(exc)
+            return JSONResponse(
+                content=f"{exc}"
+            )
 
         uvicorn_conf = Config(
             app=app,
