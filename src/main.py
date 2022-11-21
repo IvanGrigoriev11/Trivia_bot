@@ -8,7 +8,7 @@ from typing import Optional
 import jsons
 import typer
 from fastapi import FastAPI, Request
-from fastapi.responses import JSONResponse
+from fastapi.responses import PlainTextResponse
 from psycopg_pool import ConnectionPool
 from uvicorn import Config, Server
 
@@ -16,8 +16,14 @@ from bot_state import BotStateFactory
 from chat_handler import ChatHandler
 from custom_codecs import ChatHandlerDecoder, ChatHandlerEncoder
 from storage import InMemoryStorage, PostgresStorage, Question, Storage
-from telegram_client import LiveTelegramClient, TelegramException, Update, UnexpectedStatusCodeException, \
-    NetworkException
+from telegram_client import (
+    LiveTelegramClient,
+    NetworkException,
+    TelegramException,
+    UnexpectedStatusCodeException,
+    UnknownErrorException,
+    Update,
+)
 from utils import transform_keywords
 
 
@@ -62,15 +68,16 @@ class Bot:
         while True:
             try:
                 result = self.telegram_client.get_updates(offset)
+            except TelegramException as e:
+                logging.error(e)
+                continue
+
+            try:
                 if len(result) != 0:
                     for update in result:
-                        try:
-                            self.handle_update(update)
-                        except Exception as e:
-                            logging.error(e)
-                        finally:
-                            offset = update.update_id + 1
-            except TelegramException as e:
+                        self.handle_update(update)
+                        offset = update.update_id + 1
+            except Exception as e:
                 logging.error(e)
                 offset += 1
 
@@ -81,39 +88,30 @@ class Bot:
         @app.post("/handleUpdate")
         def handle_update(request: Request):
             payload = asyncio.run(request.json())
-            update = jsons.load(
-                payload, cls=Update, key_transformer=transform_keywords
-            )
+            try:
+                update = jsons.load(
+                    payload, cls=Update, key_transformer=transform_keywords
+                )
+            except jsons.DeserializationError as e:
+                raise UnknownErrorException(f"{e}")
             self.handle_update(update)
 
-        @app.exception_handler(UnexpectedStatusCodeException)
-        def telegram_exception_handler(request: Request, exc: UnexpectedStatusCodeException):
+        @app.exception_handler(TelegramException)
+        def telegram_exception_handler(request: Request, exc: TelegramException):
             logging.error(exc)
-            if 400 <= exc.status_code <= 500:
-                return JSONResponse(
-                    status_code=500,
-                    content="500: Internal server error"
-                )
+            if isinstance(exc, UnexpectedStatusCodeException):
+                if 400 <= exc.status_code <= 500:
+                    return PlainTextResponse(content="Internal server error")
 
-            if 500 < exc.status_code < 600:
-                return JSONResponse(
-                    status_code=502,
-                    content="502: Bad gateway"
-                )
+                if 500 < exc.status_code:
+                    return PlainTextResponse(content="Bad gateway")
 
-        @app.exception_handler(NetworkException)
-        def network_exception_handler(request: Request, exc: NetworkException):
-            logging.error(exc)
-            return JSONResponse(
-                content="Connection was failed"
-            )
+                return PlainTextResponse(content=f"500")
 
-        @app.exception_handler(UnexpectedStatusCodeException)
-        def unknown_exception_handler(request: Request, exc: Exception):
-            logging.error(exc)
-            return JSONResponse(
-                content=f"{exc}"
-            )
+            if isinstance(exc, NetworkException):
+                return PlainTextResponse(content="Connection was failed")
+
+            return PlainTextResponse(content=f"{exc}")
 
         uvicorn_conf = Config(
             app=app,

@@ -1,18 +1,17 @@
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from pathlib import Path
-from typing import List, Optional, TypeVar, Type, Any
+from typing import Any, List, Optional, Type, TypeVar
 
 import jsons
 import requests
 from requests.exceptions import ConnectionError
+
 from utils import transform_keywords
 
+T = TypeVar("T")
 
-T = TypeVar('T')
 
-
-@dataclass
 class TelegramException(Exception):
     pass
 
@@ -208,16 +207,18 @@ class LiveTelegramClient(TelegramClient):
 
     @staticmethod
     def _request(
-            method: str,
-            url: str,
-            cls: Optional[Type[T]] = None,
-            files: Optional[dict] = None,
-            json: Optional[Any] = None
+        method: str,
+        url: str,
+        cls: Optional[Type[T]] = None,
+        files: Optional[dict] = None,
+        json: Optional[Any] = None,
     ) -> Optional[T]:
         try:
             response = requests.request(method, url, files=files, json=json)
             if cls is not None:
-                return jsons.load(response.json(), cls=cls, key_transformer=transform_keywords)
+                return jsons.load(
+                    response.json(), cls=cls, key_transformer=transform_keywords
+                )
         except ConnectionError:
             raise NetworkException("Failed to establish a new connection.")
         except Exception as exc:
@@ -230,26 +231,44 @@ class LiveTelegramClient(TelegramClient):
         return self._request(
             "get",
             f"https://api.telegram.org/bot{self._token}/getUpdates?offset={offset}",
-            cls=GetUpdatesResponse
+            cls=GetUpdatesResponse,
         ).result
 
     def set_webhook(self, url: str, cert_path: Optional[str] = None) -> None:
         if cert_path is None:
-            self._request("post", f"https://api.telegram.org/bot{self._token}/setWebhook?url={url}")
+            self._request(
+                "post",
+                f"https://api.telegram.org/bot{self._token}/setWebhook?url={url}",
+            )
         else:
             cert = Path(cert_path)
             with open(cert, encoding="utf-8") as cert:
                 files = {"certificate": cert}
-                self._request("post", f"https://api.telegram.org/bot{self._token}/setWebhook?url={url}", files=files)
+                self._request(
+                    "post",
+                    f"https://api.telegram.org/bot{self._token}/setWebhook?url={url}",
+                    files=files,
+                )
 
     def delete_webhook(self):
-        self._request("post", f"https://api.telegram.org/bot{self._token}/deleteWebhook")
+        self._request(
+            "post", f"https://api.telegram.org/bot{self._token}/deleteWebhook"
+        )
 
     def send_message(self, payload: SendMessagePayload) -> int:
         data = jsons.dump(payload, strip_nulls=True)
-        r = self._request("post", f"https://api.telegram.org/bot{self._token}/sendMessage", cls=SendMessageResponse, json=data)
+        r = self._request(
+            "post",
+            f"https://api.telegram.org/bot{self._token}/sendMessage",
+            cls=SendMessageResponse,
+            json=data,
+        )
         return r.result.message_id
 
     def edit_message_text(self, payload: MessageEdit) -> None:
         data = jsons.dump(payload, strip_nulls=True)
-        self._request("post", f"https://api.telegram.org/bot{self._token}/editMessageText", json=data)
+        self._request(
+            "post",
+            f"https://api.telegram.org/bot{self._token}/editMessageText",
+            json=data,
+        )
