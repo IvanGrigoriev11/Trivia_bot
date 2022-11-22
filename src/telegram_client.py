@@ -219,8 +219,8 @@ class LiveTelegramClient(TelegramClient):
                 return jsons.load(
                     response.json(), cls=cls, key_transformer=transform_keywords
                 )
-        except ConnectionError:
-            raise NetworkException("Failed to establish a new connection.")
+        except ConnectionError as exc:
+            raise NetworkException("Failed to establish a new connection.") from exc
         except Exception as exc:
             raise UnknownErrorException(f"{exc}") from exc
 

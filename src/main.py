@@ -72,14 +72,13 @@ class Bot:
                 logging.error(e)
                 continue
 
-            try:
-                if len(result) != 0:
-                    for update in result:
-                        self.handle_update(update)
-                        offset = update.update_id + 1
-            except Exception as e:
-                logging.error(e)
-                offset += 1
+            for update in result:
+                try:
+                    self.handle_update(update)
+                except Exception as e:
+                    logging.error(e)
+                finally:
+                    offset = update.update_id + 1
 
     def run_server_mode(self, conf: ServerConfig):
         self.telegram_client.set_webhook(conf.url, conf.cert_path)
@@ -93,7 +92,7 @@ class Bot:
                     payload, cls=Update, key_transformer=transform_keywords
                 )
             except jsons.DeserializationError as e:
-                raise UnknownErrorException(f"{e}")
+                raise UnknownErrorException(f"{e}") from e
             self.handle_update(update)
 
         @app.exception_handler(TelegramException)
@@ -106,7 +105,7 @@ class Bot:
                 if 500 < exc.status_code:
                     return PlainTextResponse(content="Bad gateway")
 
-                return PlainTextResponse(content=f"500")
+                return PlainTextResponse(content="500")
 
             if isinstance(exc, NetworkException):
                 return PlainTextResponse(content="Connection was failed")
