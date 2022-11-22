@@ -190,10 +190,7 @@ class TelegramClient(ABC):
         reply_markup: Optional[InlineKeyboardMarkup] = None,
     ) -> int:
 
-        message_id = self.send_message(SendMessagePayload(chat_id, text, reply_markup))
-        if message_id is None:
-            raise UnknownErrorException("Failed to receive message_id")
-        return message_id
+        return self.send_message(SendMessagePayload(chat_id, text, reply_markup))
 
 
 class LiveTelegramClient(TelegramClient):
@@ -236,7 +233,7 @@ class LiveTelegramClient(TelegramClient):
         ).result
         if result is not None:
             return result
-        raise UnknownErrorException("Failed to receive updates")
+        raise UnknownErrorException("Failed to get updates")
 
     def set_webhook(self, url: str, cert_path: Optional[str] = None) -> None:
         if cert_path is None:
@@ -261,13 +258,15 @@ class LiveTelegramClient(TelegramClient):
 
     def send_message(self, payload: SendMessagePayload) -> int:
         data = jsons.dump(payload, strip_nulls=True)
-        r = self._request(
+        response = self._request(
             "post",
             f"https://api.telegram.org/bot{self._token}/sendMessage",
             cls=SendMessageResponse,
             json=data,
         )
-        return r.result.message_id
+        if response is None:
+            raise UnknownErrorException("Failed to get a response")
+        return response.result.message_id
 
     def edit_message_text(self, payload: MessageEdit) -> None:
         data = jsons.dump(payload, strip_nulls=True)
