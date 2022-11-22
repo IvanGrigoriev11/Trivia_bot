@@ -190,7 +190,10 @@ class TelegramClient(ABC):
         reply_markup: Optional[InlineKeyboardMarkup] = None,
     ) -> int:
 
-        return self.send_message(SendMessagePayload(chat_id, text, reply_markup))
+        message_id = self.send_message(SendMessagePayload(chat_id, text, reply_markup))
+        if message_id is None:
+            raise UnknownErrorException("Failed to receive message_id")
+        return message_id
 
 
 class LiveTelegramClient(TelegramClient):
@@ -226,11 +229,14 @@ class LiveTelegramClient(TelegramClient):
         return None
 
     def get_updates(self, offset: int = 0) -> List[Update]:
-        return self._request(
+        result = self._request(
             "get",
             f"https://api.telegram.org/bot{self._token}/getUpdates?offset={offset}",
             cls=GetUpdatesResponse,
         ).result
+        if result is not None:
+            return result
+        raise UnknownErrorException("Failed to receive updates")
 
     def set_webhook(self, url: str, cert_path: Optional[str] = None) -> None:
         if cert_path is None:
