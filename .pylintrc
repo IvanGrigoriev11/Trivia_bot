@@ -56,7 +56,8 @@ confidence=
 # C0111 - missing docstring
 disable=C0111,
     invalid-name,
-    too-few-public-methods
+    too-few-public-methods,
+    broad-except
 
 # Enable the message, report, category or checker with the given id(s). You can
 # either give multiple identifier separated by comma (,) or put this option

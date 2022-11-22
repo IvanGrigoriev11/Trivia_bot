@@ -98,7 +98,7 @@ class Bot:
             self.handle_update(update)
 
         @app.exception_handler(TelegramException)
-        def telegram_exception_handler(request: Request, exc: TelegramException):
+        def telegram_exception_handler(_request: Request, exc: TelegramException):
             logging.error(exc)
             if isinstance(exc, UnexpectedStatusCodeException):
                 if 400 <= exc.status_code <= 500:
