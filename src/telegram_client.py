@@ -12,26 +12,24 @@ T = TypeVar("T")
 
 
 class TelegramException(Exception):
-    pass
+    def __init__(self, message: str, status_code: Optional[int] = None):
+        super().__init__(status_code, message)
 
 
-@dataclass
 class UnexpectedStatusCodeException(TelegramException):
+    def __init__(self, status_code: int, message: str):
+        self.status_code = status_code
+        super().__init__(message, status_code)
 
-    status_code: int
-    msg: str
 
-
-@dataclass
 class NetworkException(TelegramException):
+    def __init__(self, message: str):
+        super().__init__(message)
 
-    msg: str
 
-
-@dataclass
 class UnknownErrorException(TelegramException):
-
-    msg: str
+    def __init__(self, message: str):
+        super().__init__(message)
 
 
 @dataclass
@@ -221,7 +219,7 @@ class LiveTelegramClient(TelegramClient):
         except ConnectionError as exc:
             raise NetworkException("Failed to establish a new connection.") from exc
         except Exception as exc:
-            raise UnknownErrorException(f"{exc}") from exc
+            raise UnknownErrorException("Telegram request failed") from exc
 
         if response.status_code != 200:
             raise UnexpectedStatusCodeException(response.status_code, response.reason)

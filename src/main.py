@@ -92,7 +92,9 @@ class Bot:
                     payload, cls=Update, key_transformer=transform_keywords
                 )
             except jsons.DeserializationError as e:
-                raise UnknownErrorException(f"{e}") from e
+                raise UnknownErrorException(
+                    "Failed to deserialize Telegram request"
+                ) from e
             self.handle_update(update)
 
         @app.exception_handler(TelegramException)
@@ -100,17 +102,23 @@ class Bot:
             logging.error(exc)
             if isinstance(exc, UnexpectedStatusCodeException):
                 if 400 <= exc.status_code <= 500:
-                    return PlainTextResponse(content="Internal server error")
+                    return PlainTextResponse(
+                        status_code=500, content="Internal server error"
+                    )
 
                 if 500 < exc.status_code:
-                    return PlainTextResponse(content="Bad gateway")
+                    return PlainTextResponse(status_code=502, content="Bad gateway")
 
-                return PlainTextResponse(content="500")
+                return PlainTextResponse(
+                    status_code=500, content="Internal server error"
+                )
 
             if isinstance(exc, NetworkException):
-                return PlainTextResponse(content="Connection was failed")
+                return PlainTextResponse(
+                    status_code=500, content="Internal server error"
+                )
 
-            return PlainTextResponse(content=f"{exc}")
+            return PlainTextResponse(status_code=500, content="Internal server error")
 
         uvicorn_conf = Config(
             app=app,
