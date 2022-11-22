@@ -223,6 +223,7 @@ class LiveTelegramClient(TelegramClient):
 
         if response.status_code != 200:
             raise UnexpectedStatusCodeException(response.status_code, response.reason)
+        return None
 
     def get_updates(self, offset: int = 0) -> List[Update]:
         return self._request(
