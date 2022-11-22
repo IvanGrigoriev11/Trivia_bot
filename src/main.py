@@ -68,6 +68,8 @@ class Bot:
         while True:
             try:
                 result = self.telegram_client.get_updates(offset)
+                if result is None:
+                    raise UnknownErrorException("Failed to receive update")
             except TelegramException as e:
                 logging.error(e)
                 continue
