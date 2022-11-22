@@ -226,14 +226,14 @@ class LiveTelegramClient(TelegramClient):
         return None
 
     def get_updates(self, offset: int = 0) -> List[Update]:
-        result = self._request(
+        r = self._request(
             "get",
             f"https://api.telegram.org/bot{self._token}/getUpdates?offset={offset}",
             cls=GetUpdatesResponse,
-        ).result
-        if result is not None:
-            return result
-        raise UnknownErrorException("Failed to get updates")
+        )
+        if r.result is None:
+            raise UnknownErrorException("Failed to get updates")
+        return r.result
 
     def set_webhook(self, url: str, cert_path: Optional[str] = None) -> None:
         if cert_path is None:
