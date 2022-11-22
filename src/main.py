@@ -92,7 +92,7 @@ class Bot:
                     payload, cls=Update, key_transformer=transform_keywords
                 )
             except jsons.DeserializationError as e:
-                raise UnknownErrorException(f"{e}") from e
+                raise UnknownErrorException("Failed to deserialize Telegram request") from e
             self.handle_update(update)
 
         @app.exception_handler(TelegramException)
