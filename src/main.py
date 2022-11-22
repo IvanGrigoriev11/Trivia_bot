@@ -1,5 +1,6 @@
 import asyncio
 import json
+import logging
 import os
 from dataclasses import dataclass
 from typing import Optional
@@ -7,6 +8,7 @@ from typing import Optional
 import jsons
 import typer
 from fastapi import FastAPI, Request
+from fastapi.responses import PlainTextResponse
 from psycopg_pool import ConnectionPool
 from uvicorn import Config, Server
 
@@ -14,7 +16,14 @@ from bot_state import BotStateFactory
 from chat_handler import ChatHandler
 from custom_codecs import ChatHandlerDecoder, ChatHandlerEncoder
 from storage import InMemoryStorage, PostgresStorage, Question, Storage
-from telegram_client import LiveTelegramClient, Update
+from telegram_client import (
+    LiveTelegramClient,
+    NetworkException,
+    TelegramException,
+    UnexpectedStatusCodeException,
+    UnknownErrorException,
+    Update,
+)
 from utils import transform_keywords
 
 
@@ -57,20 +66,59 @@ class Bot:
         self.telegram_client.delete_webhook()
         offset = 0
         while True:
-            for update in self.telegram_client.get_updates(offset):
-                offset = update.update_id + 1
-                self.handle_update(update)
+            try:
+                result = self.telegram_client.get_updates(offset)
+            except TelegramException as e:
+                logging.error(e)
+                continue
+
+            for update in result:
+                try:
+                    self.handle_update(update)
+                except Exception as e:
+                    logging.error(e)
+                finally:
+                    offset = update.update_id + 1
 
     def run_server_mode(self, conf: ServerConfig):
         self.telegram_client.set_webhook(conf.url, conf.cert_path)
-
         app = FastAPI()
 
         @app.post("/handleUpdate")
         def handle_update(request: Request):
             payload = asyncio.run(request.json())
-            update = jsons.load(payload, cls=Update, key_transformer=transform_keywords)
+            try:
+                update = jsons.load(
+                    payload, cls=Update, key_transformer=transform_keywords
+                )
+            except jsons.DeserializationError as e:
+                raise UnknownErrorException(
+                    "Failed to deserialize Telegram request"
+                ) from e
             self.handle_update(update)
+
+        @app.exception_handler(TelegramException)
+        def telegram_exception_handler(_request: Request, exc: TelegramException):
+            logging.error(exc)
+            if isinstance(exc, UnexpectedStatusCodeException):
+                if 400 <= exc.status_code <= 500:
+                    return PlainTextResponse(
+                        status_code=500, content="Internal server error"
+                    )
+
+                if 500 < exc.status_code:
+                    return PlainTextResponse(status_code=502, content="Bad gateway")
+
+                return PlainTextResponse(
+                    status_code=500, content="Internal server error"
+                )
+
+            if isinstance(exc, NetworkException):
+                return PlainTextResponse(
+                    status_code=500, content="Internal server error"
+                )
+
+            return PlainTextResponse(status_code=500, content="Internal server error")
 
         uvicorn_conf = Config(
             app=app,

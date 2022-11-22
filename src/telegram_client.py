@@ -1,12 +1,35 @@
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from pathlib import Path
-from typing import List, Optional
+from typing import Any, List, Optional, Type, TypeVar
 
 import jsons
 import requests
 
 from utils import transform_keywords
+
+T = TypeVar("T")
+
+
+class TelegramException(Exception):
+    def __init__(self, message: str, status_code: Optional[int] = None):
+        super().__init__(status_code, message)
+
+
+class UnexpectedStatusCodeException(TelegramException):
+    def __init__(self, status_code: int, message: str):
+        self.status_code = status_code
+        super().__init__(message, status_code)
+
+
+class NetworkException(TelegramException):
+    def __init__(self, message: str):
+        super().__init__(message)
+
+
+class UnknownErrorException(TelegramException):
+    def __init__(self, message: str):
+        super().__init__(message)
 
 
 @dataclass
@@ -179,48 +202,76 @@ class LiveTelegramClient(TelegramClient):
         """
         self._token = token
 
+    @staticmethod
+    def _request(
+        method: str,
+        url: str,
+        cls: Optional[Type[T]] = None,
+        files: Optional[dict] = None,
+        json: Optional[Any] = None,
+    ) -> Optional[T]:
+        try:
+            response = requests.request(method, url, files=files, json=json)
+            if cls is not None:
+                return jsons.load(
+                    response.json(), cls=cls, key_transformer=transform_keywords
+                )
+        except ConnectionError as exc:
+            raise NetworkException("Failed to establish a new connection.") from exc
+        except Exception as exc:
+            raise UnknownErrorException("Telegram request failed") from exc
+
+        if response.status_code != 200:
+            raise UnexpectedStatusCodeException(response.status_code, response.reason)
+        return None
+
     def get_updates(self, offset: int = 0) -> List[Update]:
-        data = requests.get(
-            f"https://api.telegram.org/bot{self._token}/getUpdates?offset={offset}"
-        ).text
-        response = jsons.loads(
-            data, cls=GetUpdatesResponse, key_transformer=transform_keywords
+        response = self._request(
+            "get",
+            f"https://api.telegram.org/bot{self._token}/getUpdates?offset={offset}",
+            cls=GetUpdatesResponse,
         )
+        if response is None:
+            raise UnknownErrorException("Failed to get updates")
         return response.result
 
     def set_webhook(self, url: str, cert_path: Optional[str] = None) -> None:
         if cert_path is None:
-            resp = requests.post(
+            self._request(
+                "post",
                 f"https://api.telegram.org/bot{self._token}/setWebhook?url={url}",
             )
         else:
             cert = Path(cert_path)
             with open(cert, encoding="utf-8") as cert:
                 files = {"certificate": cert}
-                resp = requests.post(
+                self._request(
+                    "post",
                     f"https://api.telegram.org/bot{self._token}/setWebhook?url={url}",
                     files=files,
                 )
-        assert resp.status_code == 200
 
     def delete_webhook(self):
-        response = requests.post(
-            f"https://api.telegram.org/bot{self._token}/deleteWebhook"
+        self._request(
+            "post", f"https://api.telegram.org/bot{self._token}/deleteWebhook"
         )
-        assert response.status_code == 200
 
     def send_message(self, payload: SendMessagePayload) -> int:
         data = jsons.dump(payload, strip_nulls=True)
-        r = requests.post(
-            f"https://api.telegram.org/bot{self._token}/sendMessage", json=data
+        response = self._request(
+            "post",
+            f"https://api.telegram.org/bot{self._token}/sendMessage",
+            cls=SendMessageResponse,
+            json=data,
         )
-        assert r.status_code == 200, f"Expected status code 200 but got {r.status_code}"
-        message_id = jsons.loads(r.text, cls=SendMessageResponse).result.message_id
-        return message_id
+        if response is None:
+            raise UnknownErrorException("Failed to get a response")
+        return response.result.message_id
 
     def edit_message_text(self, payload: MessageEdit) -> None:
         data = jsons.dump(payload, strip_nulls=True)
-        r = requests.post(
-            f"https://api.telegram.org/bot{self._token}/editMessageText", json=data
+        self._request(
+            "post",
+            f"https://api.telegram.org/bot{self._token}/editMessageText",
+            json=data,
         )
-        assert r.status_code == 200, f"Expected status code 200 but got {r.status_code}"
