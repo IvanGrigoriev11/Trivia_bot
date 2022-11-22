@@ -5,7 +5,6 @@ from typing import Any, List, Optional, Type, TypeVar
 
 import jsons
 import requests
-from requests.exceptions import ConnectionError
 
 from utils import transform_keywords
 
