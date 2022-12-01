@@ -80,13 +80,13 @@ class Bot:
                 finally:
                     offset = update.update_id + 1
 
-    def run_server_mode(self, conf: ServerConfig):
+    async def run_server_mode(self, conf: ServerConfig):
         self.telegram_client.set_webhook(conf.url, conf.cert_path)
         app = FastAPI()
 
         @app.post("/handleUpdate")
-        def handle_update(request: Request):
-            payload = asyncio.run(request.json())
+        async def handle_update(request: Request):
+            payload = await request.json()
             try:
                 update = jsons.load(
                     payload, cls=Update, key_transformer=transform_keywords
@@ -98,7 +98,7 @@ class Bot:
             self.handle_update(update)
 
         @app.exception_handler(TelegramException)
-        def telegram_exception_handler(_request: Request, exc: TelegramException):
+        async def telegram_exception_handler(_request: Request, exc: TelegramException):
             logging.error(exc)
             if isinstance(exc, UnexpectedStatusCodeException):
                 if 400 <= exc.status_code <= 500:
@@ -128,10 +128,10 @@ class Bot:
             ssl_keyfile=conf.key_path,
             ssl_certfile=conf.cert_path,
         )
-        Server(uvicorn_conf).run()
+        await Server(uvicorn_conf).serve()
 
 
-def launch_bot(inmemory: bool, server_conf: Optional[ServerConfig] = None):
+async def launch_bot(inmemory: bool, server_conf: Optional[ServerConfig] = None):
     """Launches of a specific mode depends on the assembled storage configuration.
     The storage configuration build process, in turn,
     depends on the presence of a server configuration parameter."""
@@ -139,10 +139,10 @@ def launch_bot(inmemory: bool, server_conf: Optional[ServerConfig] = None):
     token = os.environ["TELEGRAM_BOT_TOKEN"]
     telegram_client = LiveTelegramClient(token)
 
-    def run_bot(storage: Storage):
+    async def run_bot(storage: Storage):
         bot = Bot(telegram_client, BotStateFactory(telegram_client, storage), storage)
         if server_conf:
-            bot.run_server_mode(server_conf)
+            await bot.run_server_mode(server_conf)
         else:
             bot.run_client_mode()
 
@@ -158,7 +158,7 @@ def launch_bot(inmemory: bool, server_conf: Optional[ServerConfig] = None):
                 ),
             ]
         )
-        run_bot(game_storage)
+        await run_bot(game_storage)
     else:
         user = os.environ["POSTGRES_DB_USER"]
         password = os.environ["POSTGRES_DB_PASSWD"]
@@ -167,7 +167,7 @@ def launch_bot(inmemory: bool, server_conf: Optional[ServerConfig] = None):
         conninfo = f"postgresql://{user}:{password}@{db_host}:{5432}/{db_name}"
         with ConnectionPool(conninfo) as pool:
             game_storage = PostgresStorage(pool)
-            run_bot(game_storage)
+            await run_bot(game_storage)
 
 
 run = typer.Typer()
@@ -199,7 +199,9 @@ def server(
 ):  # pylint: disable=too-many-arguments
     """Configures parameters for server mode."""
 
-    launch_bot(inmemory, ServerConfig(url, host, port, cert_path, key_path))
+    asyncio.run(
+        launch_bot(inmemory, ServerConfig(url, host, port, cert_path, key_path))
+    )
 
 
 if __name__ == "__main__":
