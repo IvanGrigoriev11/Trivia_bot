@@ -182,7 +182,7 @@ def client(
 ):
     """Configures parameters for client mode."""
 
-    launch_bot(inmemory)
+    asyncio.run(launch_bot(inmemory))
 
 
 @run.command()
