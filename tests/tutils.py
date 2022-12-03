@@ -28,11 +28,11 @@ class FakeTelegramClient(TelegramClient):
     async def get_updates(self, offset: int = 0) -> List[Update]:
         raise NotImplementedError()
 
-    def send_message(self, payload: SendMessagePayload) -> int:
+    async def send_message(self, payload: SendMessagePayload) -> int:
         self.sent_messages.append(payload)
         return 0
 
-    def edit_message_text(self, payload: MessageEdit) -> None:
+    async def edit_message_text(self, payload: MessageEdit) -> None:
         self.sent_messages.append(payload)
 
 
@@ -72,7 +72,7 @@ def user(text_message: str) -> MessageContent:
     return MessageContent(MessageKind.USER, text_message)
 
 
-def check_conversation(
+async def check_conversation(
     configuration: ConvConfig,
     conversation: List[MessageContent],
 ):
@@ -93,7 +93,7 @@ def check_conversation(
             )
             last_message_from_bot += 1
         else:
-            chat_handler.process(
+            await chat_handler.process(
                 Update(
                     update_id,
                     Message(Chat(chat_id), msg.text_message),

@@ -1,12 +1,14 @@
+import pytest
 from test_greeting_state import make_conv_conf
 from tutils import QUESTIONS, bot_edit, bot_msg, check_conversation, user
 
 import format as fmt
 
 
-def test_entire_game():
-    check_conversation(
-        make_conv_conf(),
+@pytest.mark.asyncio
+async def test_entire_game():
+    await check_conversation(
+        await make_conv_conf(),
         [
             user("Yo"),
             bot_msg(

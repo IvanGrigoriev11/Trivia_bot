@@ -46,18 +46,18 @@ class Bot:
     state_factory: BotStateFactory
     storage: Storage
 
-    def handle_update(self, update: Update):
+    async def handle_update(self, update: Update):
         chat_id = update.chat_id
         chat_handler_snapshot = self.storage.get_chat_handler(chat_id)
         if chat_handler_snapshot is None:
-            chat_handler = ChatHandler.create(
+            chat_handler = await ChatHandler.create(
                 self.state_factory.make_greeting_state(), chat_id
             )
         else:
             chat_handler = ChatHandlerDecoder(
                 self.telegram_client, self.state_factory
             ).decode(json.loads(chat_handler_snapshot))
-        chat_handler.process(update)
+        await chat_handler.process(update)
         self.storage.set_chat_handler(
             chat_id, json.dumps(chat_handler, cls=ChatHandlerEncoder)
         )
@@ -74,7 +74,7 @@ class Bot:
 
             for update in result:
                 try:
-                    self.handle_update(update)
+                    await self.handle_update(update)
                 except Exception as e:
                     logging.error(e)
                 finally:
@@ -95,7 +95,7 @@ class Bot:
                 raise UnknownErrorException(
                     "Failed to deserialize Telegram request"
                 ) from e
-            self.handle_update(update)
+            await self.handle_update(update)
 
         @app.exception_handler(TelegramException)
         async def telegram_exception_handler(_request: Request, exc: TelegramException):

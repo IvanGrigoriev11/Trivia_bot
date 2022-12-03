@@ -177,21 +177,21 @@ class TelegramClient(ABC):
         """Gets updates from the telegram with `update_id` bigger than `offset`."""
 
     @abstractmethod
-    def send_message(self, payload: SendMessagePayload) -> int:
+    async def send_message(self, payload: SendMessagePayload) -> int:
         """Sends message with a given `payload` to Telegram and returns the id of this message."""
 
     @abstractmethod
-    def edit_message_text(self, payload: MessageEdit) -> None:
+    async def edit_message_text(self, payload: MessageEdit) -> None:
         """Edits the text of the selected message."""
 
-    def send_text(
+    async def send_text(
         self,
         chat_id: int,
         text: str,
         reply_markup: Optional[InlineKeyboardMarkup] = None,
     ) -> int:
 
-        return self.send_message(SendMessagePayload(chat_id, text, reply_markup))
+        return await self.send_message(SendMessagePayload(chat_id, text, reply_markup))
 
 
 class LiveTelegramClient(TelegramClient):
@@ -234,7 +234,9 @@ class LiveTelegramClient(TelegramClient):
                 payload = await response.json()
         if response is None:
             raise UnknownErrorException("Failed to get updates")
-        return jsons.load(payload, cls=GetUpdatesResponse).result
+        return jsons.load(
+            payload, cls=GetUpdatesResponse, key_transformer=transform_keywords
+        ).result
 
     def set_webhook(self, url: str, cert_path: Optional[str] = None) -> None:
         if cert_path is None:
@@ -257,22 +259,21 @@ class LiveTelegramClient(TelegramClient):
             "post", f"https://api.telegram.org/bot{self._token}/deleteWebhook"
         )
 
-    def send_message(self, payload: SendMessagePayload) -> int:
+    async def send_message(self, payload: SendMessagePayload) -> int:
         data = jsons.dump(payload, strip_nulls=True)
-        response = self._request(
-            "post",
-            f"https://api.telegram.org/bot{self._token}/sendMessage",
-            cls=SendMessageResponse,
-            json=data,
-        )
+        async with aiohttp.ClientSession() as session:
+            async with session.post(
+                f"https://api.telegram.org/bot{self._token}/sendMessage", json=data
+            ) as response:
+                payload = await response.json()
+                res = jsons.load(payload, cls=SendMessageResponse)
         if response is None:
             raise UnknownErrorException("Failed to get a response")
-        return response.result.message_id
+        return res.result.message_id
 
-    def edit_message_text(self, payload: MessageEdit) -> None:
+    async def edit_message_text(self, payload: MessageEdit) -> None:
         data = jsons.dump(payload, strip_nulls=True)
-        self._request(
-            "post",
-            f"https://api.telegram.org/bot{self._token}/editMessageText",
-            json=data,
-        )
+        async with aiohttp.ClientSession() as session:
+            await session.post(
+                f"https://api.telegram.org/bot{self._token}/editMessageText", json=data
+            )

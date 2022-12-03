@@ -15,21 +15,21 @@ class ChatHandler:
         self._state = initial_state
         self._chat_id = chat_id
 
-    def process(self, update: Update) -> None:
+    async def process(self, update: Update) -> None:
         """Processes a given `update`."""
 
-        new_state = self._state.process(update)
+        new_state = await self._state.process(update)
         if new_state != self._state:
-            new_state.on_enter(self._chat_id)
+            await new_state.on_enter(self._chat_id)
 
         self._state = new_state
 
     @staticmethod
-    def create(state: BotState, chat_id: int):
+    async def create(state: BotState, chat_id: int):
         """Method initialize default state for chat handler
         at the very beginning of the game"""
 
-        state.on_enter(chat_id)
+        await state.on_enter(chat_id)
         return ChatHandler(state, chat_id)
 
     @property
