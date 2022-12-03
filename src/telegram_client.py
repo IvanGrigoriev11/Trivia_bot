@@ -3,6 +3,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, List, Optional, Type, TypeVar
 
+import aiohttp
 import jsons
 import requests
 
@@ -172,7 +173,7 @@ class TelegramClient(ABC):
     """An interface for communicating with Telegram backend."""
 
     @abstractmethod
-    def get_updates(self, offset: int = 0) -> List[Update]:
+    async def get_updates(self, offset: int = 0) -> List[Update]:
         """Gets updates from the telegram with `update_id` bigger than `offset`."""
 
     @abstractmethod
@@ -225,15 +226,15 @@ class LiveTelegramClient(TelegramClient):
             raise UnexpectedStatusCodeException(response.status_code, response.reason)
         return None
 
-    def get_updates(self, offset: int = 0) -> List[Update]:
-        response = self._request(
-            "get",
-            f"https://api.telegram.org/bot{self._token}/getUpdates?offset={offset}",
-            cls=GetUpdatesResponse,
-        )
+    async def get_updates(self, offset: int = 0) -> List[Update]:
+        async with aiohttp.ClientSession() as session:
+            async with session.get(
+                f"https://api.telegram.org/bot{self._token}/getUpdates?offset={offset}"
+            ) as response:
+                payload = await response.json()
         if response is None:
             raise UnknownErrorException("Failed to get updates")
-        return response.result
+        return jsons.load(payload, cls=GetUpdatesResponse).result
 
     def set_webhook(self, url: str, cert_path: Optional[str] = None) -> None:
         if cert_path is None:

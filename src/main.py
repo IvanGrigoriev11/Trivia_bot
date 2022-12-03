@@ -62,12 +62,12 @@ class Bot:
             chat_id, json.dumps(chat_handler, cls=ChatHandlerEncoder)
         )
 
-    def run_client_mode(self):
+    async def run_client_mode(self):
         self.telegram_client.delete_webhook()
         offset = 0
         while True:
             try:
-                result = self.telegram_client.get_updates(offset)
+                result = await self.telegram_client.get_updates(offset)
             except TelegramException as e:
                 logging.error(e)
                 continue
@@ -144,7 +144,7 @@ async def launch_bot(inmemory: bool, server_conf: Optional[ServerConfig] = None)
         if server_conf:
             await bot.run_server_mode(server_conf)
         else:
-            bot.run_client_mode()
+            await bot.run_client_mode()
 
     if inmemory:
         game_storage = InMemoryStorage(

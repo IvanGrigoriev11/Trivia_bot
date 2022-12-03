@@ -25,7 +25,7 @@ class FakeTelegramClient(TelegramClient):
     def __init__(self):
         self.sent_messages: List[SendMessagePayload | MessageEdit] = []
 
-    def get_updates(self, offset: int = 0) -> List[Update]:
+    async def get_updates(self, offset: int = 0) -> List[Update]:
         raise NotImplementedError()
 
     def send_message(self, payload: SendMessagePayload) -> int:
