@@ -1,3 +1,4 @@
+import pytest
 from tutils import (
     QUESTIONS,
     ConvConfig,
@@ -12,18 +13,20 @@ from chat_handler import ChatHandler
 from storage import InMemoryStorage
 
 
-def make_conv_conf():
+async def make_conv_conf():
     client = FakeTelegramClient()
     storage = InMemoryStorage(QUESTIONS)
     state_factory = BotStateFactory(client, storage)
     state = state_factory.make_greeting_state()
     chat_id = 111
-    return ConvConfig(ChatHandler.create(state, chat_id), client, chat_id)
+    ch = await ChatHandler.create(state, chat_id)
+    return ConvConfig(ch, client, chat_id)
 
 
-def test_greeting_state():
-    check_conversation(
-        make_conv_conf(),
+@pytest.mark.asyncio
+async def test_greeting_state():
+    await check_conversation(
+        await make_conv_conf(),
         [
             user("hi"),
             bot_msg(

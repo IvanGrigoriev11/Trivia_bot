@@ -3,6 +3,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, List, Optional, Type, TypeVar
 
+import aiohttp
 import jsons
 import requests
 
@@ -172,25 +173,25 @@ class TelegramClient(ABC):
     """An interface for communicating with Telegram backend."""
 
     @abstractmethod
-    def get_updates(self, offset: int = 0) -> List[Update]:
+    async def get_updates(self, offset: int = 0) -> List[Update]:
         """Gets updates from the telegram with `update_id` bigger than `offset`."""
 
     @abstractmethod
-    def send_message(self, payload: SendMessagePayload) -> int:
+    async def send_message(self, payload: SendMessagePayload) -> int:
         """Sends message with a given `payload` to Telegram and returns the id of this message."""
 
     @abstractmethod
-    def edit_message_text(self, payload: MessageEdit) -> None:
+    async def edit_message_text(self, payload: MessageEdit) -> None:
         """Edits the text of the selected message."""
 
-    def send_text(
+    async def send_text(
         self,
         chat_id: int,
         text: str,
         reply_markup: Optional[InlineKeyboardMarkup] = None,
     ) -> int:
 
-        return self.send_message(SendMessagePayload(chat_id, text, reply_markup))
+        return await self.send_message(SendMessagePayload(chat_id, text, reply_markup))
 
 
 class LiveTelegramClient(TelegramClient):
@@ -225,16 +226,6 @@ class LiveTelegramClient(TelegramClient):
             raise UnexpectedStatusCodeException(response.status_code, response.reason)
         return None
 
-    def get_updates(self, offset: int = 0) -> List[Update]:
-        response = self._request(
-            "get",
-            f"https://api.telegram.org/bot{self._token}/getUpdates?offset={offset}",
-            cls=GetUpdatesResponse,
-        )
-        if response is None:
-            raise UnknownErrorException("Failed to get updates")
-        return response.result
-
     def set_webhook(self, url: str, cert_path: Optional[str] = None) -> None:
         if cert_path is None:
             self._request(
@@ -256,9 +247,44 @@ class LiveTelegramClient(TelegramClient):
             "post", f"https://api.telegram.org/bot{self._token}/deleteWebhook"
         )
 
-    def send_message(self, payload: SendMessagePayload) -> int:
+    @staticmethod
+    async def _async_request(
+        method: str,
+        url: str,
+        cls: Optional[Type[T]] = None,
+        json: Optional[Any] = None,
+    ) -> Optional[T]:
+        try:
+            async with aiohttp.ClientSession() as session:
+                response = await session.request(method, url, json=json)
+                if cls is not None:
+                    return jsons.load(
+                        await response.json(),
+                        cls=cls,
+                        key_transformer=transform_keywords,
+                    )
+        except ConnectionError as exc:
+            raise NetworkException("Failed to establish a new connection.") from exc
+        except Exception as exc:
+            raise UnknownErrorException("Telegram request failed") from exc
+
+        if response.status != 200:
+            raise UnexpectedStatusCodeException(response.status, response.reason)
+        return None
+
+    async def get_updates(self, offset: int = 0) -> List[Update]:
+        response = await self._async_request(
+            "get",
+            f"https://api.telegram.org/bot{self._token}/getUpdates?offset={offset}",
+            cls=GetUpdatesResponse,
+        )
+        if response is None:
+            raise UnknownErrorException("Failed to get updates")
+        return response.result
+
+    async def send_message(self, payload: SendMessagePayload) -> int:
         data = jsons.dump(payload, strip_nulls=True)
-        response = self._request(
+        response = await self._async_request(
             "post",
             f"https://api.telegram.org/bot{self._token}/sendMessage",
             cls=SendMessageResponse,
@@ -268,9 +294,9 @@ class LiveTelegramClient(TelegramClient):
             raise UnknownErrorException("Failed to get a response")
         return response.result.message_id
 
-    def edit_message_text(self, payload: MessageEdit) -> None:
+    async def edit_message_text(self, payload: MessageEdit) -> None:
         data = jsons.dump(payload, strip_nulls=True)
-        self._request(
+        await self._async_request(
             "post",
             f"https://api.telegram.org/bot{self._token}/editMessageText",
             json=data,

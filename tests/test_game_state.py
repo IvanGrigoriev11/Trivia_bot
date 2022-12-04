@@ -1,5 +1,6 @@
 from typing import Optional
 
+import pytest
 from tutils import (
     QUESTIONS,
     ConvConfig,
@@ -17,14 +18,14 @@ from storage import InMemoryStorage
 from telegram_client import CallbackQuery, MessageEdit, SendMessagePayload, Update, User
 
 
-def make_conv_conf(game_params: Optional[ProtoGameState] = None):
+async def make_conv_conf(game_params: Optional[ProtoGameState] = None):
     client = FakeTelegramClient()
     storage = InMemoryStorage(QUESTIONS)
     state_factory = BotStateFactory(client, storage)
     chat_id = 111
 
     if game_params is None:
-        handler = ChatHandler.create(state_factory.make_game_state(), chat_id)
+        handler = await ChatHandler.create(state_factory.make_game_state(), chat_id)
     else:
         handler = ChatHandler(
             GameState(client, state_factory, game_params, True), chat_id
@@ -32,9 +33,10 @@ def make_conv_conf(game_params: Optional[ProtoGameState] = None):
     return ConvConfig(handler, client, chat_id)
 
 
-def test_game_till_end():
-    check_conversation(
-        make_conv_conf(),
+@pytest.mark.asyncio
+async def test_game_till_end():
+    await check_conversation(
+        await make_conv_conf(),
         [
             bot_msg(fmt.make_question(QUESTIONS[0]), fmt.make_keyboard(QUESTIONS[0])),
             user("b"),
@@ -53,9 +55,10 @@ def test_game_till_end():
     )
 
 
-def test_gibberish_reply():
-    check_conversation(
-        make_conv_conf(),
+@pytest.mark.asyncio
+async def test_gibberish_reply():
+    await check_conversation(
+        await make_conv_conf(),
         [
             bot_msg(fmt.make_question(QUESTIONS[0]), fmt.make_keyboard(QUESTIONS[0])),
             user("first"),
@@ -69,9 +72,10 @@ def test_gibberish_reply():
     )
 
 
-def test_enter_inappropriate_number():
-    check_conversation(
-        make_conv_conf(),
+@pytest.mark.asyncio
+async def test_enter_inappropriate_number():
+    await check_conversation(
+        await make_conv_conf(),
         [
             bot_msg(fmt.make_question(QUESTIONS[0]), fmt.make_keyboard(QUESTIONS[0])),
             user("-1"),
@@ -85,9 +89,10 @@ def test_enter_inappropriate_number():
     )
 
 
-def test_typing_unsuitable_letter_as_answer():
-    check_conversation(
-        make_conv_conf(),
+@pytest.mark.asyncio
+async def test_typing_unsuitable_letter_as_answer():
+    await check_conversation(
+        await make_conv_conf(),
         [
             bot_msg(fmt.make_question(QUESTIONS[0]), fmt.make_keyboard(QUESTIONS[0])),
             user("D"),
@@ -101,13 +106,13 @@ def test_typing_unsuitable_letter_as_answer():
     )
 
 
-def check_callback_query(button: str):
+async def check_callback_query(button: str):
     client = FakeTelegramClient()
 
     state = BotStateFactory(client, InMemoryStorage(QUESTIONS)).make_game_state()
     chat_id = 111
-    state.on_enter(chat_id)
-    state.process(Update(123, None, CallbackQuery(User(111), f"{button}")))
+    await state.on_enter(chat_id)
+    await state.process(Update(123, None, CallbackQuery(User(111), f"{button}")))
     expected = [
         SendMessagePayload(
             111, fmt.make_question(QUESTIONS[0]), fmt.make_keyboard(QUESTIONS[0])
@@ -125,15 +130,17 @@ def check_callback_query(button: str):
     assert client.sent_messages == expected
 
 
-def test_callback_query():
-    check_callback_query("c")
+@pytest.mark.asyncio
+async def test_callback_query():
+    await check_callback_query("c")
 
 
-def test_game_score_for_deserialized_state():
+@pytest.mark.asyncio
+async def test_game_score_for_deserialized_state():
     cur_score = 1
     prev_message_id = 0
-    check_conversation(
-        make_conv_conf(ProtoGameState(QUESTIONS, 2, cur_score, prev_message_id)),
+    await check_conversation(
+        await make_conv_conf(ProtoGameState(QUESTIONS, 2, cur_score, prev_message_id)),
         [
             user("d"),  # correct answer for question 2 (0-based)
             bot_edit(fmt.make_answered_question(3, QUESTIONS[2])),

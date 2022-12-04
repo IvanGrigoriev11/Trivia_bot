@@ -24,22 +24,22 @@ class BotState(ABC):
     def __init__(self, _on_enter_called: bool):
         self._on_enter_called = _on_enter_called
 
-    def on_enter(self, chat_id: int) -> None:
+    async def on_enter(self, chat_id: int) -> None:
         assert not self._on_enter_called
         self._on_enter_called = True
-        self._do_on_enter(chat_id)
+        await self._do_on_enter(chat_id)
 
-    def process(self, update: Update) -> "BotState":
+    async def process(self, update: Update) -> "BotState":
         assert self._on_enter_called
-        return self._do_process(update)
+        return await self._do_process(update)
 
     @abstractmethod
-    def _do_on_enter(self, chat_id: int) -> None:
+    async def _do_on_enter(self, chat_id: int) -> None:
         """A callback when this bot state becomes active. Can be used to
         e.g. proactively send a message to the chat."""
 
     @abstractmethod
-    def _do_process(self, update: Update) -> "BotState":
+    async def _do_process(self, update: Update) -> "BotState":
         """A callback for handling an update."""
 
     def __eq__(self, other):
@@ -66,19 +66,21 @@ class IdleState(BotState):
         self._client = client
         self._state_factory = state_factory
 
-    def _do_on_enter(self, chat_id: int) -> None:
+    async def _do_on_enter(self, chat_id: int) -> None:
         pass
 
-    def _do_process(self, update: Update) -> "BotState":
+    async def _do_process(self, update: Update) -> "BotState":
         if update.message is not None:
             text = update.message.text.lower()
             chat_id = update.message.chat.id
 
             if text == "/startgame":
-                self._client.send_text(chat_id, "Starting game!")
+                await self._client.send_text(chat_id, "Starting game!")
                 return self._state_factory.make_game_state()
 
-            self._client.send_text(chat_id, "Type /startGame to start a new game.")
+            await self._client.send_text(
+                chat_id, "Type /startGame to start a new game."
+            )
         return self
 
 
@@ -119,20 +121,20 @@ class GameState(BotState):
     def game_params(self) -> ProtoGameState:
         return self._params
 
-    def _do_on_enter(self, chat_id: int) -> None:
+    async def _do_on_enter(self, chat_id: int) -> None:
         assert self._params.current_question == 0
-        self._params.last_question_msg_id = self._client.send_text(
+        self._params.last_question_msg_id = await self._client.send_text(
             chat_id,
             fmt.make_question(self._params.questions[0]),
             fmt.make_keyboard(self._params.questions[0]),
         )
 
-    def _do_process(self, update: Update) -> "BotState":
+    async def _do_process(self, update: Update) -> "BotState":
         chat_id = update.chat_id
         if update.message is not None:
             answer = parse_answer(update.message.text)
             if answer is None:
-                self._client.send_text(
+                await self._client.send_text(
                     chat_id,
                     fmt.make_answers_help_message(
                         self._params.questions[self._params.current_question].answers
@@ -145,12 +147,12 @@ class GameState(BotState):
                 raise InvalidCallbackDataException(update.callback_query.data)
         else:
             return self
-        return self._handle_answer(chat_id, answer)
+        return await self._handle_answer(chat_id, answer)
 
-    def _handle_answer(self, chat_id: int, answer: int):
+    async def _handle_answer(self, chat_id: int, answer: int):
         cur_question = self._params.questions[self._params.current_question]
         if answer < 0 or answer >= len(cur_question.answers):
-            self._client.send_text(
+            await self._client.send_text(
                 chat_id,
                 fmt.make_answers_help_message(cur_question.answers),
             )
@@ -162,7 +164,7 @@ class GameState(BotState):
         ):
             self._params.score += 1
 
-        self._client.edit_message_text(
+        await self._client.edit_message_text(
             MessageEdit(
                 chat_id,
                 self._params.last_question_msg_id,
@@ -174,7 +176,7 @@ class GameState(BotState):
         self._params.current_question += 1
 
         if self._params.current_question != len(self._params.questions):
-            self._params.last_question_msg_id = self._client.send_text(
+            self._params.last_question_msg_id = await self._client.send_text(
                 chat_id,
                 fmt.make_question(
                     self._params.questions[self._params.current_question]
@@ -185,7 +187,7 @@ class GameState(BotState):
             )
             return self
 
-        self._client.send_text(
+        await self._client.send_text(
             chat_id,
             f"You got {self._params.score} points out of {self._params.current_question}."
             + "\n"
@@ -207,11 +209,11 @@ class GreetingState(BotState):
         self._client = client
         self._state_factory = state_factory
 
-    def _do_on_enter(self, chat_id: int) -> None:
+    async def _do_on_enter(self, chat_id: int) -> None:
         pass
 
-    def _do_process(self, update: Update) -> "BotState":
-        self._client.send_text(
+    async def _do_process(self, update: Update) -> "BotState":
+        await self._client.send_text(
             update.chat_id,
             "Hello. I am Trivia Bot. If you want to play the game,\n"
             "please type /startGame",
