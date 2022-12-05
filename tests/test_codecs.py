@@ -1,6 +1,6 @@
 import asyncio
 import json
-from typing import Callable, Coroutine, Optional
+from typing import Callable, Coroutine
 
 import pytest
 from tutils import QUESTIONS, FakeTelegramClient
@@ -11,9 +11,7 @@ from custom_codecs import ChatHandlerDecoder, ChatHandlerEncoder
 from storage import InMemoryStorage
 
 
-async def check_chat_handler_codecs(
-    make_state: Callable[[BotStateFactory], Optional[Coroutine]]
-):
+async def check_chat_handler_codecs(make_state: Callable[[BotStateFactory], Coroutine]):
     client = FakeTelegramClient()
     chat_id = 111
     storage = InMemoryStorage(QUESTIONS)
