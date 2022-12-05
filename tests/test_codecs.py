@@ -28,28 +28,22 @@ async def check_chat_handler_codecs(
     assert initial_chat_handler == reassembled_chat_handler
 
 
-async def _greeting_state_handler():
-    await check_chat_handler_codecs(lambda factory: factory.make_greeting_state())
-
-
 @pytest.mark.asyncio
 async def test_greeting_state_handler():
-    asyncio.create_task(_greeting_state_handler())
-
-
-async def _idle_state_handler():
-    await check_chat_handler_codecs(lambda factory: factory.make_idle_state())
+    asyncio.create_task(
+        check_chat_handler_codecs(lambda factory: factory.make_greeting_state())
+    )
 
 
 @pytest.mark.asyncio
 async def test_idle_state_handler():
-    asyncio.create_task(_idle_state_handler())
-
-
-async def _right_game_state_handler():
-    await check_chat_handler_codecs(lambda factory: factory.make_game_state())
+    asyncio.create_task(
+        check_chat_handler_codecs(lambda factory: factory.make_idle_state())
+    )
 
 
 @pytest.mark.asyncio
 async def test_right_game_state_handler():
-    asyncio.create_task(_right_game_state_handler())
+    asyncio.create_task(
+        check_chat_handler_codecs(lambda factory: factory.make_game_state())
+    )
