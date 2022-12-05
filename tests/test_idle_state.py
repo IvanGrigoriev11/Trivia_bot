@@ -17,7 +17,7 @@ async def make_conv_conf():
     client = FakeTelegramClient()
     storage = InMemoryStorage(QUESTIONS)
     state_factory = BotStateFactory(client, storage)
-    state = state_factory.make_idle_state()
+    state = await state_factory.make_idle_state()
     chat_id = 111
     ch = await ChatHandler.create(state, chat_id)
     return ConvConfig(ch, client, chat_id)

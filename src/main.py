@@ -9,7 +9,7 @@ import jsons
 import typer
 from fastapi import FastAPI, Request
 from fastapi.responses import PlainTextResponse
-from psycopg_pool import ConnectionPool
+from psycopg_pool import AsyncConnectionPool
 from uvicorn import Config, Server
 
 from bot_state import BotStateFactory
@@ -48,17 +48,17 @@ class Bot:
 
     async def handle_update(self, update: Update):
         chat_id = update.chat_id
-        chat_handler_snapshot = self.storage.get_chat_handler(chat_id)
+        chat_handler_snapshot = await self.storage.get_chat_handler(chat_id)
         if chat_handler_snapshot is None:
             chat_handler = await ChatHandler.create(
-                self.state_factory.make_greeting_state(), chat_id
+                await self.state_factory.make_greeting_state(), chat_id
             )
         else:
             chat_handler = ChatHandlerDecoder(
                 self.telegram_client, self.state_factory
             ).decode(json.loads(chat_handler_snapshot))
         await chat_handler.process(update)
-        self.storage.set_chat_handler(
+        await self.storage.set_chat_handler(
             chat_id, json.dumps(chat_handler, cls=ChatHandlerEncoder)
         )
 
@@ -165,7 +165,7 @@ async def launch_bot(inmemory: bool, server_conf: Optional[ServerConfig] = None)
         db_host = os.environ["POSTGRES_DB_HOST"]
         db_name = os.environ["POSTGRES_DB_NAME"]
         conninfo = f"postgresql://{user}:{password}@{db_host}:{5432}/{db_name}"
-        with ConnectionPool(conninfo) as pool:
+        async with AsyncConnectionPool(conninfo) as pool:
             game_storage = PostgresStorage(pool)
             await run_bot(game_storage)
 

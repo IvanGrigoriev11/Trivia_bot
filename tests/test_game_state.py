@@ -25,7 +25,9 @@ async def make_conv_conf(game_params: Optional[ProtoGameState] = None):
     chat_id = 111
 
     if game_params is None:
-        handler = await ChatHandler.create(state_factory.make_game_state(), chat_id)
+        handler = await ChatHandler.create(
+            await state_factory.make_game_state(), chat_id
+        )
     else:
         handler = ChatHandler(
             GameState(client, state_factory, game_params, True), chat_id
@@ -109,7 +111,7 @@ async def test_typing_unsuitable_letter_as_answer():
 async def check_callback_query(button: str):
     client = FakeTelegramClient()
 
-    state = BotStateFactory(client, InMemoryStorage(QUESTIONS)).make_game_state()
+    state = await BotStateFactory(client, InMemoryStorage(QUESTIONS)).make_game_state()
     chat_id = 111
     await state.on_enter(chat_id)
     await state.process(Update(123, None, CallbackQuery(User(111), f"{button}")))

@@ -19,7 +19,7 @@ async def make_conv_conf():
     state_factory = BotStateFactory(client, storage)
     state = state_factory.make_greeting_state()
     chat_id = 111
-    ch = await ChatHandler.create(state, chat_id)
+    ch = await ChatHandler.create(await state, chat_id)
     return ConvConfig(ch, client, chat_id)
 
 
