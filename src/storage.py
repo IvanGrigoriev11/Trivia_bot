@@ -1,3 +1,4 @@
+import asyncio
 import itertools
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
@@ -142,7 +143,11 @@ class PostgresStorage(Storage):
                 )
 
     @cache
-    async def _ensure_chat_handler_table(self):
+    def _ensure_chat_handler_table(self):
+        coro = self._ensure_chat_handler_table_coro()
+        return asyncio.create_task(coro)
+
+    async def _ensure_chat_handler_table_coro(self):
         async with self._pool.connection() as conn:
             async with conn.cursor() as cur:
                 await cur.execute(
