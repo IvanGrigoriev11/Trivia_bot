@@ -76,7 +76,7 @@ class IdleState(BotState):
 
             if text == "/startgame":
                 await self._client.send_text(chat_id, "Starting game!")
-                return self._state_factory.make_game_state()
+                return await self._state_factory.make_game_state()
 
             await self._client.send_text(
                 chat_id, "Type /startGame to start a new game."
@@ -193,7 +193,7 @@ class GameState(BotState):
             + "\n"
             + "If you want to try again, type /startGame to start a new game.",
         )
-        return self._state_factory.make_idle_state()
+        return await self._state_factory.make_idle_state()
 
 
 class GreetingState(BotState):
@@ -218,7 +218,7 @@ class GreetingState(BotState):
             "Hello. I am Trivia Bot. If you want to play the game,\n"
             "please type /startGame",
         )
-        return self._state_factory.make_idle_state()
+        return await self._state_factory.make_idle_state()
 
 
 class BotStateFactory:
@@ -228,18 +228,20 @@ class BotStateFactory:
         self._client = client
         self._storage = storage
 
-    def make_game_state(self):
+    async def make_game_state(self):
         _question_count = 5
         if self._storage is not None:
             return GameState(
                 self._client,
                 self,
-                ProtoGameState(self._storage.get_questions(_question_count), 0, 0, 0),
+                ProtoGameState(
+                    await self._storage.get_questions(_question_count), 0, 0, 0
+                ),
             )
         raise TypeError("Storage must be chosen for creating game state")
 
-    def make_idle_state(self):
+    async def make_idle_state(self):
         return IdleState(self._client, self)
 
-    def make_greeting_state(self):
+    async def make_greeting_state(self):
         return GreetingState(self._client, self)
