@@ -9,7 +9,7 @@ import typer
 from psycopg import Cursor
 
 
-class Command(Enum, str):
+class Command(str, Enum):
     reset = "reset"
     populate = "populate"
 

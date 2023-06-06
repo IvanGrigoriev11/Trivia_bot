@@ -86,10 +86,20 @@ class Bot:
 
         @app.post("/handleUpdate")
         async def handle_update(request: Request):
-            payload = await request.json()
+            def _filter_payload(payload):
+                if "channel_post" in payload:
+                    logging.warning(
+                        "The message is not processable due to invalid format: %s",
+                        payload,
+                    )
+                    return None
+                return payload
+
+            filtered_payload = await _filter_payload(await request.json())
+
             try:
                 update = jsons.load(
-                    payload, cls=Update, key_transformer=transform_keywords
+                    filtered_payload, cls=Update, key_transformer=transform_keywords
                 )
             except jsons.DeserializationError as e:
                 raise UnknownErrorException(
