@@ -70,6 +70,9 @@ class Storage(ABC):
     async def set_chat_handler(self, chat_id: int, chat_handler: str):
         """Save serialized chat_handler to the DB or internal memory."""
 
+    async def del_chat_handler(self, chat_id: int):
+        """Delete all entries related to a specific chat id due to user blocking."""
+
 
 class PostgresStorage(Storage):
     """Data storage over a PostgreSQL database."""
@@ -142,6 +145,17 @@ class PostgresStorage(Storage):
                     ),
                 )
 
+    async def del_chat_handler(self, chat_id: int):
+        async with self._pool.connection() as cur:
+            self._ensure_chat_handler_table()
+            await cur.execute(
+                """
+                DELETE FROM handlers
+                WHERE chat_id = (%s);
+                """,
+                (chat_id,),
+            )
+
     @cache
     def _ensure_chat_handler_table(self):
         coro = self._ensure_chat_handler_table_coro()
@@ -153,7 +167,7 @@ class PostgresStorage(Storage):
                 await cur.execute(
                     """
                     CREATE TABLE IF NOT EXISTS handlers (
-                        chat_id integer PRIMARY KEY,
+                        chat_id bigint PRIMARY KEY,
                         chat_handler text
                         )
                     """
@@ -178,3 +192,7 @@ class InMemoryStorage(Storage):
 
     async def set_chat_handler(self, chat_id: int, chat_handler: str):
         self._chat_handlers[chat_id] = chat_handler
+
+    async def del_chat_handler(self, chat_id: int):
+        del self._chat_handlers[chat_id]
+

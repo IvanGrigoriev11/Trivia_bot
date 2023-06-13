@@ -48,19 +48,26 @@ class Bot:
 
     async def handle_update(self, update: Update):
         chat_id = update.chat_id
-        chat_handler_snapshot = await self.storage.get_chat_handler(chat_id)
-        if chat_handler_snapshot is None:
-            chat_handler = await ChatHandler.create(
-                await self.state_factory.make_greeting_state(), chat_id
+
+        if update.my_chat_member is None:
+            chat_handler_snapshot = await self.storage.get_chat_handler(chat_id)
+            if chat_handler_snapshot is None:
+                chat_handler = await ChatHandler.create(
+                    await self.state_factory.make_greeting_state(), chat_id
+                )
+            else:
+                chat_handler = ChatHandlerDecoder(
+                    self.telegram_client, self.state_factory
+                ).decode(json.loads(chat_handler_snapshot))
+            await chat_handler.process(update)
+            await self.storage.set_chat_handler(
+                chat_id, json.dumps(chat_handler, cls=ChatHandlerEncoder)
             )
-        else:
-            chat_handler = ChatHandlerDecoder(
-                self.telegram_client, self.state_factory
-            ).decode(json.loads(chat_handler_snapshot))
-        await chat_handler.process(update)
-        await self.storage.set_chat_handler(
-            chat_id, json.dumps(chat_handler, cls=ChatHandlerEncoder)
-        )
+        elif update.my_chat_member.new_chat_member.status == "member":
+            logging.warning(f"The user {chat_id} has unblocked the bot")
+        elif update.my_chat_member.new_chat_member.status == "kicked":
+            logging.warning(f"The user {chat_id} has blocked the bot")
+            await self.storage.del_chat_handler(chat_id)
 
     async def run_client_mode(self):
         self.telegram_client.delete_webhook()
@@ -88,14 +95,12 @@ class Bot:
         async def handle_update(request: Request):
             def _filter_payload(payload):
                 if "channel_post" in payload:
-                    logging.warning(
-                        "The message is not processable due to invalid format: %s",
-                        payload,
-                    )
+                    logging.warning("The message is not processable due to invalid format: %s", payload)
                     return None
+
                 return payload
 
-            filtered_payload = await _filter_payload(await request.json())
+            filtered_payload = _filter_payload(await request.json())
 
             try:
                 update = jsons.load(
