@@ -268,13 +268,11 @@ class LiveTelegramClient(TelegramClient):
         return None
 
     def set_webhook(self, url: str, cert_path: Optional[str] = None) -> None:
-        allowed_updates = (
-            "allowed_updates=['message','callback_query','my_chat_member']"
-        )
+        fields = "allowed_updates=['message','callback_query','my_chat_member']"
         if cert_path is None:
             self._request(
                 "post",
-                f"https://api.telegram.org/bot{self._token}/setWebhook?url={url}&{allowed_updates}",
+                f"https://api.telegram.org/bot{self._token}/setWebhook?url={url}&{fields}",
             )
         else:
             cert = Path(cert_path)
@@ -282,7 +280,7 @@ class LiveTelegramClient(TelegramClient):
                 files = {"certificate": cert}
                 self._request(
                     "post",
-                    f"https://api.telegram.org/bot{self._token}/setWebhook?url={url}&{allowed_updates}",
+                    f"https://api.telegram.org/bot{self._token}/setWebhook?url={url}&{fields}",
                     files=files,
                 )
 
@@ -318,12 +316,10 @@ class LiveTelegramClient(TelegramClient):
 
     @filter_messages
     async def get_updates(self, offset: int = 0) -> List[Update]:
-        allowed_updates = (
-            "allowed_updates=['message','callback_query','my_chat_member']"
-        )
+        fields = "allowed_updates=['message','callback_query','my_chat_member']"
         response = await self._async_request(
             "get",
-            f"https://api.telegram.org/bot{self._token}/getUpdates?offset={offset}&{allowed_updates}",
+            f"https://api.telegram.org/bot{self._token}/getUpdates?offset={offset}&{fields}",
             cls=GetUpdatesResponse,
         )
         if response is None:
