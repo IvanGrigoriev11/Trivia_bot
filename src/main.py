@@ -95,7 +95,10 @@ class Bot:
         async def handle_update(request: Request):
             def _filter_payload(payload):
                 if "channel_post" in payload:
-                    logging.warning("The message is not processable due to invalid format: %s", payload)
+                    logging.warning(
+                        "The message is not processable due to invalid format: %s",
+                        payload,
+                    )
                     return None
 
                 return payload

@@ -17,10 +17,13 @@ def filter_messages(func):
     async def wrapper(*args, **kwargs):
         message = await func(*args, **kwargs)
         if "channel_post" in message:
-            logging.warning("The message is not processable due to invalid format: %s", message)
+            logging.warning(
+                "The message is not processable due to invalid format: %s", message
+            )
             return None
 
         return message
+
     return wrapper
 
 
@@ -126,7 +129,14 @@ class Update:
     @property
     def chat_id(self) -> int:
         assert (
-            len([x for x in (self.message, self.callback_query, self.my_chat_member) if x is not None]) == 1
+            len(
+                [
+                    x
+                    for x in (self.message, self.callback_query, self.my_chat_member)
+                    if x is not None
+                ]
+            )
+            == 1
         )
 
         if self.message is not None:
@@ -258,7 +268,9 @@ class LiveTelegramClient(TelegramClient):
         return None
 
     def set_webhook(self, url: str, cert_path: Optional[str] = None) -> None:
-        allowed_updates = "allowed_updates=['message','callback_query','my_chat_member']"
+        allowed_updates = (
+            "allowed_updates=['message','callback_query','my_chat_member']"
+        )
         if cert_path is None:
             self._request(
                 "post",
@@ -306,7 +318,9 @@ class LiveTelegramClient(TelegramClient):
 
     @filter_messages
     async def get_updates(self, offset: int = 0) -> List[Update]:
-        allowed_updates = "allowed_updates=['message','callback_query','my_chat_member']"
+        allowed_updates = (
+            "allowed_updates=['message','callback_query','my_chat_member']"
+        )
         response = await self._async_request(
             "get",
             f"https://api.telegram.org/bot{self._token}/getUpdates?offset={offset}&{allowed_updates}",

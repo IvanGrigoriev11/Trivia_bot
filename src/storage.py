@@ -195,4 +195,3 @@ class InMemoryStorage(Storage):
 
     async def del_chat_handler(self, chat_id: int):
         del self._chat_handlers[chat_id]
-
