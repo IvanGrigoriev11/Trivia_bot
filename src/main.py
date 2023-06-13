@@ -64,9 +64,9 @@ class Bot:
                 chat_id, json.dumps(chat_handler, cls=ChatHandlerEncoder)
             )
         elif update.my_chat_member.new_chat_member.status == "member":
-            logging.warning(f"The user %s has unblocked the bot" % chat_id)
+            logging.warning(f"The user %s has unblocked the bot", chat_id)
         elif update.my_chat_member.new_chat_member.status == "kicked":
-            logging.warning(f"The user {chat_id} has blocked the bot" % chat_id)
+            logging.warning(f"The user %s has blocked the bot", chat_id)
             await self.storage.del_chat_handler(chat_id)
 
     async def run_client_mode(self):
