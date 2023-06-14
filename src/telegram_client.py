@@ -230,9 +230,7 @@ class LiveTelegramClient(TelegramClient):
         self._token = token
 
     @staticmethod
-    def filter_messages(
-        func: Callable[[TelegramClient, int], Coroutine[Any, Any, List[Update]]]
-    ):
+    def filter_messages(func: Callable[[..., int], Coroutine[Any, Any, List[Update]]]):
         """Filters out updates with valid fields from those with the field 'channel_post'
         if such are skipped by telegram.
         """
