@@ -220,7 +220,9 @@ class TelegramClient(ABC):
         return await self.send_message(SendMessagePayload(chat_id, text, reply_markup))
 
 
-def filter_messages(func: Callable[[TelegramClient], Coroutine[Any, Any, List[Update]]]):
+def filter_messages(
+    func: Callable[[TelegramClient], Coroutine[Any, Any, List[Update]]]
+):
     """Filters out updates with valid fields from those with the field 'channel_post'
     if such are skipped by telegram.
     """
