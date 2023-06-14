@@ -2,7 +2,7 @@ import logging
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, List, Optional, Type, TypeVar
+from typing import Any, Callable, Coroutine, List, Optional, Type, TypeVar
 
 import aiohttp
 import jsons
@@ -11,20 +11,6 @@ import requests
 from utils import transform_keywords
 
 T = TypeVar("T")
-
-
-def filter_messages(func):
-    async def wrapper(*args, **kwargs):
-        message = await func(*args, **kwargs)
-        if "channel_post" in message:
-            logging.warning(
-                "The message is not processable due to invalid format: %s", message
-            )
-            return None
-
-        return message
-
-    return wrapper
 
 
 class TelegramException(Exception):
@@ -213,7 +199,6 @@ class TelegramClient(ABC):
     """An interface for communicating with Telegram backend."""
 
     @abstractmethod
-    @filter_messages
     async def get_updates(self, offset: int = 0) -> List[Update]:
         """Gets updates from the telegram with `update_id` bigger than `offset`."""
 
@@ -233,6 +218,24 @@ class TelegramClient(ABC):
     ) -> int:
 
         return await self.send_message(SendMessagePayload(chat_id, text, reply_markup))
+
+
+def filter_messages(func: Callable[[List[Update]], Optional[Coroutine]]):
+    """Filters out updates with valid fields from those with the field 'channel_post'
+    if such are skipped by telegram.
+    """
+
+    async def wrapper(*args, **kwargs):
+        message = await func(*args, **kwargs)
+        if "channel_post" in message:
+            logging.warning(
+                "The message is not processable due to invalid format: %s", message
+            )
+            return None
+
+        return message
+
+    return wrapper
 
 
 class LiveTelegramClient(TelegramClient):
