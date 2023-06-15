@@ -112,6 +112,7 @@ class Update:
     message: Optional[Message] = None
     callback_query: Optional[CallbackQuery] = None
     my_chat_member: Optional[ChatMemberUpdated] = None
+    channel_post: Optional[Message] = None
 
     @property
     def chat_id(self) -> int:
@@ -233,10 +234,10 @@ def filter_updates(
         result = await func(*args, **kwargs)
         filtered_updates = []
         for update in result:
-            if "channel_post" in update.message:
+            if update.channel_post is not None:
                 logging.warning(
                     "The message is not processable due to invalid format: %s",
-                    update.message,
+                    update.channel_post,
                 )
             else:
                 filtered_updates.append(update)
