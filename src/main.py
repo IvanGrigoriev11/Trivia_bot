@@ -38,8 +38,7 @@ def filter_updates(update: Update) -> Optional[Update]:
             update.channel_post,
         )
         return None
-    else:
-        return update
+    return update
 
 
 @dataclass
