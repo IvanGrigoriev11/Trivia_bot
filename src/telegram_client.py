@@ -1,3 +1,4 @@
+import logging
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from functools import wraps
@@ -220,13 +221,22 @@ class TelegramClient(ABC):
         return await self.send_message(SendMessagePayload(chat_id, text, reply_markup))
 
 
-def filter_updates(
+def filter_messages(
     func: Callable[..., Coroutine[Any, Any, List[Update]]]
-) -> Callable[..., Coroutine[Any, Any, List[Update]]]:
+) -> Callable[..., Coroutine[Any, Any, Optional[List[Update]]]]:
+    """Filters out updates with valid fields from those with the field 'channel_post'
+    if such are skipped by telegram.
+    """
+
     @wraps(func)
-    async def wrapper(*args, **kwargs) -> List[Update]:
-        result = await func(*args, **kwargs)
-        return [update for update in result if update.message is not None]
+    async def wrapper(*args, **kwargs) -> Optional[List[Update]]:
+        message = await func(*args, **kwargs)
+        if "channel_post" in message:
+            logging.warning(
+                "The message is not processable due to invalid format: %s", message
+            )
+            return None
+        return message
 
     return wrapper
 
@@ -310,7 +320,7 @@ class LiveTelegramClient(TelegramClient):
             raise UnexpectedStatusCodeException(response.status, response.reason)
         return None
 
-    @filter_updates
+    @filter_messages
     async def get_updates(self, offset: int = 0) -> List[Update]:
         fields = "allowed_updates=['message','callback_query','my_chat_member']"
         response = await self._async_request(
