@@ -1,3 +1,4 @@
+import logging
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from pathlib import Path
@@ -111,6 +112,20 @@ class Update:
     callback_query: Optional[CallbackQuery] = None
     my_chat_member: Optional[ChatMemberUpdated] = None
     channel_post: Optional[Message] = None
+
+    @property
+    def is_processable(self) -> bool:
+        """Filters out updates with valid fields from those with the field 'channel_post'
+        if such are skipped by telegram.
+        """
+
+        if self.channel_post is not None:
+            logging.warning(
+                "The message is not processable due to invalid format: %s",
+                self.channel_post,
+            )
+            return False
+        return True
 
     @property
     def chat_id(self) -> int:

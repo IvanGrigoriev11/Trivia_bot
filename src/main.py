@@ -27,20 +27,6 @@ from telegram_client import (
 from utils import transform_keywords
 
 
-def filter_updates(update: Update) -> Optional[Update]:
-    """Filters out updates with valid fields from those with the field 'channel_post'
-    if such are skipped by telegram.
-    """
-
-    if update.channel_post is not None:
-        logging.warning(
-            "The message is not processable due to invalid format: %s",
-            update.channel_post,
-        )
-        return None
-    return update
-
-
 @dataclass
 class ServerConfig:
     """Necessary parameters to configure the server."""
@@ -94,11 +80,9 @@ class Bot:
                 continue
 
             for update in result:
-                filtered_update = filter_updates(update)
                 try:
-                    if filtered_update is None:
-                        continue
-                    await self.handle_update(filtered_update)
+                    if update.is_processable:
+                        await self.handle_update(update)
                 except Exception as e:
                     logging.error(e)
                 finally:
@@ -121,10 +105,8 @@ class Bot:
                     "Failed to deserialize Telegram request"
                 ) from e
 
-            filtered_updates = filter_updates(update)
-
-            if filtered_updates:
-                await self.handle_update(filtered_updates)
+            if update.is_processable:
+                await self.handle_update(update)
 
         @app.exception_handler(TelegramException)
         async def telegram_exception_handler(_request: Request, exc: TelegramException):
