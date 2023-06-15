@@ -115,8 +115,8 @@ class Update:
 
     @property
     def is_processable(self) -> bool:
-        """Filters out updates with valid fields from those with the field 'channel_post'
-        if such are skipped by telegram.
+        """Checks if Update() object is processable or not. Returns 'True' if the object has only valid fields.
+        If there is invalid field `channel_post` in Update() object, it returns 'False'.
         """
 
         if self.channel_post is not None:
