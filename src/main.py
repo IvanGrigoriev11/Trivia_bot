@@ -122,7 +122,9 @@ class Bot:
                 ) from e
 
             filtered_updates = filter_updates(update)
-            await self.handle_update(filtered_updates)
+
+            if filtered_updates:
+                await self.handle_update(filtered_updates)
 
         @app.exception_handler(TelegramException)
         async def telegram_exception_handler(_request: Request, exc: TelegramException):
