@@ -1,3 +1,4 @@
+import logging
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from pathlib import Path
@@ -86,6 +87,21 @@ class Message:
 
 
 @dataclass
+class ChatMember:
+    """Сurrent status of the specific chat."""
+
+    status: str
+
+
+@dataclass
+class ChatMemberUpdated:
+    """Current membership status."""
+
+    chat: Chat
+    new_chat_member: ChatMember
+
+
+@dataclass
 class Update:
     """A class used to represent Telegram updates that a bot can receive.
     The class contains two optional fields which represent special type of Telegram messages.
@@ -94,17 +110,43 @@ class Update:
     update_id: int
     message: Optional[Message] = None
     callback_query: Optional[CallbackQuery] = None
+    my_chat_member: Optional[ChatMemberUpdated] = None
+    channel_post: Optional[Message] = None
+
+    @property
+    def is_processable(self) -> bool:
+        """Checks if Update() object is processable or not.
+        Returns 'True' if the object has only valid fields.
+        If there is invalid field `channel_post` in Update() object, it returns 'False'.
+        """
+
+        if self.channel_post is not None:
+            logging.warning(
+                "The message is not processable due to invalid format: %s",
+                self.channel_post,
+            )
+            return False
+        return True
 
     @property
     def chat_id(self) -> int:
         assert (
-            len([x for x in (self.message, self.callback_query) if x is not None]) == 1
+            len(
+                [
+                    x
+                    for x in (self.message, self.callback_query, self.my_chat_member)
+                    if x is not None
+                ]
+            )
+            == 1
         )
 
         if self.message is not None:
             return self.message.chat.id
         if self.callback_query is not None:
             return self.callback_query.from_.id
+        if self.my_chat_member is not None:
+            return self.my_chat_member.chat.id
 
         assert False, "Unreachable"
 
@@ -227,10 +269,11 @@ class LiveTelegramClient(TelegramClient):
         return None
 
     def set_webhook(self, url: str, cert_path: Optional[str] = None) -> None:
+        fields = "allowed_updates=['message','callback_query','my_chat_member']"
         if cert_path is None:
             self._request(
                 "post",
-                f"https://api.telegram.org/bot{self._token}/setWebhook?url={url}",
+                f"https://api.telegram.org/bot{self._token}/setWebhook?url={url}&{fields}",
             )
         else:
             cert = Path(cert_path)
@@ -238,7 +281,7 @@ class LiveTelegramClient(TelegramClient):
                 files = {"certificate": cert}
                 self._request(
                     "post",
-                    f"https://api.telegram.org/bot{self._token}/setWebhook?url={url}",
+                    f"https://api.telegram.org/bot{self._token}/setWebhook?url={url}&{fields}",
                     files=files,
                 )
 
@@ -273,9 +316,10 @@ class LiveTelegramClient(TelegramClient):
         return None
 
     async def get_updates(self, offset: int = 0) -> List[Update]:
+        fields = "allowed_updates=['message','callback_query','my_chat_member']"
         response = await self._async_request(
             "get",
-            f"https://api.telegram.org/bot{self._token}/getUpdates?offset={offset}",
+            f"https://api.telegram.org/bot{self._token}/getUpdates?offset={offset}&{fields}",
             cls=GetUpdatesResponse,
         )
         if response is None:

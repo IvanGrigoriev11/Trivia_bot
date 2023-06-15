@@ -48,19 +48,26 @@ class Bot:
 
     async def handle_update(self, update: Update):
         chat_id = update.chat_id
-        chat_handler_snapshot = await self.storage.get_chat_handler(chat_id)
-        if chat_handler_snapshot is None:
-            chat_handler = await ChatHandler.create(
-                await self.state_factory.make_greeting_state(), chat_id
+
+        if update.my_chat_member is None:
+            chat_handler_snapshot = await self.storage.get_chat_handler(chat_id)
+            if chat_handler_snapshot is None:
+                chat_handler = await ChatHandler.create(
+                    await self.state_factory.make_greeting_state(), chat_id
+                )
+            else:
+                chat_handler = ChatHandlerDecoder(
+                    self.telegram_client, self.state_factory
+                ).decode(json.loads(chat_handler_snapshot))
+            await chat_handler.process(update)
+            await self.storage.set_chat_handler(
+                chat_id, json.dumps(chat_handler, cls=ChatHandlerEncoder)
             )
-        else:
-            chat_handler = ChatHandlerDecoder(
-                self.telegram_client, self.state_factory
-            ).decode(json.loads(chat_handler_snapshot))
-        await chat_handler.process(update)
-        await self.storage.set_chat_handler(
-            chat_id, json.dumps(chat_handler, cls=ChatHandlerEncoder)
-        )
+        elif update.my_chat_member.new_chat_member.status == "member":
+            logging.warning("The bot was unblocked by user: %s", chat_id)
+        elif update.my_chat_member.new_chat_member.status == "kicked":
+            logging.warning("The bot was blocked by user: %s", chat_id)
+            await self.storage.del_chat_handler(chat_id)
 
     async def run_client_mode(self):
         self.telegram_client.delete_webhook()
@@ -74,7 +81,8 @@ class Bot:
 
             for update in result:
                 try:
-                    await self.handle_update(update)
+                    if update.is_processable:
+                        await self.handle_update(update)
                 except Exception as e:
                     logging.error(e)
                 finally:
@@ -87,6 +95,7 @@ class Bot:
         @app.post("/handleUpdate")
         async def handle_update(request: Request):
             payload = await request.json()
+
             try:
                 update = jsons.load(
                     payload, cls=Update, key_transformer=transform_keywords
@@ -95,7 +104,9 @@ class Bot:
                 raise UnknownErrorException(
                     "Failed to deserialize Telegram request"
                 ) from e
-            await self.handle_update(update)
+
+            if update.is_processable:
+                await self.handle_update(update)
 
         @app.exception_handler(TelegramException)
         async def telegram_exception_handler(_request: Request, exc: TelegramException):
