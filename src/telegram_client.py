@@ -1,6 +1,7 @@
 import logging
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
+from functools import wraps
 from pathlib import Path
 from typing import Any, Callable, Coroutine, List, Optional, Type, TypeVar
 
@@ -220,6 +221,26 @@ class TelegramClient(ABC):
         return await self.send_message(SendMessagePayload(chat_id, text, reply_markup))
 
 
+def filter_messages(
+    func: Callable[..., Coroutine[Any, Any, List[Update]]]
+) -> Callable[..., Optional[Coroutine[Any, Any, List[Update]]]]:
+    """Filters out updates with valid fields from those with the field 'channel_post'
+    if such are skipped by telegram.
+    """
+
+    @wraps(func)
+    async def wrapper(*args, **kwargs) -> Optional[List[Update]]:
+        message = await func(*args, **kwargs)
+        if "channel_post" in message:
+            logging.warning(
+                "The message is not processable due to invalid format: %s", message
+            )
+            return None
+        return message
+
+    return wrapper
+
+
 class LiveTelegramClient(TelegramClient):
     """An implementation of the `TelegramClient` for communicating with an actual backend."""
 
@@ -228,24 +249,6 @@ class LiveTelegramClient(TelegramClient):
         token -- Telegram bot token.
         """
         self._token = token
-
-    @staticmethod
-    def filter_messages(func: Callable[[..., int], Coroutine[Any, Any, List[Update]]]):
-        """Filters out updates with valid fields from those with the field 'channel_post'
-        if such are skipped by telegram.
-        """
-
-        async def wrapper(*args, **kwargs):
-            message = await func(*args, **kwargs)
-            if "channel_post" in message:
-                logging.warning(
-                    "The message is not processable due to invalid format: %s", message
-                )
-                return None
-
-            return message
-
-        return wrapper
 
     @staticmethod
     def _request(
