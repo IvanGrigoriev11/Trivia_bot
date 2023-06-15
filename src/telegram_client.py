@@ -115,7 +115,8 @@ class Update:
 
     @property
     def is_processable(self) -> bool:
-        """Checks if Update() object is processable or not. Returns 'True' if the object has only valid fields.
+        """Checks if Update() object is processable or not.
+        Returns 'True' if the object has only valid fields.
         If there is invalid field `channel_post` in Update() object, it returns 'False'.
         """
 
