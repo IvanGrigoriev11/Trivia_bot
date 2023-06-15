@@ -27,6 +27,21 @@ from telegram_client import (
 from utils import transform_keywords
 
 
+def filter_updates(update: Update) -> Optional[Update]:
+    """Filters out updates with valid fields from those with the field 'channel_post'
+    if such are skipped by telegram.
+    """
+
+    if update.channel_post is not None:
+        logging.warning(
+            "The message is not processable due to invalid format: %s",
+            update.channel_post,
+        )
+        return None
+    else:
+        return update
+
+
 @dataclass
 class ServerConfig:
     """Necessary parameters to configure the server."""
@@ -80,8 +95,11 @@ class Bot:
                 continue
 
             for update in result:
+                filtered_update = filter_updates(update)
                 try:
-                    await self.handle_update(update)
+                    if filtered_update is None:
+                        continue
+                    await self.handle_update(filtered_update)
                 except Exception as e:
                     logging.error(e)
                 finally:
@@ -93,27 +111,19 @@ class Bot:
 
         @app.post("/handleUpdate")
         async def handle_update(request: Request):
-            def _filter_payload(payload):
-                if "channel_post" in payload:
-                    logging.warning(
-                        "The message is not processable due to invalid format: %s",
-                        payload,
-                    )
-                    return None
-
-                return payload
-
-            filtered_payload = _filter_payload(await request.json())
+            payload = await request.json()
 
             try:
                 update = jsons.load(
-                    filtered_payload, cls=Update, key_transformer=transform_keywords
+                    payload, cls=Update, key_transformer=transform_keywords
                 )
             except jsons.DeserializationError as e:
                 raise UnknownErrorException(
                     "Failed to deserialize Telegram request"
                 ) from e
-            await self.handle_update(update)
+
+            filtered_updates = filter_updates(update)
+            await self.handle_update(filtered_updates)
 
         @app.exception_handler(TelegramException)
         async def telegram_exception_handler(_request: Request, exc: TelegramException):
