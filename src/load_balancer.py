@@ -40,7 +40,7 @@ class Op(LockService):
 
         async with aioredis.Redis(connection_pool=self._pool) as conn:
             # TO DO: discuss which expiration time is more preferable for holding the key and add it
-            await conn.execute_command("SET", chat_id, 1, "NX")
+            await conn.execute_command("SET", chat_id, 1, "NX", "EX", 5)
 
     async def release_lock(self, chat_id: int) -> None:
 
@@ -67,7 +67,7 @@ class NoOp(LockService):
 
         async with aioredis.Redis(connection_pool=self._pool) as conn:
             # TO DO: discuss which expiration time is more preferable for holding the key and add it
-            await conn.execute_command("SET", chat_id, 1, "NX")
+            await conn.execute_command("SET", chat_id, 1, "NX", "EX", 5)
 
     async def release_lock(self, chat_id: int) -> None:
         pass
