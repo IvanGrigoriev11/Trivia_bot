@@ -1,3 +1,4 @@
+from abc import abstractmethod
 from typing import Protocol
 
 import aioredis
@@ -6,15 +7,18 @@ import aioredis
 class LockService(Protocol):
     """Load balancer interface based on Redis."""
 
+    @abstractmethod
     async def acquire_lock(self, chat_id: int) -> None:
         """Set the lock on operations with a specific chat.
         If the key 'chat_id' exists in the DB, the lock is acquired on the chat.
         If the key doesn't exist in the DB, the lock doesn't exist on this chat as well.
         """
 
+    @abstractmethod
     async def release_lock(self, chat_id: int) -> None:
         """Delete lock on operations with a particular chat."""
 
+    @abstractmethod
     async def check_existing_lock(self, chat_id: int) -> bool:
         """Check if the lock is still existing."""
 
