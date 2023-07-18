@@ -46,7 +46,6 @@ class Bot:
     telegram_client: LiveTelegramClient
     state_factory: BotStateFactory
     storage: Storage
-    lock_handler: LockHandler
 
     async def handle_update(self, update: Update, lock: LockService):
         chat_id = update.chat_id
@@ -161,7 +160,6 @@ async def launch_bot(inmemory: bool, server_conf: Optional[ServerConfig] = None)
             telegram_client,
             BotStateFactory(telegram_client, storage),
             storage,
-            LockHandler(),
         )
         if server_conf:
             await bot.run_server_mode(server_conf, Op())
