@@ -46,32 +46,34 @@ class Bot:
     telegram_client: LiveTelegramClient
     state_factory: BotStateFactory
     storage: Storage
+    lock_handler: LockHandler
 
     async def handle_update(self, update: Update, lock: LockService):
         chat_id = update.chat_id
-        await lock.acquire_lock(chat_id)
-
-        if update.my_chat_member is None:
-            chat_handler_snapshot = await self.storage.get_chat_handler(chat_id)
-            if chat_handler_snapshot is None:
-                chat_handler = await ChatHandler.create(
-                    await self.state_factory.make_greeting_state(), chat_id
-                )
-            else:
-                chat_handler = ChatHandlerDecoder(
-                    self.telegram_client, self.state_factory
-                ).decode(json.loads(chat_handler_snapshot))
-            await chat_handler.process(update)
-            await self.storage.set_chat_handler(
-                chat_id, json.dumps(chat_handler, cls=ChatHandlerEncoder)
-            )
-        elif update.my_chat_member.new_chat_member.status == "member":
-            logging.warning("The bot was unblocked by user: %s", chat_id)
+        if not lock.check_existing_lock(chat_id):
             await lock.acquire_lock(chat_id)
-        elif update.my_chat_member.new_chat_member.status == "kicked":
-            logging.warning("The bot was blocked by user: %s", chat_id)
-            await self.storage.del_chat_handler(chat_id)
-            await lock.release_lock(chat_id)
+
+            if update.my_chat_member is None:
+                chat_handler_snapshot = await self.storage.get_chat_handler(chat_id)
+                if chat_handler_snapshot is None:
+                    chat_handler = await ChatHandler.create(
+                        await self.state_factory.make_greeting_state(), chat_id
+                    )
+                else:
+                    chat_handler = ChatHandlerDecoder(
+                        self.telegram_client, self.state_factory
+                    ).decode(json.loads(chat_handler_snapshot))
+                await chat_handler.process(update)
+                await self.storage.set_chat_handler(
+                    chat_id, json.dumps(chat_handler, cls=ChatHandlerEncoder)
+                )
+            elif update.my_chat_member.new_chat_member.status == "member":
+                logging.warning("The bot was unblocked by user: %s", chat_id)
+                await lock.acquire_lock(chat_id)
+            elif update.my_chat_member.new_chat_member.status == "kicked":
+                logging.warning("The bot was blocked by user: %s", chat_id)
+                await self.storage.del_chat_handler(chat_id)
+                await lock.release_lock(chat_id)
 
     async def run_client_mode(self, lock: NoOp):
         self.telegram_client.delete_webhook()
@@ -155,7 +157,12 @@ async def launch_bot(inmemory: bool, server_conf: Optional[ServerConfig] = None)
     telegram_client = LiveTelegramClient(token)
 
     async def run_bot(storage: Storage):
-        bot = Bot(telegram_client, BotStateFactory(telegram_client, storage), storage)
+        bot = Bot(
+            telegram_client,
+            BotStateFactory(telegram_client, storage),
+            storage,
+            LockHandler(),
+        )
         if server_conf:
             await bot.run_server_mode(server_conf, Op())
         else:

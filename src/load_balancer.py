@@ -15,6 +15,9 @@ class LockService(Protocol):
     async def release_lock(self, chat_id: int) -> None:
         """Delete lock on operations with a particular chat."""
 
+    async def check_existing_lock(self, chat_id: int) -> bool:
+        """Check if the lock is still existing."""
+
 
 # TO DO: think more about the names of child classes
 
@@ -23,6 +26,8 @@ class Op(LockService):
     """Implementation for operating with multiple machine setup."""
 
     def __init__(self):
+        # TO DO: do not forget to write to right address
+
         self._pool = aioredis.ConnectionPool.from_url(
             "redis://localhost/", max_connections=10
         )
@@ -39,7 +44,6 @@ class Op(LockService):
             await conn.execute_command("del", chat_id)
 
     async def check_existing_lock(self, chat_id: int) -> bool:
-        """Check if the lock is still existing."""
 
         async with aioredis.Redis(connection_pool=self._pool) as conn:
             if await conn.execute_command("get", chat_id):
@@ -63,3 +67,10 @@ class NoOp(LockService):
 
     async def release_lock(self, chat_id: int) -> None:
         pass
+
+    async def check_existing_lock(self, chat_id: int) -> bool:
+
+        async with aioredis.Redis(connection_pool=self._pool) as conn:
+            if await conn.execute_command("get", chat_id):
+                return True
+            return False
