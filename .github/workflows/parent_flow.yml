@@ -14,7 +14,7 @@ jobs:
       - name: INIT WORKFLOW - Dispatch init event to REMOTE repository
         if: github.event.action != 'Formula Workflow Response'
         run: |
-          curl -X POST https://api.github.com/repos/IvanGrigoriev11/Trivia_bot/dispatches \
+          curl -X POST https://api.github.com/repos/IvanGrigoriev11/newsagg/dispatches \
           -H 'Accept: application/vnd.github.everest-preview+json' \
           -u ${{ secrets.ACCESS_TOKEN }} \
           --data '{"event_type": "Start Formula Workflow", "client_payload": { "repository": "'"$GITHUB_REPOSITORY"'" }}'
@@ -23,7 +23,7 @@ jobs:
         if: github.event.action == 'Formula Workflow Response'
         run: |
           echo "RESPONSE received from '${{ github.event.client_payload.repository }}'"
-          curl -X POST https://api.github.com/repos/IvanGrigoriev11/Trivia_bot/dispatches \
+          curl -X POST https://api.github.com/repos/IvanGrigoriev11/newsagg/dispatches \
           -H 'Accept: application/vnd.github.everest-preview+json' \
           -u ${{ secrets.ACCESS_TOKEN }} \
           --data '{"event_type": "Unexpected Event Demo", "client_payload": { "repository": "'"$GITHUB_REPOSITORY"'" }}'
