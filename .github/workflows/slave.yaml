@@ -16,33 +16,33 @@ jobs:
           echo "Event type: ${{ github.event.action }}"
 
       - name: Master Branch Step
-        if: contains(github.event.client_payload.branch, 'master') || contains(github.event.client_payload.branch, 'main')
+        if: contains(github.event.client_payload.branch, 'main') || contains(github.event.client_payload.branch, 'main')
         run: |
           echo "This step runs only on master/main branch"
           echo "Branch name: ${{ github.event.client_payload.branch }}"
 
       - name: Non-Master Branch Step
-        if: "!contains(github.event.client_payload.branch, 'master') && !contains(github.event.client_payload.branch, 'main')"
+        if: "!contains(github.event.client_payload.branch, 'main') && !contains(github.event.client_payload.branch, 'main')"
         run: |
           echo "This step runs on non-master branches"
           echo "Branch name: ${{ github.event.client_payload.branch }}"
 
       - name: Master Ref Name Step 1
-        if: github.ref_name == 'master'
+        if: github.ref_name == 'main'
         run: |
           echo "This is first step for master ref_name"
           echo "Current ref_name: ${{ github.ref_name }}"
           echo "Full ref: ${{ github.ref }}"
 
       - name: Not Master Ref Name Step 2
-        if: github.ref_name != 'master'
+        if: github.ref_name != 'main'
         run: |
           echo "This is second step for master ref_name"
           echo "Repository: ${{ github.repository }}"
           echo "Event name: ${{ github.event_name }}"
 
       - name: Master Ref Name Step 3
-        if: ${{ github.ref_name == 'master' }}
+        if: ${{ github.ref_name == 'main' }}
         run: |
           echo "This is third step for master ref_name"
           echo "Repository: ${{ github.repository }}"
