@@ -27,6 +27,12 @@ jobs:
           echo "This step runs on non-master branches"
           echo "Branch name: ${{ github.event.client_payload.branch }}"
 
+      - name: Failing Step
+        run: |
+          echo "This step will fail intentionally"
+          echo "Any steps after this will not be executed"
+          exit 1
+
       - name: Master Ref Name Step 1
         if: github.ref_name == 'main'
         run: |
@@ -42,7 +48,7 @@ jobs:
           echo "Event name: ${{ github.event_name }}"
 
       - name: Master Ref Name Step 3
-        if: ${{ github.ref_name == 'main' }}
+        if: ${{ always() && github.ref_name == 'main' }}
         run: |
           echo "This is third step for master ref_name"
           echo "Repository: ${{ github.repository }}"
