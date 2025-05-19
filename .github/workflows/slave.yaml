@@ -1,0 +1,54 @@
+name: Slave Workflow
+
+on:
+  repository_dispatch:
+    types: [deploy]
+
+jobs:
+  process-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Print Trigger Information
+        run: |
+          echo "Triggered by: ${{ github.event.client_payload.triggered_by }}"
+          echo "Branch: ${{ github.event.client_payload.branch }}"
+          echo "SHA: ${{ github.event.client_payload.sha }}"
+          echo "Event type: ${{ github.event.action }}"
+
+      - name: Master Branch Step
+        if: contains(github.event.client_payload.branch, 'master') || contains(github.event.client_payload.branch, 'main')
+        run: |
+          echo "This step runs only on master/main branch"
+          echo "Branch name: ${{ github.event.client_payload.branch }}"
+
+      - name: Non-Master Branch Step
+        if: "!contains(github.event.client_payload.branch, 'master') && !contains(github.event.client_payload.branch, 'main')"
+        run: |
+          echo "This step runs on non-master branches"
+          echo "Branch name: ${{ github.event.client_payload.branch }}"
+
+      - name: Master Ref Name Step 1
+        if: github.ref_name == 'master'
+        run: |
+          echo "This is first step for master ref_name"
+          echo "Current ref_name: ${{ github.ref_name }}"
+          echo "Full ref: ${{ github.ref }}"
+
+      - name: Not Master Ref Name Step 2
+        if: github.ref_name != 'master'
+        run: |
+          echo "This is second step for master ref_name"
+          echo "Repository: ${{ github.repository }}"
+          echo "Event name: ${{ github.event_name }}"
+
+      - name: Master Ref Name Step 3
+        if: ${{ github.ref_name == 'master' }}
+        run: |
+          echo "This is third step for master ref_name"
+          echo "Repository: ${{ github.repository }}"
+          echo "Event name: ${{ github.event_name }}"
+
+      - name: Process Deployment
+        run: |
+          echo "Processing deployment for branch: ${{ github.event.client_payload.branch }}"
+          echo "Triggered by user: ${{ github.event.client_payload.triggered_by }}"
