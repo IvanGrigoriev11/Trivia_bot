@@ -15,6 +15,7 @@ from uvicorn import Config, Server
 from bot_state import BotStateFactory
 from chat_handler import ChatHandler
 from custom_codecs import ChatHandlerDecoder, ChatHandlerEncoder
+from load_balancer import LockService, NoOp, Op
 from storage import InMemoryStorage, PostgresStorage, Question, Storage
 from telegram_client import (
     LiveTelegramClient,
@@ -46,30 +47,34 @@ class Bot:
     state_factory: BotStateFactory
     storage: Storage
 
-    async def handle_update(self, update: Update):
+    async def handle_update(self, update: Update, lock: LockService):
         chat_id = update.chat_id
+        if not lock.check_existing_lock(chat_id):
+            await lock.acquire_lock(chat_id)
 
-        if update.my_chat_member is None:
-            chat_handler_snapshot = await self.storage.get_chat_handler(chat_id)
-            if chat_handler_snapshot is None:
-                chat_handler = await ChatHandler.create(
-                    await self.state_factory.make_greeting_state(), chat_id
+            if update.my_chat_member is None:
+                chat_handler_snapshot = await self.storage.get_chat_handler(chat_id)
+                if chat_handler_snapshot is None:
+                    chat_handler = await ChatHandler.create(
+                        await self.state_factory.make_greeting_state(), chat_id
+                    )
+                else:
+                    chat_handler = ChatHandlerDecoder(
+                        self.telegram_client, self.state_factory
+                    ).decode(json.loads(chat_handler_snapshot))
+                await chat_handler.process(update)
+                await self.storage.set_chat_handler(
+                    chat_id, json.dumps(chat_handler, cls=ChatHandlerEncoder)
                 )
-            else:
-                chat_handler = ChatHandlerDecoder(
-                    self.telegram_client, self.state_factory
-                ).decode(json.loads(chat_handler_snapshot))
-            await chat_handler.process(update)
-            await self.storage.set_chat_handler(
-                chat_id, json.dumps(chat_handler, cls=ChatHandlerEncoder)
-            )
-        elif update.my_chat_member.new_chat_member.status == "member":
-            logging.warning("The bot was unblocked by user: %s", chat_id)
-        elif update.my_chat_member.new_chat_member.status == "kicked":
-            logging.warning("The bot was blocked by user: %s", chat_id)
-            await self.storage.del_chat_handler(chat_id)
+            elif update.my_chat_member.new_chat_member.status == "member":
+                logging.warning("The bot was unblocked by user: %s", chat_id)
+                await lock.acquire_lock(chat_id)
+            elif update.my_chat_member.new_chat_member.status == "kicked":
+                logging.warning("The bot was blocked by user: %s", chat_id)
+                await self.storage.del_chat_handler(chat_id)
+                await lock.release_lock(chat_id)
 
-    async def run_client_mode(self):
+    async def run_client_mode(self, lock: NoOp):
         self.telegram_client.delete_webhook()
         offset = 0
         while True:
@@ -82,13 +87,13 @@ class Bot:
             for update in result:
                 try:
                     if update.is_processable:
-                        await self.handle_update(update)
+                        await self.handle_update(update, lock)
                 except Exception as e:
                     logging.error(e)
                 finally:
                     offset = update.update_id + 1
 
-    async def run_server_mode(self, conf: ServerConfig):
+    async def run_server_mode(self, conf: ServerConfig, lock: Op):
         self.telegram_client.set_webhook(conf.url, conf.cert_path)
         app = FastAPI()
 
@@ -106,7 +111,7 @@ class Bot:
                 ) from e
 
             if update.is_processable:
-                await self.handle_update(update)
+                await self.handle_update(update, lock)
 
         @app.exception_handler(TelegramException)
         async def telegram_exception_handler(_request: Request, exc: TelegramException):
@@ -151,11 +156,15 @@ async def launch_bot(inmemory: bool, server_conf: Optional[ServerConfig] = None)
     telegram_client = LiveTelegramClient(token)
 
     async def run_bot(storage: Storage):
-        bot = Bot(telegram_client, BotStateFactory(telegram_client, storage), storage)
+        bot = Bot(
+            telegram_client,
+            BotStateFactory(telegram_client, storage),
+            storage,
+        )
         if server_conf:
-            await bot.run_server_mode(server_conf)
+            await bot.run_server_mode(server_conf, Op())
         else:
-            await bot.run_client_mode()
+            await bot.run_client_mode(NoOp())
 
     if inmemory:
         game_storage = InMemoryStorage(
