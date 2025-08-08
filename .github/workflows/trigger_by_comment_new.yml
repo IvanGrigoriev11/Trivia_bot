@@ -170,7 +170,7 @@ jobs:
     with:
       docker_image: ${{ github.event.issue.pull_request && 'trivia-bot' || 'trivia-bot' }}
       docker_tag: pr-${{ github.event.issue.number }}
-      labels: ${{ toJson([needs.parse_comment.outputs.command_type]) }}
+      labels: "${{ toJson([needs.parse_comment.outputs.command_type]) }}"
       custom_images: ${{ needs.parse_comment.outputs.custom_images }}
       role-name: 'mock-role'
       project-name: 'trivia-bot'
