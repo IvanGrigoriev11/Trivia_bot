@@ -161,17 +161,35 @@ jobs:
           echo "should_run=true" >> $GITHUB_OUTPUT
           echo "Found custom services: $CUSTOM_SERVICES"
 
+  parse_pr_labels:
+    name: Parse PR Labels for QA Test Command
+    runs-on: ubuntu-latest
+    if: |
+      github.event_name == 'pull_request' &&
+      (
+        contains(github.event.pull_request.labels.*.name, 'run-qa-smoke-tests-on-localenv') ||
+        contains(github.event.pull_request.labels.*.name, 'run-qa-integration-tests-on-localenv')
+      )
+    outputs:
+      should_run: "true"
+      command_type: "all"
+      custom_images: ""
+    steps:
+      - name: Parse PR labels
+        run: |
+          echo "PR labeled with QA test labels - will run tests"
+          echo "Labels: ${{ toJson(github.event.pull_request.labels.*.name) }}"
 
   run_qa_tests:
     name: Run QA Tests via Reusable Workflow
-    needs: [parse_comment]
-    if: needs.parse_comment.outputs.should_run == 'true'
+    needs: [parse_comment, parse_pr_labels]
+    if: always() && (needs.parse_comment.outputs.should_run == 'true' || needs.parse_pr_labels.outputs.should_run == 'true')
     uses: ./.github/workflows/reusable-workflow.yml
     with:
-      docker_image: ${{ github.event.issue.pull_request && 'trivia-bot' || 'trivia-bot' }}
-      docker_tag: pr-${{ github.event.issue.number }}
+      docker_image: trivia-bot
+      docker_tag: pr-${{ github.event_name == 'pull_request' && github.event.pull_request.number || github.event.issue.number }}
       labels: ${{ github.event_name == 'pull_request' && toJson(github.event.pull_request.labels.*.name) || (needs.parse_comment.outputs.command_type == 'smoke' && '["run-qa-smoke-tests-on-localenv"]' || needs.parse_comment.outputs.command_type == 'integration' && '["run-qa-integration-tests-on-localenv"]' || '["run-qa-smoke-tests-on-localenv", "run-qa-integration-tests-on-localenv"]') }}
-      custom_images: ${{ needs.parse_comment.outputs.custom_images }}
+      custom_images: ${{ needs.parse_comment.outputs.custom_images || needs.parse_pr_labels.outputs.custom_images }}
       role-name: 'mock-role'
       project-name: 'trivia-bot'
     secrets:
