@@ -9,7 +9,7 @@ on:
 jobs:
   show_help:
     name: Show Available QA Commands
-    runs-on: [ self-hosted, can-run-small-job ]
+    runs-on: ubuntu-latest
     if: |
       github.event_name == 'issue_comment' && 
       github.event.issue.pull_request &&
@@ -55,7 +55,7 @@ jobs:
 
   handle_invalid_commands:
     name: Handle Invalid QA Commands
-    runs-on: [ self-hosted, can-run-small-job ]
+    runs-on: ubuntu-latest
     if: |
       github.event_name == 'issue_comment' && 
       github.event.issue.pull_request &&
@@ -90,7 +90,7 @@ jobs:
 
   parse_comment:
     name: Parse Comment for QA Test Command
-    runs-on: [ self-hosted, can-run-small-job ]
+    runs-on: ubuntu-latest
     if: |
       github.event_name == 'issue_comment' && 
       github.event.issue.pull_request &&
