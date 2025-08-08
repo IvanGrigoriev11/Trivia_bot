@@ -1,0 +1,86 @@
+name: QA Tests on Localenv
+
+on:
+  workflow_call:
+    inputs:
+      docker_image:
+        required: false
+        description: Docker image repository
+        type: string
+      docker_tag:
+        required: false
+        description: Docker image tag
+        type: string
+      labels:
+        required: false
+        description: Labels of the PR as JSON array
+        type: string
+      custom_images:
+        required: false
+        description: 'Custom Docker images (format: "service1:tag1 service2:tag2")'
+        type: string
+      role-name:
+        required: false
+        description: 'AWS role name to assume'
+        type: string
+        default: 'github_actions_ecr_localenv'
+      project-name:
+        required: false
+        description: 'Project name (e.g. dts, improvado-spa, etc)'
+        type: string
+        default: 'dts'
+    secrets:
+      personal_access_token:
+        required: true
+
+jobs:
+  determine_test_category:
+    name: Determine Test Category
+    runs-on: ubuntu-latest
+    outputs:
+      test_category: ${{ steps.determine.outputs.category }}
+    steps:
+      - name: Determine test category
+        id: determine
+        run: |
+          labels_json='${{ inputs.labels || '[]' }}'
+          echo "Debug: Raw input: $labels_json"
+          
+          if ! echo "$labels_json" | jq empty > /dev/null 2>&1; then
+            echo "Invalid JSON, fallback to empty array"
+            labels_json="[]"
+          fi
+          
+          echo "Debug: Normalized JSON: $labels_json"
+
+          has_smoke=$(echo "$labels_json" | jq -e 'contains(["run-qa-smoke-tests-on-localenv"])' >/dev/null && echo true || echo false)
+          has_integration=$(echo "$labels_json" | jq -e 'contains(["run-qa-integration-tests-on-localenv"])' >/dev/null && echo true || echo false)
+          
+          echo "Debug: Has smoke tests: $has_smoke"
+          echo "Debug: Has integration tests: $has_integration"
+          
+          if [[ "$has_smoke" == "true" && "$has_integration" == "true" ]]; then
+            test_category="smoke or regression"
+          elif [[ "$has_integration" == "true" ]]; then
+            test_category="regression"
+          elif [[ "$has_smoke" == "true" ]]; then
+            test_category="smoke"
+          else
+            test_category="smoke or regression"
+          fi
+          
+          echo "category=$test_category" >> "$GITHUB_OUTPUT"
+          echo "Determined test category: $test_category"
+
+  qa_autotests_workflow:
+    name: Run QA Automation Workflow
+    needs: determine_test_category
+    uses: ./.github/workflows/deploy-localenv.yml
+    with:
+      test-category: ${{ needs.determine_test_category.outputs.test_category }}
+      docker-tag: ${{ inputs.docker_tag || '' }}
+      service-name: ${{ inputs.project-name }}
+      custom-images: ${{ inputs.custom_images || '' }}
+      role-name: ${{ inputs.role-name }}
+    secrets:
+      personal_access_token: ${{ secrets.personal_access_token }}

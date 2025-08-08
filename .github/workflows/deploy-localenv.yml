@@ -1,0 +1,123 @@
+name: Run UI tests on localenv
+
+concurrency:
+  group: localenv-${{ github.ref }}
+  cancel-in-progress: true
+
+on:
+  workflow_dispatch:
+  workflow_call:
+    inputs:
+      test-category:
+        description: 'Test category to run'
+        required: false
+        default: 'can_run_on_qa_env'
+        type: string
+      docker-tag:
+        description: 'Docker tag to use'
+        required: false
+        default: 'latest'
+        type: string
+      service-name:
+        description: 'Service name for image override (deprecated, use custom-images)'
+        required: false
+        default: ''
+        type: string
+      custom-images:
+        description: 'Custom Docker images (format: "service1:tag1 service2:tag2")'
+        required: false
+        default: ''
+        type: string
+      role-name:
+        description: 'AWS role name to assume'
+        required: false
+        default: 'github_actions_ecr_pr_localenv'
+        type: string
+    secrets:
+      personal_access_token:
+        description: GitHub token for cloning localenv repo
+        required: true
+
+jobs:
+  deploy:
+    name: 'Deploy localenv and run qa automation tests'
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+      checks: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Mock setup (skipped for demo)
+        run: |
+          echo "=== Mock Setup (AWS, ECR, hosts file setup skipped for demo) ==="
+          echo "In real workflow this would set up AWS credentials and ECR login"
+
+      - name: Create localenv config override
+        run: |
+          echo "Creating localenv.config.override.json"
+          
+          # Base config
+          CONFIG='{
+              "components": {
+                  "marquez": {
+                      "enabled": false
+                  },
+                  "uls": {
+                      "enabled": false
+                  }
+              }
+          }'
+          
+          # Handle custom images (new format)
+          CUSTOM_IMAGES="${{ inputs.custom-images }}"
+          if [ -n "$CUSTOM_IMAGES" ]; then
+            echo "Processing custom images: $CUSTOM_IMAGES"
+            
+            # Add images section to config
+            CONFIG=$(echo "$CONFIG" | jq '.images = {}')
+            
+            # Parse custom images (format: "service1:tag1 service2:tag2")
+            for image_spec in $CUSTOM_IMAGES; do
+              service=$(echo "$image_spec" | cut -d':' -f1)
+              tag=$(echo "$image_spec" | cut -d':' -f2)
+              echo "Adding image override: $service:$tag"
+              CONFIG=$(echo "$CONFIG" | jq --arg service "$service" --arg tag "$tag" '.images[$service] = {"tag": $tag}')
+            done
+            
+          # Fallback to old single service format for backward compatibility
+          elif [ -n "${{ inputs.service-name }}" ]; then
+            echo "Using legacy single service format: ${{ inputs.service-name }}:${{ inputs.docker-tag }}"
+            CONFIG=$(echo "$CONFIG" | jq --arg service "${{ inputs.service-name }}" --arg tag "${{ inputs.docker-tag }}" '.images = {($service): {"tag": $tag}}')
+          else
+            echo "No custom images specified, using base config"
+          fi
+          
+          # Write final config
+          echo "$CONFIG" > localenv.config.override.json
+          
+          echo "Final config:"
+          cat localenv.config.override.json
+          cat localenv.config.override.json | jq -e . > /dev/null || exit 1
+
+      - name: Mock QA Tests Execution (Demo Only)
+        run: |
+          echo ""
+          echo "🧪 Mock QA Tests Execution"
+          echo "Test category: ${{ inputs.test-category }}"
+          echo "Docker tag: ${{ inputs.docker-tag }}"  
+          echo "Service name: ${{ inputs.service-name }}"
+          echo "Custom images: ${{ inputs.custom-images }}"
+          
+          echo ""
+          echo "=== In real workflow, this would: ==="
+          echo "1. Deploy localenv with the JSON config above"
+          echo "2. Wait for services to be ready"
+          echo "3. Run QA automation tests"  
+          echo "4. Collect and publish test results"
+          echo ""
+          echo "✅ Mock test execution completed successfully!"
+
