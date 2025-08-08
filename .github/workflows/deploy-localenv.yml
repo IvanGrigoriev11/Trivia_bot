@@ -80,12 +80,20 @@ jobs:
             # Add images section to config
             CONFIG=$(echo "$CONFIG" | jq '.images = {}')
             
-            # Parse custom images (format: "service1:tag1 service2:tag2")
+            # Parse custom images (format: "service1:pr_number service2:pr_number")
             for image_spec in $CUSTOM_IMAGES; do
               service=$(echo "$image_spec" | cut -d':' -f1)
-              tag=$(echo "$image_spec" | cut -d':' -f2)
-              echo "Adding image override: $service:$tag"
-              CONFIG=$(echo "$CONFIG" | jq --arg service "$service" --arg tag "$tag" '.images[$service] = {"tag": $tag}')
+              pr_number=$(echo "$image_spec" | cut -d':' -f2)
+              
+              # Mock finding latest commit tag for this PR 
+              # In real workflow this would query ECR with:
+              # aws ecr describe-images --repository-name $service --query 'imageDetails[].imageTags[]' | grep "pr-${pr_number}-"
+              # Format: pr-{PR_NUMBER}-{COMMIT_SUFFIX}
+              mock_commit_suffix="8854-1"  # This would be actual latest commit suffix from ECR
+              full_tag="pr-${pr_number}-${mock_commit_suffix}"
+              
+              echo "Processing: $service:$pr_number -> $service with tag $full_tag"
+              CONFIG=$(echo "$CONFIG" | jq --arg service "$service" --arg tag "$full_tag" '.images[$service] = {"tag": $tag}')
             done
             
           # Fallback to old single service format for backward compatibility
